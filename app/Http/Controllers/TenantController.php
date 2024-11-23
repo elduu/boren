@@ -8,10 +8,12 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\Tenant;
 use App\Models\Contract;
 use App\Models\PaymentForTenant;
+use App\Models\PaymentForBuyer;
 use App\Models\Document;
 use App\Models\Floor;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\UploadedFile;
 
 
 class TenantController extends Controller
@@ -56,21 +58,25 @@ public function store(Request $request)
         }
 
         // Step 7: Store Document file and detect format
-        $documentPath = $this->storeDocumentFile($request, $tenant->id);
+       
+    // Step 3: Iterate over each file and corresponding document type
+    foreach ($request->file('file') as $index => $file) {
+        // Store each file and retrieve the path
+        $documentPath = $this->storeDocumentFile($file, $tenant->id);
 
-        // Step 8: Automatically detect and set document format
-        $documentFormat = $this->detectDocumentFormat($request);
+        // Detect the format for each file
+        $documentFormat = $this->detectDocumentFormat($file);
 
-        // Step 9: Save Document record with file path and detected format
+        // Create a new Document record for each file
         Document::create([
             'documentable_id' => $tenant->id,
             'documentable_type' => Tenant::class,
-            'document_type' => $validatedData['document_type'],
+            'document_type' => $request->input('document_type')[$index], // Get the corresponding document type
             'document_format' => $documentFormat,
-          //  'uploaded_by' => $validatedData['uploaded_by'],
             'date' => $validatedData['date'],
             'file_path' => $documentPath,
         ]);
+    }
 
         DB::commit();
 
@@ -79,6 +85,11 @@ public function store(Request $request)
             'message' => 'Tenant, contract, payment, and document created successfully.',
             'data' => $tenant,
         ], 201);
+
+      
+    
+        // Return response with success message
+      
 
     } catch (\Exception $e) {
         DB::rollBack();
@@ -89,6 +100,16 @@ public function store(Request $request)
     }
 }
 
+private function storeDocumentFile(UploadedFile $file, $tenantId)
+{
+    // Define the directory path where documents will be stored
+    $directory = "documents/tenants/{$tenantId}";
+
+    // Store the file and get the path
+    $path = $file->store($directory, 'public');
+
+    return $path;
+}
 /**
  * Validate the Tenant data.
  */
@@ -112,10 +133,16 @@ private function validateTenantData(Request $request)
         'utility_fee' => 'required_if:type,tenant|numeric',
         'payment_made_until' => 'required_if:type,tenant|date',
         'start_date' => 'required|date',
-        'document_type' => 'required|in:payment_receipt,lease_agreement,tenant_info',
+       // 'document_type' => 'required|in:payment_receipt,lease_agreement,tenant_info',
     //'uploaded_by' => 'required|string|max:255',
         'date' => 'required|date',
-        'file' => 'required|file|mimes:pdf,doc,docx,xlsx,xls,jpg,jpeg,png|max:2048', // Document file validation
+       // 'file' => 'required|file|mimes:pdf,doc,docx,xlsx,xls,jpg,jpeg,png|max:2048', // Document file validation
+    'file' => 'required|array|min:1', // Ensure that files are an array
+        'file.*' => 'file|mimes:pdf,doc,docx,xlsx,xls,jpg,jpeg,png|max:2048', // Validate each file
+        'document_type' => 'required|array|min:1', // Ensure document_type is also an array
+        'document_type.*' => 'required|in:payment_receipt,lease_agreement,tenant_info', // Validate each document type
+    
+    
     ]);
 }
 
@@ -165,32 +192,174 @@ private function createTenantPayment($tenantId, $validatedData)
 /**
  * Store the uploaded document file.
  */
-private function storeDocumentFile(Request $request, $tenantId)
-{
-    if ($request->hasFile('file')) {
-        $file = $request->file('file');
-        $fileName = 'tenant_' . $tenantId . '_' . time() . '.' . $file->getClientOriginalExtension();
-        return $file->storeAs('documents', $fileName, 'public');
-    }
-    return null;
-}
+
 
 /**
  * Detect the document format based on the file extension.
  */
-private function detectDocumentFormat(Request $request)
+private function detectDocumentFormat(UploadedFile $file)
 {
-    $file = $request->file('file');
-    $extension = strtolower($file->getClientOriginalExtension());
+    $mimeType = $file->getClientMimeType();
 
-    return match ($extension) {
-        'pdf' => 'pdf',
-        'doc', 'docx' => 'word',
-        'xlsx', 'xls' => 'excel',
-        'jpg', 'jpeg', 'png' => 'image',
-        default => 'unknown',
-    };
+    switch ($mimeType) {
+        case 'application/pdf':
+            return 'pdf';
+        case 'application/msword':
+        case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+            return 'word';
+        case 'application/vnd.ms-excel':
+        case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+            return 'excel';
+        case 'image/jpeg':
+        case 'image/png':
+            return 'image';
+        default:
+            return 'unknown';
+    }
 }
+
+public function storeBuyer(Request $request)
+{   
+    DB::beginTransaction();
+
+    try {
+        // Step 1: Validate the request data
+        $validatedData = $this->validateBuyerData($request);
+
+        // Step 2: Find Floor to get building_id and category_id
+        $floor = Floor::findOrFail($validatedData['floor_id']);
+        $validatedData['building_id'] = $floor->building_id;
+        $validatedData['category_id'] = $floor->category_id;
+
+        // Step 3: If tenant type is buyer, set the status to "active" and make expiring_date nullable
+        if ($validatedData['type'] === 'buyer') {
+            $validatedData['status'] = 'active';  // Default status for buyer
+            $validatedData['expiring_date'] = null; // Make expiring_date nullable for buyers
+        }
+
+        // Step 4: Calculate due date (one month from expiring_date), but only for non-buyers
+        if ($validatedData['type'] !== 'buyer' && isset($validatedData['expiring_date'])) {
+            $validatedData['due_date'] = date('Y-m-d', strtotime($validatedData['expiring_date'] . ' +1 month'));
+        }
+
+        // Step 5: Create the Tenant record
+        $tenant = Tenant::create(array_merge(
+            $validatedData,
+            ['tenant_number' => uniqid('TEN-')]
+        ));
+
+        // Step 6: Create a Contract for the Tenant
+        $contract = $this->createBuyerContract($tenant->id, $validatedData);
+
+        // Step 7: Create Payment for Buyer (only if type is buyer)
+        if ($tenant->type === 'buyer') {
+            $this->createBuyerPayment($tenant->id, $validatedData);
+        }
+
+        // Step 8: Store Document file and detect format
+        foreach ($request->file('file') as $index => $file) {
+            $documentPath = $this->storeDocumentFile($file, $tenant->id);
+            $documentFormat = $this->detectDocumentFormat($file);
+
+            // Create a new Document record for each file
+            Document::create([
+                'documentable_id' => $tenant->id,
+                'documentable_type' => Tenant::class,
+                'document_type' => $request->input('document_type')[$index], // Get the corresponding document type
+                'document_format' => $documentFormat,
+                'date' => $validatedData['date'],
+                'file_path' => $documentPath,
+            ]);
+        }
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Tenant, contract, payment (if buyer), and document created successfully.',
+            'data' => $tenant,
+        ], 201);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        return response()->json([
+            'success' => false,
+            'message' => 'An unexpected error occurred: ' . $e->getMessage(),
+        ], 500);
+    }
+}
+
+/**
+ * Validate the Tenant data.
+ */
+private function validateBuyerData(Request $request)
+{
+    return $request->validate([
+        'floor_id' => 'required|exists:floors,id',
+        'name' => 'required|string|max:255',
+        'gender' => 'required|in:male,female,other',
+        'phone_number' => ['required', 'unique:tenants,phone_number', 'regex:/^(\+251|0)[1-9]\d{8}$/'],  // Ethiopian phone number format
+        'email' => 'required|email|unique:tenants,email',
+        'room_number' => 'required|string|max:255|unique:tenants,room_number',
+        'type' => 'required|in:buyer,tenant',
+        'contract_type' => 'required|string|max:255',
+        'contract_status' => 'required|string|max:255',
+        'signing_date' => 'required|date',
+        'expiring_date' => 'nullable|date',  // Make expiring_date nullable
+        'unit_price' => 'required_if:type,tenant|numeric',
+        //'monthly_paid' => 'required_if:type,tenant|numeric',
+       // 'area_m2' => 'required_if:type,tenant|numeric',
+        'utility_fee' => 'required_if:type,tenant|numeric',
+        //'payment_made_until' => 'required_if:type,tenant|date',
+        'start_date' => 'required_if:type,buyer|date',
+        'date' => 'required|date',
+        'file' => 'required|array|min:1', // Ensure that files are an array
+        'file.*' => 'file|mimes:pdf,doc,docx,xlsx,xls,jpg,jpeg,png|max:2048', // Validate each file
+        'document_type' => 'required|array|min:1', // Ensure document_type is also an array
+        'document_type.*' => 'required|in:payment_receipt,lease_agreement,tenant_info', // Validate each document type
+    ]);
+}
+
+/**
+ * Create a Contract for the Tenant.
+ */
+private function createBuyerContract($tenantId, $validatedData)
+{
+    try {
+        // Calculate the due date (one month before the expiring date)
+        $dueDate = Carbon::parse($validatedData['expiring_date'] ?? now())->subMonth()->format('Y-m-d');
+
+        // Create contract
+        $contract = Contract::create([
+            'tenant_id' => $tenantId,
+            'type' => $validatedData['contract_type'],
+            'status' => $validatedData['contract_status'],
+            'signing_date' => $validatedData['signing_date'],
+            'expiring_date' => $validatedData['expiring_date'] ?? null, // Nullable expiring date for buyers
+            'due_date' => $dueDate, // Add calculated due date
+        ]);
+
+        return $contract;  // Return the created contract
+
+    } catch (\Exception $e) {
+        // Handle exception and return an error message
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+    }
+}
+
+/**
+ * Create Payment for Buyer.
+ */
+private function createBuyerPayment($tenantId, $validatedData)
+{
+    return PaymentForBuyer::create([
+        'tenant_id' => $tenantId,
+        'property_price' => $validatedData['property_price'],  // Price of the purchased property
+        'utility_fee' => $validatedData['utility_fee'],  // Utility fee for the buyer
+        'start_date' => $validatedData['start_date'],  // Start date
+    ]);
+}
+
     /**
      * Show a specific tenant.
      */

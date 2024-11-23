@@ -54,9 +54,9 @@ Route::post('floors', [FloorController::class, 'store']);
 Route::delete('floors/{id}', [FloorController::class, 'destroy']);
 Route::patch('floors_restore/{id}', [FloorController::class, 'restore']);
 Route::get('floors/search', [FloorController::class, 'search']);
-Route::get('/floorsinbuilding/{id}', [BuildingController::class, 'listFloorsInBuilding']);
-Route::get('/buildings/filterFloorsInCategory', [BuildingController::class, 'filterFloorsInCategory']);
-Route::get('/floors/{floorId}/tenants', [FloorController::class, 'listTenantsInFloor']);
+Route::get('floorsinbuilding/{id}', [BuildingController::class, 'listFloorsInBuilding']);
+Route::get('buildings/filterFloorsInCategory', [BuildingController::class, 'filterFloorsInCategory']);
+Route::get('floors/{floorId}/tenants', [FloorController::class, 'listTenantsInFloor']);
 // Route group for tenant-related actions
 Route::prefix('tenants')->group(function() {
     
