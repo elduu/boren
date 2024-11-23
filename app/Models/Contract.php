@@ -32,4 +32,9 @@ class Contract extends Model
     {
         return \Carbon\Carbon::parse($value)->format('Y-m-d');
     }
+    public function documents()
+    {
+        return $this->morphMany(Document::class, 'documentable');
+    }
 }
+

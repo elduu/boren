@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\PaymentForTenant;
+use Illuminate\Validation\ValidationException;
+use Exception;
+
 
 class PaymentForTenantController extends Controller
 {  /**
@@ -106,6 +109,20 @@ class PaymentForTenantController extends Controller
                 return response()->json(['success' => false, 'message' => 'Failed to restore payment: ' . $e->getMessage()], 500);
             }
         }
+        public function searchByTenantId($tenantId)
+    {
+        try {
+            $payments = PaymentForTenant::where('tenant_id', $tenantId)->get();
+
+            if ($payments->isEmpty()) {
+                return response()->json(['message' => 'No payments found for this tenant'], 404);
+            }
+
+            return response()->json($payments);
+        } catch (Exception $e) {
+            return response()->json(['message' => 'Error fetching payments', 'error' => $e->getMessage()], 500);
+        }
+    }
     }
     
 

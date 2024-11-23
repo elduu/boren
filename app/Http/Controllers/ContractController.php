@@ -177,6 +177,7 @@ class ContractController extends Controller
                 'status' => 'active',
                 'start_date' => $request->start_date,
                 'end_date' => $request->end_date,
+                'expiring_date' => $request->end_date, 
                 'due_date' => Carbon::parse($request->end_date)->subMonth()->format('Y-m-d'),
             ]);
 

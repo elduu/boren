@@ -7,6 +7,8 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\FloorController;
 use App\Http\Controllers\TenantController;
 use App\Http\Controllers\ContractController;
+use App\Http\Controllers\PaymentForBuyerController;
+use App\Http\Controllers\PaymentForTenantController;
 
 /*
 |--------------------------------------------------------------------------
@@ -33,7 +35,7 @@ Route::delete('categories/{id}', [CategoryController::class, 'destroy']); // Del
 Route::get('category_search/{name}', [CategoryController::class, 'search']);
 Route::patch('categories_restore/{id}', [CategoryController::class, 'restore']);
 Route::get('categories/trashed', [CategoryController::class, 'trashed']);
-Route::get('categoriesinbuildings/{id}', [CategoryController::class, 'buildingsInCategory']);
+Route::get('categoriesinbuildings/{id}', [CategoryController::class, 'buildingsInCategoryid']);
 Route::get('buildingsInCategory', [CategoryController::class, 'buildingsInCategory']);
 
 
@@ -79,4 +81,19 @@ Route::delete('contracts/{id}', [ContractController::class, 'destroy']);  // Sof
 Route::patch('contracts/{id}/restore', [ContractController::class, 'restore']);  // Restore a soft-deleted contract
 Route::post('contracts/{id}/status', [ContractController::class, 'updateStatus']);  // Update contract status
 
+Route::get('/payments', [PaymentForBuyerController::class, 'index']);
+Route::get('/payments/{id}', [PaymentForBuyerController::class, 'show']);
+Route::post('/payments', [PaymentForBuyerController::class, 'store']);
+Route::put('/payments/{id}', [PaymentForBuyerController::class, 'update']);
+Route::delete('/payments/{id}', [PaymentForBuyerController::class, 'destroy']);
+Route::post('/payments/{id}/restore', [PaymentForBuyerController::class, 'restore']);
+Route::put('/payments/{id}/renew', [PaymentForBuyerController::class, 'renew']);
+Route::get('/payments/tenant/{tenantId}', [PaymentForBuyerController::class, 'searchByTenantId']);
 
+Route::get('payments', [PaymentForTenantController::class, 'index'])->name('payments.index');
+Route::get('payments/{id}', [PaymentForTenantController::class, 'show'])->name('payments.show');
+Route::post('payments', [PaymentForTenantController::class, 'store'])->name('payments.store');
+Route::put('payments/{id}', [PaymentForTenantController::class, 'update'])->name('payments.update');
+Route::delete('payments/{id}', [PaymentForTenantController::class, 'destroy'])->name('payments.destroy');
+Route::patch('payments/restore/{id}', [PaymentForTenantController::class, 'restore'])->name('payments.restore');
+Route::get('payments/tenant/{tenantId}', [PaymentForTenantController::class, 'searchByTenantId'])->name('payments.searchByTenantId');

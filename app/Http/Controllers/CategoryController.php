@@ -108,21 +108,21 @@ public function trashed()
 
     return response()->json($deletedCategories, 200);
 }
-// public function buildingsInCategory($categoryId)
-//     {
-//         $category = Category::find($categoryId);
+ public function buildingsInCategoryid($categoryId)
+     {
+         $category = Category::find($categoryId);
 
-//         if (!$category) {
-//             return response()->json(['success' => false, 'message' => 'Category not found'], 404);
-//         }
+         if (!$category) {
+             return response()->json(['success' => false, 'message' => 'Category not found'], 404);
+         }
 
-//         try {
-//             $buildings = $category->buildings; // Assuming 'buildings' relationship exists in Category model
-//             return response()->json(['success' => true, 'data' => $buildings], 200);
-//         } catch (\Exception $e) {
-//             return response()->json(['success' => false, 'message' => 'Failed to fetch buildings in category: ' . $e->getMessage()], 500);
-//         }
-//     }
+         try {
+             $buildings = $category->buildings; // Assuming 'buildings' relationship exists in Category model
+             return response()->json(['success' => true, 'data' => $buildings], 200);
+         } catch (\Exception $e) {
+             return response()->json(['success' => false, 'message' => 'Failed to fetch buildings in category: ' . $e->getMessage()], 500);
+         }
+  }
     public function buildingsInCategory(Request $request)
 {
     $categoryName = $request->input('name');

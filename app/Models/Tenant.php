@@ -44,4 +44,12 @@ class Tenant extends Model
     {
         return $this->hasMany(Contract::class);
     }
+    public function documents()
+    {
+        return $this->morphMany(Document::class, 'documentable');
+    }
+    public function getDueDateAttribute($value)
+    {
+        return \Carbon\Carbon::parse($value)->format('Y-m-d');
+    }
 }

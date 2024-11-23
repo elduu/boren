@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Floor;
+use App\Models\Building;
+
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class FloorController extends Controller
@@ -21,17 +23,33 @@ class FloorController extends Controller
     // Store a new floor
     public function store(Request $request)
     {
+        // Validate the request data
         $validated = $request->validate([
-            'building_id' => 'required|exists:buildings,id',
-            'category_id' => 'required|exists:categories,id',
-            'name' => 'required|string|max:255',
+            'building_id' => 'required|exists:buildings,id',  // Ensure building exists
+            'name' => 'required|string|max:255',              // Floor name is required, max length 255 characters
         ]);
-
+    
         try {
-            $floor = Floor::create($validated);
-            return response()->json(['message' => 'Floor created successfully', 'data' => $floor], 201);
+            // Retrieve the category_id from the specified building
+            $building = Building::findOrFail($validated['building_id']);
+            $categoryId = $building->category_id;
+    
+            // Create a new floor record, automatically setting the category_id from the building
+            $floor = Floor::create([
+                'building_id' => $validated['building_id'],
+                'category_id' => $categoryId,
+                'name' => $validated['name']
+            ]);
+    
+            return response()->json([
+                'message' => 'Floor created successfully',
+                'data' => $floor
+            ], 201);
+    
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error creating floor: ' . $e->getMessage()], 500);
+            return response()->json([
+                'error' => 'An error occurred while creating the floor. Please try again later.'
+            ], 500);
         }
     }
 
