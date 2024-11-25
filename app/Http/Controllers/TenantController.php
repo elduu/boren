@@ -14,6 +14,7 @@ use App\Models\Floor;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Validator; 
 
 
 class TenantController extends Controller
@@ -77,7 +78,7 @@ public function store(Request $request)
             'documentable_type' => Tenant::class,
             'document_type' => $document['document_type'], // Get the corresponding document type
             'document_format' => $documentFormat,
-            'date' => $validatedData['date'],
+          //  'date' => $validatedData['date'],
             'file_path' => $documentPath,
         ]);
     }
@@ -140,7 +141,7 @@ private function validateTenantData(Request $request)
         'start_date' => 'required|date',
        // 'document_type' => 'required|in:payment_receipt,lease_agreement,tenant_info',
     //'uploaded_by' => 'required|string|max:255',
-        'date' => 'required|date',
+     
        // 'file' => 'required|file|mimes:pdf,doc,docx,xlsx,xls,jpg,jpeg,png|max:2048', // Document file validation
        'documents' => 'required|array|min:1', // Ensure that documents is an array
        'documents.*.file' => 'required|file|mimes:pdf,doc,docx,xlsx,xls,jpg,jpeg,png|max:2048', // Validate each file
@@ -243,7 +244,7 @@ private function validateBuyerData(Request $request)
         'property_price' => 'required_if:type,buyer|numeric',
         //'payment_made_until' => 'required_if:type,tenant|date',
         'start_date' => 'required_if:type,buyer|date',
-        'date' => 'required|date',
+ 
         'documents' => 'required|array|min:1', // Ensure that documents is an array
         'documents.*.file' => 'required|file|mimes:pdf,doc,docx,xlsx,xls,jpg,jpeg,png|max:2048', // Validate each file
         // Optional path for each file
@@ -427,7 +428,8 @@ private function createBuyerPayment($tenantId, $validatedData)
      */
     public function update(Request $request, $id)
     {
-        $request->validate([
+        // Custom validation rules
+        $validator = Validator::make($request->all(), [
             'building_id' => 'exists:buildings,id',
             'category_id' => 'exists:categories,id',
             'floor_id' => 'exists:floors,id',
@@ -435,17 +437,45 @@ private function createBuyerPayment($tenantId, $validatedData)
             'gender' => 'in:male,female,other',
             'phone_number' => ['unique:tenants,phone_number,' . $id, 'regex:/^(\+251|0)[1-9]\d{8}$/'],
             'email' => 'email|unique:tenants,email,' . $id,
-            'room_number' => 'string|max:255|unique:tenants,room_number'.$id,
-            'type' => 'in:buyer,tenant',
+            'room_number' => 'string|max:255|unique:tenants,room_number,' . $id,
+            'tenant_type' => 'in:buyer,tenant',
         ]);
-
+    
+        // Check if validation fails
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation errors',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+    
         try {
+            // Retrieve the tenant
             $tenant = Tenant::findOrFail($id);
+    
+            // Check and retrieve building_id and category_id from floor_id
+            if ($request->filled('floor_id')) {
+                $floor = Floor::findOrFail($request->floor_id);
+                $request->merge([
+                    'building_id' => $floor->building_id,
+                    'category_id' => $floor->category_id,
+                ]);
+            }
+    
+            // Update tenant data
             $tenant->update($request->all());
-
-            return response()->json(['success' => true, 'data' => $tenant], 200);
+    
+            return response()->json([
+                'success' => true,
+                'data' => $tenant,
+            ], 200);
+    
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'An unexpected error occurred: ' . $e->getMessage(),
+            ], 500);
         }
     }
 
@@ -529,6 +559,32 @@ private function createBuyerPayment($tenantId, $validatedData)
         return response()->json([
             'success' => false,
             'message' => 'An error occurred: ' . $e->getMessage()
+        ], 500);
+    }
+}
+
+
+public function deactivateTenant($id)
+{
+    try {
+        // Find the tenant by ID
+        $tenant = Tenant::findOrFail($id);
+
+        // Update tenant's status to inactive
+        $tenant->status = 'inactive';
+        $tenant->save();
+
+        // Return a success response
+        return response()->json([
+            'success' => true,
+            'message' => 'Tenant status updated to inactive successfully.',
+            'data' => $tenant
+        ], 200);
+    } catch (\Exception $e) {
+        // Handle errors and return an appropriate error response
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to update tenant status: ' . $e->getMessage()
         ], 500);
     }
 }

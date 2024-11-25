@@ -211,4 +211,33 @@ class ContractController extends Controller
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
+    public function restore($id)
+{
+    try {
+        // Find the deleted contract using withTrashed
+        $contract = Contract::withTrashed()->findOrFail($id);
+
+        // Restore the deleted contract
+        $contract->restore();
+
+        // Return success response
+        return response()->json([
+            'success' => true,
+            'message' => 'Contract restored successfully.',
+            'data' => $contract
+        ], 200);
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        // Handle case where contract does not exist or is not deleted
+        return response()->json([
+            'success' => false,
+            'message' => 'Contract not found or is not deleted.'
+        ], 404);
+    } catch (\Exception $e) {
+        // Handle general exceptions
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred while restoring the contract: ' . $e->getMessage()
+        ], 500);
+    }
+}
 }

@@ -94,7 +94,8 @@ Route::prefix('tenants')->middleware(['permission:manage tenants'])->group(funct
     Route::post('{id}', [TenantController::class, 'update']);
     Route::delete('{id}', [TenantController::class, 'destroy']);
     Route::patch('{id}/restore', [TenantController::class, 'restore']);
-    
+    Route::post('/{id}/deactivate', [TenantController::class, 'deactivateTenant']);
+
     Route::get('trashed', [TenantController::class, 'trashed']);
     Route::post('tenants/{id}/status', [TenantController::class, 'updateStatus']);
 });
@@ -111,12 +112,13 @@ Route::middleware(['permission:manage contracts'])->group(function () {
 });
 
 
-Route::get('contracts', [ContractController::class, 'index']);  // List all contracts
+Route::get('contracts', [ContractController::class, 'index']);
+Route::get('tenantcontracts/{tenantId}', [ContractController::class, 'getTenantContracts']);  // List all contracts
 Route::get('contracts/{id}', [ContractController::class, 'show']);  // View contract
 
 Route::get('/payments', [PaymentForBuyerController::class, 'index']);
 Route::get('/payments/{id}', [PaymentForBuyerController::class, 'show']);
-Route::get('/payments/tenant/{tenantId}', [PaymentForBuyerController::class, 'searchByTenantId']);
+Route::get('/tenantpayments/{tenantId}', [PaymentForBuyerController::class, 'searchByTenantId']);
 
 Route::middleware(['permission:manage payments'])->group(function () {
 Route::post('/payments', [PaymentForBuyerController::class, 'store']);
