@@ -10,6 +10,8 @@ use Laravel\Sanctum\HasApiTokens;
 use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use Spatie\Permission\Traits\HasRoles;
+use Spatie\Permission\Middlewares\RoleMiddleware;
+
 
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;

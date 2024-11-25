@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use App\Models\User;
+use Spatie\Permission\Middlewares\RoleMiddleware;
+
 use Illuminate\Support\Facades\Hash;
+
 
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;

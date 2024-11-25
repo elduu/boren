@@ -7,6 +7,8 @@ use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Illuminate\Database\Seeder;
 use App\Models\User;
+use Spatie\Permission\Middlewares\RoleMiddleware;
+
 
 class RolesAndPermissionsSeeder extends Seeder
 {
