@@ -11,6 +11,8 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 use Illuminate\Auth\Passwords\CanResetPassword;
 use Spatie\Permission\Traits\HasRoles;
 
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
 class User extends Authenticatable implements JWTSubject
 {
     use HasApiTokens, HasFactory, Notifiable,CanResetPassword,HasRoles; 
@@ -21,7 +23,7 @@ class User extends Authenticatable implements JWTSubject
      * @var array<int, string>
      */
     protected $fillable = [
-       'name', 'email', 'phone', 'password', 'role','status',
+       'name', 'email', 'phone', 'password', 'status',
        
     ];
 

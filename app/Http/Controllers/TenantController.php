@@ -46,7 +46,8 @@ public function store(Request $request)
         // Step 4: Create the Tenant record
         $tenant = Tenant::create(array_merge(
             $validatedData,
-            ['tenant_number' => uniqid('TEN-')]
+            ['tenant_number' => uniqid('TEN-')
+            ]
         ));
 
         // Step 5: Create a Contract for the Tenant
@@ -122,7 +123,7 @@ private function validateTenantData(Request $request)
         'phone_number' => ['required', 'unique:tenants,phone_number', 'regex:/^(\+251|0)[1-9]\d{8}$/'],  // Ethiopian phone number format
         'email' => 'required|email|unique:tenants,email',
         'room_number' => 'required|string|max:255|unique:tenants,room_number',
-        'type' => 'required|in:buyer,tenant',
+        'tenant_type' => 'required|in:buyer,tenant',
         'contract_type' => 'required|string|max:255',
         'contract_status' => 'required|string|max:255',
         'signing_date' => 'required|date',
@@ -227,7 +228,7 @@ private function validateBuyerData(Request $request)
         'phone_number' => ['required', 'unique:tenants,phone_number', 'regex:/^(\+251|0)[1-9]\d{8}$/'],  // Ethiopian phone number format
         'email' => 'required|email|unique:tenants,email',
         'room_number' => 'required|string|max:255|unique:tenants,room_number',
-        'type' => 'required|in:buyer,tenant',
+        'tenant_type' => 'required|in:buyer,tenant',
         'contract_type' => 'required|string|max:255',
         'contract_status' => 'required|string|max:255',
         'signing_date' => 'required|date',

@@ -20,7 +20,7 @@ class Tenant extends Model
         'phone_number',
         'email',
         'room_number',
-        'type',
+        'tenant_type',
         'status',
     ];
 

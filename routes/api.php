@@ -27,21 +27,22 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::middleware(['auth:api', 'role:admin'])->group(function () {
-    Route::post('register', [AuthController::class, 'register']);
-    Route::post('users/filter-by-phone', [AuthController::class, 'filterByPhone']);
-    Route::put('users/{id}/status', [AuthController::class, 'updateStatus']);
-    Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
-    Route::post('reset-password', [AuthController::class, 'resetPassword']);
-    
-});
+
+
 Route::post('tenants', [TenantController::class, 'store']);
 
 Route::post('login', [AuthController::class, 'login']);
 Route::post('logout', [AuthController::class, 'logout']);
 
 Route::middleware(['jwt.auth'])->group(function () {
-
+    Route::middleware(['auth:api', 'role:admin'])->group(function () {
+        Route::post('register', [AuthController::class, 'register']);
+        Route::post('users/filter-by-phone', [AuthController::class, 'filterByPhone']);
+        Route::put('users/{id}/status', [AuthController::class, 'updateStatus']);
+        Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
+        Route::post('reset-password', [AuthController::class, 'resetPassword']);
+        
+    });
     Route::middleware(['permission:manage categories'])->group(function () {
     
 Route::post('categories', [CategoryController::class, 'store']); // Create a new category
