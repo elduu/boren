@@ -218,6 +218,36 @@ private function detectDocumentFormat(UploadedFile $file)
     }
 }
 
+private function validateBuyerData(Request $request)
+{
+    return $request->validate([
+        'floor_id' => 'required|exists:floors,id',
+        'name' => 'required|string|max:255',
+        'gender' => 'required|in:male,female,other',
+        'phone_number' => ['required', 'unique:tenants,phone_number', 'regex:/^(\+251|0)[1-9]\d{8}$/'],  // Ethiopian phone number format
+        'email' => 'required|email|unique:tenants,email',
+        'room_number' => 'required|string|max:255|unique:tenants,room_number',
+        'type' => 'required|in:buyer,tenant',
+        'contract_type' => 'required|string|max:255',
+        'contract_status' => 'required|string|max:255',
+        'signing_date' => 'required|date',
+        'expiring_date' => 'nullable|date',  // Make expiring_date nullable
+        'unit_price' => 'required_if:type,tenant|numeric',
+        //'monthly_paid' => 'required_if:type,tenant|numeric',
+       // 'area_m2' => 'required_if:type,tenant|numeric',
+        //'utility_fee' => 'required_if:type,tenant|numeric',
+        'utility_fee' => 'required_if:type,buyer|numeric',  // Required for buyers
+        'property_price' => 'required_if:type,buyer|numeric',
+        //'payment_made_until' => 'required_if:type,tenant|date',
+        'start_date' => 'required_if:type,buyer|date',
+        'date' => 'required|date',
+        'file' => 'required|array|min:1', // Ensure that files are an array
+        'file.*' => 'file|mimes:pdf,doc,docx,xlsx,xls,jpg,jpeg,png|max:2048', // Validate each file
+        'document_type' => 'required|array|min:1', // Ensure document_type is also an array
+        'document_type.*' => 'required|in:payment_receipt,lease_agreement,tenant_info', // Validate each document type
+    ]);
+}
+
 public function storeBuyer(Request $request)
 {   
     DB::beginTransaction();
@@ -234,7 +264,7 @@ public function storeBuyer(Request $request)
         // Step 3: If tenant type is buyer, set the status to "active" and make expiring_date nullable
         if ($validatedData['type'] === 'buyer') {
             $validatedData['status'] = 'active';  // Default status for buyer
-            $validatedData['expiring_date'] = null; // Make expiring_date nullable for buyers
+            // // Make expiring_date nullable for buyers
         }
 
         // Step 4: Calculate due date (one month from expiring_date), but only for non-buyers
@@ -256,7 +286,7 @@ public function storeBuyer(Request $request)
             $this->createBuyerPayment($tenant->id, $validatedData);
         }
 
-        // Step 8: Store Document file and detect format
+        // Step 8: Store Document files and detect format
         foreach ($request->file('file') as $index => $file) {
             $documentPath = $this->storeDocumentFile($file, $tenant->id);
             $documentFormat = $this->detectDocumentFormat($file);
@@ -290,37 +320,6 @@ public function storeBuyer(Request $request)
 }
 
 /**
- * Validate the Tenant data.
- */
-private function validateBuyerData(Request $request)
-{
-    return $request->validate([
-        'floor_id' => 'required|exists:floors,id',
-        'name' => 'required|string|max:255',
-        'gender' => 'required|in:male,female,other',
-        'phone_number' => ['required', 'unique:tenants,phone_number', 'regex:/^(\+251|0)[1-9]\d{8}$/'],  // Ethiopian phone number format
-        'email' => 'required|email|unique:tenants,email',
-        'room_number' => 'required|string|max:255|unique:tenants,room_number',
-        'type' => 'required|in:buyer,tenant',
-        'contract_type' => 'required|string|max:255',
-        'contract_status' => 'required|string|max:255',
-        'signing_date' => 'required|date',
-        'expiring_date' => 'nullable|date',  // Make expiring_date nullable
-        'unit_price' => 'required_if:type,tenant|numeric',
-        //'monthly_paid' => 'required_if:type,tenant|numeric',
-       // 'area_m2' => 'required_if:type,tenant|numeric',
-        'utility_fee' => 'required_if:type,tenant|numeric',
-        //'payment_made_until' => 'required_if:type,tenant|date',
-        'start_date' => 'required_if:type,buyer|date',
-        'date' => 'required|date',
-        'file' => 'required|array|min:1', // Ensure that files are an array
-        'file.*' => 'file|mimes:pdf,doc,docx,xlsx,xls,jpg,jpeg,png|max:2048', // Validate each file
-        'document_type' => 'required|array|min:1', // Ensure document_type is also an array
-        'document_type.*' => 'required|in:payment_receipt,lease_agreement,tenant_info', // Validate each document type
-    ]);
-}
-
-/**
  * Create a Contract for the Tenant.
  */
 private function createBuyerContract($tenantId, $validatedData)
@@ -339,11 +338,15 @@ private function createBuyerContract($tenantId, $validatedData)
             'due_date' => $dueDate, // Add calculated due date
         ]);
 
+        if (!$contract) {
+            throw new \Exception("Contract not created successfully.");
+        }
+
         return $contract;  // Return the created contract
 
     } catch (\Exception $e) {
         // Handle exception and return an error message
-        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        throw new \Exception("Contract creation error: " . $e->getMessage());
     }
 }
 
@@ -352,13 +355,31 @@ private function createBuyerContract($tenantId, $validatedData)
  */
 private function createBuyerPayment($tenantId, $validatedData)
 {
-    return PaymentForBuyer::create([
-        'tenant_id' => $tenantId,
-        'property_price' => $validatedData['property_price'],  // Price of the purchased property
-        'utility_fee' => $validatedData['utility_fee'],  // Utility fee for the buyer
-        'start_date' => $validatedData['start_date'],  // Start date
-    ]);
+    try {
+        // Check if property_price and utility_fee are set
+        if (!isset($validatedData['property_price']) || !isset($validatedData['utility_fee'])) {
+            throw new \Exception("Missing property_price or utility_fee in validated data.");
+        }
+
+        // Create payment
+        $payment = PaymentForBuyer::create([
+            'tenant_id' => $tenantId,
+            'property_price' => $validatedData['property_price'],  // Price of the purchased property
+            'utility_fee' => $validatedData['utility_fee'],  // Utility fee for the buyer
+            'start_date' => $validatedData['start_date'],  // Start date
+        ]);
+
+        if (!$payment) {
+            throw new \Exception("Payment not created successfully.");
+        }
+
+        return $payment;
+
+    } catch (\Exception $e) {
+        throw new \Exception("Payment creation error: " . $e->getMessage());
+    }
 }
+
 
     /**
      * Show a specific tenant.
@@ -366,10 +387,26 @@ private function createBuyerPayment($tenantId, $validatedData)
     public function show($id)
     {
         try {
-            $tenant = Tenant::with(['building', 'category', 'floor'])->findOrFail($id);
-            return response()->json(['success' => true, 'data' => $tenant], 200);
+            // Load tenant with related building, category, floor, contract, payment, and document information
+            $tenant = Tenant::with([
+                'building',
+                'category',
+                'floor',
+                'contracts',     // Assuming a relationship is defined in Tenant model for contracts
+                'payments',      // Assuming a relationship is defined in Tenant model for payments
+                'documents'      // Assuming a relationship is defined in Tenant model for documents
+            ])->findOrFail($id);
+    
+            return response()->json([
+                'success' => true,
+                'data' => $tenant
+            ], 200);
+    
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred: ' . $e->getMessage()
+            ], 404);
         }
     }
 

@@ -9,6 +9,8 @@ use App\Http\Controllers\TenantController;
 use App\Http\Controllers\ContractController;
 use App\Http\Controllers\PaymentForBuyerController;
 use App\Http\Controllers\PaymentForTenantController;
+use App\Http\Controllers\DocumentController;
+use App\Http\Controllers\AuthController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,13 +27,32 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
+Route::middleware(['auth:api', 'role:admin'])->group(function () {
+    Route::post('register', [AuthController::class, 'register']);
+    Route::post('users/filter-by-phone', [AuthController::class, 'filterByPhone']);
+    Route::put('users/{id}/status', [AuthController::class, 'updateStatus']);
+    Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('reset-password', [AuthController::class, 'resetPassword']);
+    
+});
+Route::post('tenants', [TenantController::class, 'store']);
 
+Route::post('login', [AuthController::class, 'login']);
+Route::post('logout', [AuthController::class, 'logout']);
 
-Route::get('categories', [CategoryController::class, 'index']); // List all categories
+Route::middleware(['jwt.auth'])->group(function () {
+
+    Route::middleware(['permission:manage categories'])->group(function () {
+    
 Route::post('categories', [CategoryController::class, 'store']); // Create a new category
-Route::get('categories/{id}', [CategoryController::class, 'show']); // Show a specific category by ID
+
 Route::post('categories/{id}', [CategoryController::class, 'update']); // Update a category by ID
-Route::delete('categories/{id}', [CategoryController::class, 'destroy']); // Delete a category by ID
+Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
+
+});
+// Delete a category by ID
+Route::get('categories/{id}', [CategoryController::class, 'show']); 
+Route::get('categories', [CategoryController::class, 'index']); // List all categories
 Route::get('category_search/{name}', [CategoryController::class, 'search']);
 Route::patch('categories_restore/{id}', [CategoryController::class, 'restore']);
 Route::get('categories/trashed', [CategoryController::class, 'trashed']);
@@ -39,30 +60,35 @@ Route::get('categoriesinbuildings/{id}', [CategoryController::class, 'buildingsI
 Route::get('buildingsInCategory', [CategoryController::class, 'buildingsInCategory']);
 
 
-Route::get('buildings', [BuildingController::class, 'index']); // List all buildings
-Route::post('buildings', [BuildingController::class, 'store']); // Create a new building
-Route::get('buildings/{id}', [BuildingController::class, 'show']); // Show a specific building
-Route::post('buildings/{id}', [BuildingController::class, 'update']); // Update a building
-Route::delete('buildings/{id}', [BuildingController::class, 'destroy']); // Soft delete a building
-Route::get('buildings_trashed', [BuildingController::class, 'trashed']); // Get all soft-deleted buildings
-Route::patch('buildings_restore/{id}',[BuildingController::class, 'restore']);
+Route::middleware(['permission:manage buildings'])->group(function () {
+    Route::post('buildings', [BuildingController::class, 'store']);
+    Route::post('buildings/{id}', [BuildingController::class, 'update']);
+    Route::delete('buildings/{id}', [BuildingController::class, 'destroy']);
+    Route::patch('buildings_restore/{id}', [BuildingController::class, 'restore']);
+});
+
+Route::get('buildings', [BuildingController::class, 'index']);
+Route::get('buildings/{id}', [BuildingController::class, 'show']);
+Route::get('buildings_trashed', [BuildingController::class, 'trashed']);
 Route::get('building_search', [BuildingController::class, 'search']); // Get all soft-deleted buildings 
 
 
+Route::middleware(['permission:manage floors'])->group(function () {
+    Route::post('floors', [FloorController::class, 'store']);
+    Route::delete('floors/{id}', [FloorController::class, 'destroy']);
+    Route::patch('floors_restore/{id}', [FloorController::class, 'restore']);
+});
+
 Route::get('floors', [FloorController::class, 'index']);
-Route::post('floors', [FloorController::class, 'store']);
-Route::delete('floors/{id}', [FloorController::class, 'destroy']);
-Route::patch('floors_restore/{id}', [FloorController::class, 'restore']);
 Route::get('floors/search', [FloorController::class, 'search']);
+Route::get('floors/{floorId}/tenants', [FloorController::class, 'listTenantsInFloor']);
 Route::get('floorsinbuilding/{id}', [BuildingController::class, 'listFloorsInBuilding']);
 Route::get('buildings/filterFloorsInCategory', [BuildingController::class, 'filterFloorsInCategory']);
-Route::get('floors/{floorId}/tenants', [FloorController::class, 'listTenantsInFloor']);
-// Route group for tenant-related actions
-Route::prefix('tenants')->group(function() {
-    
-    Route::post('/', [TenantController::class, 'store']);
-    Route::get('/', [TenantController::class, 'index']);
-    Route::get('{id}', [TenantController::class, 'show']);
+
+Route::prefix('tenants')->middleware(['permission:manage tenants'])->group(function () {
+
+    Route::get('/', [TenantController::class, 'index'])->middleware('permission:view tenants');;
+    Route::get('{id}', [TenantController::class, 'show'])->middleware('permission:view tenants');;
     Route::post('{id}', [TenantController::class, 'update']);
     Route::delete('{id}', [TenantController::class, 'destroy']);
     Route::patch('{id}/restore', [TenantController::class, 'restore']);
@@ -70,30 +96,54 @@ Route::prefix('tenants')->group(function() {
     Route::get('trashed', [TenantController::class, 'trashed']);
     Route::post('tenants/{id}/status', [TenantController::class, 'updateStatus']);
 });
-Route::get('search', [TenantController::class, 'search']);
+Route::get('search', [TenantController::class, 'search'])->middleware('permission:view tenants');;
+Route::post('buyer', [TenantController::class, 'storeBuyer'])->middleware('permission:manage tenants');;
+
+Route::middleware(['permission:manage contracts'])->group(function () {
+    Route::post('contracts', [ContractController::class, 'store']);
+    Route::post('contracts/{id}', [ContractController::class, 'update']);
+    Route::post('contracts_renew/{id}', [ContractController::class, 'renew']);
+    Route::delete('contracts/{id}', [ContractController::class, 'destroy']);
+    Route::patch('contracts/{id}/restore', [ContractController::class, 'restore']);
+    Route::post('contracts/{id}/status', [ContractController::class, 'updateStatus']);
+});
+
 
 Route::get('contracts', [ContractController::class, 'index']);  // List all contracts
-Route::get('contracts/{id}', [ContractController::class, 'show']);  // Get contract details by ID
-Route::post('contracts', [ContractController::class, 'store']);  // Create a new contract
-Route::post('contracts/{id}', [ContractController::class, 'update']);  // Update contract details
-Route::post('contracts_renew/{id}', [ContractController::class, 'renew']);  // Renew a contract
-Route::delete('contracts/{id}', [ContractController::class, 'destroy']);  // Soft delete a contract
-Route::patch('contracts/{id}/restore', [ContractController::class, 'restore']);  // Restore a soft-deleted contract
-Route::post('contracts/{id}/status', [ContractController::class, 'updateStatus']);  // Update contract status
+Route::get('contracts/{id}', [ContractController::class, 'show']);  // View contract
 
 Route::get('/payments', [PaymentForBuyerController::class, 'index']);
 Route::get('/payments/{id}', [PaymentForBuyerController::class, 'show']);
+Route::get('/payments/tenant/{tenantId}', [PaymentForBuyerController::class, 'searchByTenantId']);
+
+Route::middleware(['permission:manage payments'])->group(function () {
 Route::post('/payments', [PaymentForBuyerController::class, 'store']);
 Route::put('/payments/{id}', [PaymentForBuyerController::class, 'update']);
 Route::delete('/payments/{id}', [PaymentForBuyerController::class, 'destroy']);
 Route::post('/payments/{id}/restore', [PaymentForBuyerController::class, 'restore']);
 Route::put('/payments/{id}/renew', [PaymentForBuyerController::class, 'renew']);
-Route::get('/payments/tenant/{tenantId}', [PaymentForBuyerController::class, 'searchByTenantId']);
+});
 
 Route::get('payments', [PaymentForTenantController::class, 'index'])->name('payments.index');
 Route::get('payments/{id}', [PaymentForTenantController::class, 'show'])->name('payments.show');
+
+Route::middleware(['permission:manage payments'])->group(function () {
 Route::post('payments', [PaymentForTenantController::class, 'store'])->name('payments.store');
 Route::put('payments/{id}', [PaymentForTenantController::class, 'update'])->name('payments.update');
 Route::delete('payments/{id}', [PaymentForTenantController::class, 'destroy'])->name('payments.destroy');
 Route::patch('payments/restore/{id}', [PaymentForTenantController::class, 'restore'])->name('payments.restore');
 Route::get('payments/tenant/{tenantId}', [PaymentForTenantController::class, 'searchByTenantId'])->name('payments.searchByTenantId');
+});
+
+Route::middleware(['permission:manage documents'])->group(function () {
+    Route::post('/documents', [DocumentController::class, 'store']);  // Only manage documents permission can upload
+    Route::delete('/documents/{id}', [DocumentController::class, 'destroy']);  // Only manage documents permission can delete
+});
+
+
+Route::get('/documents', [DocumentController::class, 'listAllDocuments']);
+Route::get('/filterdocbytype', [DocumentController::class, 'filterByDocumentType']);
+Route::get('/filterdocbytenant/{tenantId}', [DocumentController::class, 'filterByTenantId']);
+
+
+});
