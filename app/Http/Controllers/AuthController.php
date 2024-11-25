@@ -8,7 +8,7 @@ use App\Models\User;
 use Spatie\Permission\Middlewares\RoleMiddleware;
 
 use Illuminate\Support\Facades\Hash;
-
+use Illuminate\Support\Facades\Auth;
 
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
@@ -157,11 +157,43 @@ class AuthController extends Controller
 
     return response()->json(['token' => $token], 200);
 }
-public function logout()
+public function logout(Request $request)
 {
-    auth()->logout();
-    return response()->json(['message' => 'Successfully logged out']);
+    Auth::guard('api')->logout();
+
+  
+
+    return response()->json(['message' => 'Successfully logged out'], 200);
+}
+public function getUserInfo()
+{
+    // Retrieve the authenticated user based on the token
+    $user = Auth::user();
+
+    if ($user) {
+        // Return the user's information as a JSON response
+        return response()->json([
+            'status' => 'success',
+            'data' => $user
+        ], 200);
+    } else {
+        // Return an error response if the user is not found
+        return response()->json([
+            'status' => 'error',
+            'message' => 'User not authenticated'
+        ], 401);
+    }
 }
 
+public function listAllUsers()
+{
+    $AuthUser = auth()->user();
+    $user = User::find($AuthUser->id);
 
+    if (!$user->hasRole('admin')) {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+
+    return response()->json(User::all(), 200);
+}
 }
