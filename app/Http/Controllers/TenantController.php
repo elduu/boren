@@ -61,24 +61,28 @@ public function store(Request $request)
         // Step 7: Store Document file and detect format
        
     // Step 3: Iterate over each file and corresponding document type
-    foreach ($request->file('file') as $index => $file) {
-        // Store each file and retrieve the path
-        $documentPath = $this->storeDocumentFile($file, $tenant->id);
+    if ($request->has('documents')) {
+        foreach ($request->documents as $document) {
+            if (isset($document['file']) && isset($document['document_type'])) {
+                // Store the file and retrieve the path
+                $documentPath = $this->storeDocumentFile($document['file'], $tenant->id);
 
-        // Detect the format for each file
-        $documentFormat = $this->detectDocumentFormat($file);
+                // Detect the format for each file
+                $documentFormat = $this->detectDocumentFormat($document['file']);
 
+      
         // Create a new Document record for each file
         Document::create([
             'documentable_id' => $tenant->id,
             'documentable_type' => Tenant::class,
-            'document_type' => $request->input('document_type')[$index], // Get the corresponding document type
+            'document_type' => $document['document_type'], // Get the corresponding document type
             'document_format' => $documentFormat,
             'date' => $validatedData['date'],
             'file_path' => $documentPath,
         ]);
     }
-
+}
+}
         DB::commit();
 
         return response()->json([
@@ -138,13 +142,11 @@ private function validateTenantData(Request $request)
     //'uploaded_by' => 'required|string|max:255',
         'date' => 'required|date',
        // 'file' => 'required|file|mimes:pdf,doc,docx,xlsx,xls,jpg,jpeg,png|max:2048', // Document file validation
-    'file' => 'required|array|min:1', // Ensure that files are an array
-        'file.*' => 'file|mimes:pdf,doc,docx,xlsx,xls,jpg,jpeg,png|max:2048', // Validate each file
-        'document_type' => 'required|array|min:1', // Ensure document_type is also an array
-        'document_type.*' => 'required|in:payment_receipt,lease_agreement,tenant_info', // Validate each document type
-    
-    
-    ]);
+       'documents' => 'required|array|min:1', // Ensure that documents is an array
+       'documents.*.file' => 'required|file|mimes:pdf,doc,docx,xlsx,xls,jpg,jpeg,png|max:2048', // Validate each file
+   // Optional path for each file
+       'documents.*.document_type' => 'required|in:payment_receipt,lease_agreement,tenant_info', // Validate each document type
+   ]);
 }
 
 /**
@@ -242,10 +244,10 @@ private function validateBuyerData(Request $request)
         //'payment_made_until' => 'required_if:type,tenant|date',
         'start_date' => 'required_if:type,buyer|date',
         'date' => 'required|date',
-        'file' => 'required|array|min:1', // Ensure that files are an array
-        'file.*' => 'file|mimes:pdf,doc,docx,xlsx,xls,jpg,jpeg,png|max:2048', // Validate each file
-        'document_type' => 'required|array|min:1', // Ensure document_type is also an array
-        'document_type.*' => 'required|in:payment_receipt,lease_agreement,tenant_info', // Validate each document type
+        'documents' => 'required|array|min:1', // Ensure that documents is an array
+        'documents.*.file' => 'required|file|mimes:pdf,doc,docx,xlsx,xls,jpg,jpeg,png|max:2048', // Validate each file
+        // Optional path for each file
+        'documents.*.document_type' => 'required|in:payment_receipt,lease_agreement,tenant_info', // Validate each document type
     ]);
 }
 
@@ -263,13 +265,13 @@ public function storeBuyer(Request $request)
         $validatedData['category_id'] = $floor->category_id;
 
         // Step 3: If tenant type is buyer, set the status to "active" and make expiring_date nullable
-        if ($validatedData['type'] === 'buyer') {
+        if ($validatedData['tenant_type'] === 'buyer') {
             $validatedData['status'] = 'active';  // Default status for buyer
             // // Make expiring_date nullable for buyers
         }
 
         // Step 4: Calculate due date (one month from expiring_date), but only for non-buyers
-        if ($validatedData['type'] !== 'buyer' && isset($validatedData['expiring_date'])) {
+        if ($validatedData['tenant_type'] !== 'buyer' && isset($validatedData['expiring_date'])) {
             $validatedData['due_date'] = date('Y-m-d', strtotime($validatedData['expiring_date'] . ' +1 month'));
         }
 
@@ -283,25 +285,34 @@ public function storeBuyer(Request $request)
         $contract = $this->createBuyerContract($tenant->id, $validatedData);
 
         // Step 7: Create Payment for Buyer (only if type is buyer)
-        if ($tenant->type === 'buyer') {
+        if ($tenant->tenant_type === 'buyer') {
             $this->createBuyerPayment($tenant->id, $validatedData);
         }
 
         // Step 8: Store Document files and detect format
-        foreach ($request->file('file') as $index => $file) {
-            $documentPath = $this->storeDocumentFile($file, $tenant->id);
-            $documentFormat = $this->detectDocumentFormat($file);
+            // Step 3: Iterate over each file and corresponding document type
+    if ($request->has('documents')) {
+        foreach ($request->documents as $document) {
+            if (isset($document['file']) && isset($document['document_type'])) {
+                // Store the file and retrieve the path
+                $documentPath = $this->storeDocumentFile($document['file'], $tenant->id);
+
+                // Detect the format for each file
+                $documentFormat = $this->detectDocumentFormat($document['file']);
 
             // Create a new Document record for each file
             Document::create([
                 'documentable_id' => $tenant->id,
                 'documentable_type' => Tenant::class,
-                'document_type' => $request->input('document_type')[$index], // Get the corresponding document type
+                'document_type' => $document['document_type'],//Get the corresponding document type
                 'document_format' => $documentFormat,
                 'date' => $validatedData['date'],
                 'file_path' => $documentPath,
             ]);
-        }
+    
+            }
+    }
+}
 
         DB::commit();
 
