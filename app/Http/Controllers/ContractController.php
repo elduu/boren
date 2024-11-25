@@ -240,4 +240,47 @@ class ContractController extends Controller
         ], 500);
     }
 }
+
+public function filterByType(Request $request)
+{
+    try {
+        // Validate request data
+        $validated = $request->validate([
+            'type' => 'required|string|in:rental,purchased' // Add your contract types
+        ], [
+            'type.required' => 'The contract type is required.',
+            'type.string' => 'The contract type must be a valid string.',
+            'type.in' => 'The contract type must be one of the following: lease, purchase, service, rent.'
+        ]);
+
+        // Fetch contracts of the specified type
+        $contracts = Contract::where('type', $validated['type'])->get();
+
+        // Return results
+        if ($contracts->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No contracts found for the specified type.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $contracts
+        ], 200);
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        // Return validation errors
+        return response()->json([
+            'success' => false,
+            'errors' => $e->errors()
+        ], 422);
+    } catch (\Exception $e) {
+        // Handle general exceptions
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred while filtering contracts: ' . $e->getMessage()
+        ], 500);
+    }
 }
+}
+

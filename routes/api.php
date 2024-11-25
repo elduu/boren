@@ -111,7 +111,7 @@ Route::middleware(['permission:manage contracts'])->group(function () {
     Route::post('contracts/{id}/status', [ContractController::class, 'updateStatus']);
 });
 
-
+Route::post('/contractsfilter', [ContractController::class, 'filterByType']);
 Route::get('contracts', [ContractController::class, 'index']);
 Route::get('tenantcontracts/{tenantId}', [ContractController::class, 'getTenantContracts']);  // List all contracts
 Route::get('contracts/{id}', [ContractController::class, 'show']);  // View contract

@@ -307,7 +307,7 @@ public function storeBuyer(Request $request)
                 'documentable_type' => Tenant::class,
                 'document_type' => $document['document_type'],//Get the corresponding document type
                 'document_format' => $documentFormat,
-                'date' => $validatedData['date'],
+               // 'date' => $validatedData['date'],
                 'file_path' => $documentPath,
             ]);
     
