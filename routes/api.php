@@ -34,6 +34,7 @@ Route::post('tenants', [TenantController::class, 'store']);
 Route::post('login', [AuthController::class, 'login']);
 Route::post('logout', [AuthController::class, 'logout']);
 
+
 Route::middleware(['jwt.auth'])->group(function () {
     Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::post('register', [AuthController::class, 'register']);
@@ -42,10 +43,11 @@ Route::middleware(['jwt.auth'])->group(function () {
         Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
         Route::post('reset-password', [AuthController::class, 'resetPassword']);
         Route::get('users', [AuthController::class, 'listAllUsers']);
-        
+
+
     });
     Route::middleware(['permission:manage categories'])->group(function () {
-    
+
 Route::post('categories', [CategoryController::class, 'store']); // Create a new category
 
 Route::post('categories/{id}', [CategoryController::class, 'update']); // Update a category by ID
@@ -53,7 +55,7 @@ Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
 
 });
 // Delete a category by ID
-Route::get('categories/{id}', [CategoryController::class, 'show']); 
+Route::get('categories/{id}', [CategoryController::class, 'show']);
 Route::get('categories', [CategoryController::class, 'index']); // List all categories
 Route::get('category_search/{name}', [CategoryController::class, 'search']);
 Route::patch('categories_restore/{id}', [CategoryController::class, 'restore']);
@@ -72,7 +74,7 @@ Route::middleware(['permission:manage buildings'])->group(function () {
 Route::get('buildings', [BuildingController::class, 'index']);
 Route::get('buildings/{id}', [BuildingController::class, 'show']);
 Route::get('buildings_trashed', [BuildingController::class, 'trashed']);
-Route::get('building_search', [BuildingController::class, 'search']); // Get all soft-deleted buildings 
+Route::get('building_search', [BuildingController::class, 'search']); // Get all soft-deleted buildings
 
 
 Route::middleware(['permission:manage floors'])->group(function () {
