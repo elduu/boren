@@ -53,7 +53,7 @@ class TenantController extends Controller
                 ['tenant_number' => uniqid('TEN-')]
             ));
     
-            // Step 5: Create a Contract for the Tenant
+            // Step 5: Create the Contract for the Tenant
             $contract = $this->createContract($tenant->id, $validatedData);
     
             // Step 6: Create Payment for Tenant (only if type is tenant)
@@ -62,45 +62,66 @@ class TenantController extends Controller
                 $paymentfortenant = $this->createTenantPayment($tenant->id, $validatedData);
                 Log::info('Created Payment for Tenant:', ['paymentfortenant' => $paymentfortenant]);
             }
+            $paymentforbuyer = null;
     
             // Step 7: Store Document files and detect format
             if ($request->has('documents')) {
                 foreach ($request->documents as $document) {
                     if (isset($document['file']) && isset($document['document_type'])) {
-                        // Store the file and retrieve the path
-                        $documentPath = $this->storeDocumentFile($document['file'], $tenant->id);
+                        try {
+                            // Assign foreign keys based on document type
+                            $contractid = null;
+                            $paymentid = null;
     
-                        // Detect the format for each file
-                        $documentFormat = $this->detectDocumentFormat($document['file']);
-    
-                        // Initialize foreign keys
-                        $foreignKeys = [
-                            'contract_id' => null,
-                            'payment_for_tenant_id' => null,
-                            'payment_for_buyer_id' => null,
-                        ];
-    
-                        // Assign foreign keys based on document type
-                        if ($document['document_type'] === 'payment_receipt') {
-                            if ($tenant->tenant_type === 'tenant' && $paymentfortenant) {
-                                $foreignKeys['payment_for_tenant_id'] = $paymentfortenant->id;
-                            } elseif ($tenant->tenant_type === 'buyer') {
-                                $foreignKeys['payment_for_buyer_id'] = $tenant->id;
+                            if ($document['document_type'] === 'payment_receipt') {
+                                if ($tenant->tenant_type === 'tenant' && isset($paymentfortenant)) {
+                                    $paymentid = $paymentfortenant->id;
+                                } elseif ($tenant->tenant_type === 'buyer') {
+                                    $paymentid = $paymentforbuyer;
+                                }
                             }
-                        } elseif ($document['document_type'] === 'lease_agreement') {
-                            $foreignKeys['contract_id'] = $contract->id;
+    
+                            if ($document['document_type'] === 'lease_agreement' && isset($contract)) {
+                                // For lease agreements, associate with the contract
+                                $contractid = $contract->id;
+                            }
+    
+                            // Log assigned values for debugging
+                            Log::info('Assigned IDs:', [
+                                'contract_id' => $contractid,
+                                'payment_for_tenant_id' => $paymentid,
+                                'document_type' => $document['document_type']
+                            ]);
+    
+                            // Store the document file
+                            $documentPath = $this->storeDocumentFile($document['file'], $tenant->id);
+    
+                            // Detect the format for each file
+                            $documentFormat = $this->detectDocumentFormat($document['file']);
+    
+                            // Create a new Document record for each file
+                            $documentRecord = Document::create([
+                                'documentable_id' => $tenant->id,
+                                'documentable_type' => Tenant::class,
+                                'document_type' => $document['document_type'],
+                                'document_format' => $documentFormat,
+                                'file_path' => $documentPath,
+                                'contract_id' => $contractid, // Set the contract_id
+                                'payment_for_tenant_id' => $paymentid, // Set payment id for tenant
+                            ]);
+    
+                            Log::info('Document created successfully:', $documentRecord->toArray());
+                        } catch (\Exception $e) {
+                            // Log the error message for debugging
+                            Log::error('Error while creating document: ' . $e->getMessage(), [
+                                'trace' => $e->getTraceAsString(),
+                                'tenant_id' => $tenant->id ?? null,
+                                'document_type' => $document['document_type'] ?? null,
+                            ]);
+    
+                            // Optionally, rethrow the exception if needed
+                            throw $e;
                         }
-    
-                        Log::info('Document Foreign Keys:', $foreignKeys);
-    
-                        // Create a new Document record for each file
-                        Document::create(array_merge($foreignKeys, [
-                            'documentable_id' => $tenant->id,
-                            'documentable_type' => Tenant::class,
-                            'document_type' => $document['document_type'],
-                            'document_format' => $documentFormat,
-                            'file_path' => $documentPath,
-                        ]));
                     }
                 }
             }
@@ -189,7 +210,9 @@ private function createContract($tenantId, $validatedData)
             'due_date' => $dueDate, // Add calculated due date
         ]);
 
-        return $contract;  // Return the created contract
+        Log::info('Contract Created', ['contract_id' => $contract->id]); return $contract;
+
+         // Return the created contract
 
     } catch (\Exception $e) {
         // Handle exception and return an error message
@@ -211,6 +234,8 @@ private function createTenantPayment($tenantId, $validatedData)
         'start_date' => $validatedData['start_date'],
         'due_date' => $validatedData['due_date'],
     ]);
+
+    Log::info('Payment Created', ['payment_id' => $paymentfortenant->id]); return $payment;
 }
 
 /**

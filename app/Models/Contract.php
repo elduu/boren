@@ -21,9 +21,9 @@ class Contract extends Model
 
     // Define the relationship to the Tenant model
     public function tenant()
-    {
-        return $this->belongsTo(Tenant::class);
-    }
+{
+    return $this->belongsTo(Tenant::class);
+}
 
     // Define the relationship to the Building model
 
@@ -31,10 +31,9 @@ class Contract extends Model
     public function getDueDateAttribute($value)
     {
         return \Carbon\Carbon::parse($value)->format('Y-m-d');
-    }
-    public function documents()
+    }   public function documents()
     {
-        return $this->morphMany(Document::class, 'documentable');
+        return $this->hasMany(Document::class);
     }
 }
 
