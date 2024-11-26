@@ -11,7 +11,11 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\Validator;
 use Spatie\Permission\Models\Permission;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+
 class AuthController extends Controller
 {
     public function register(Request $request)
@@ -195,5 +199,48 @@ public function listAllUsers()
     }
 
     return response()->json(User::all(), 200);
+}
+
+public function update(Request $request, $id)
+{
+    DB::beginTransaction();
+
+    try {
+        // Find the user record by ID
+        $user = User::findOrFail($id);
+
+        // Validate the request data
+        $validatedData = $request->validate([
+            'name' => 'string|max:255',
+            'email' => 'string|email|max:255|unique:users,email,' . $id,
+            'phone' => 'string|max:20',
+            // Add any other fields you want to allow for update here
+        ]);
+
+        // Update only the fields provided in the request
+        $user->fill($validatedData);
+
+        // Save the changes to the database
+        $user->save();
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User updated successfully.',
+            'data' => $user
+        ], 200);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+
+        // Log error for debugging
+        Log::error('Error updating user: ' . $e->getMessage());
+
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred while updating the user.',
+        ], 500);
+    }
 }
 }

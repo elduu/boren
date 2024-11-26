@@ -38,6 +38,7 @@ Route::post('logout', [AuthController::class, 'logout']);
 Route::middleware(['jwt.auth'])->group(function () {
     Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::post('register', [AuthController::class, 'register']);
+        Route::post('edituser/{id}', [AuthController::class, 'update']);
         Route::post('filter-by-phone', [AuthController::class, 'filterByPhone']);
         Route::post('users/{id}/status', [AuthController::class, 'updateStatus']);
         Route::post('forgot-password', [AuthController::class, 'forgotPassword']);

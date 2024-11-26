@@ -236,7 +236,8 @@ public function listContractsInFloor(Request $request)
 
         return response()->json([
             'success' => true,
-            'contracts' => $contracts
+            'name'=> $tenant->name,
+            'contracts' => $contracts,
         ]);
     } catch (\Exception $e) {
         DB::rollBack();
