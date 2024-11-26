@@ -15,6 +15,8 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Validator; 
+use Illuminate\Support\Facades\Log;
+
 
 
 class TenantController extends Controller
@@ -29,82 +31,100 @@ class TenantController extends Controller
         }
     }
 
-public function store(Request $request)
-{   DB::beginTransaction();
-
-    try {
-        // Step 1: Validate the request data
-        $validatedData = $this->validateTenantData($request);
-
-        // Step 2: Find Floor to get building_id and category_id
-        $floor = Floor::findOrFail($validatedData['floor_id']);
-        $validatedData['building_id'] = $floor->building_id;
-        $validatedData['category_id'] = $floor->category_id;
-
-        // Step 3: Calculate due date (one month from expiring_date)
-        $validatedData['due_date'] = date('Y-m-d', strtotime($validatedData['expiring_date'] . ' +1 month'));
-
-        // Step 4: Create the Tenant record
-        $tenant = Tenant::create(array_merge(
-            $validatedData,
-            ['tenant_number' => uniqid('TEN-')
-            ]
-        ));
-
-        // Step 5: Create a Contract for the Tenant
-        $contract = $this->createContract($tenant->id, $validatedData);
-
-        // Step 6: Create Payment for Tenant (only if type is tenant)
-        if ($tenant->type === 'tenant') {
-            $this->createTenantPayment($tenant->id, $validatedData);
-        }
-
-        // Step 7: Store Document file and detect format
-       
-    // Step 3: Iterate over each file and corresponding document type
-    if ($request->has('documents')) {
-        foreach ($request->documents as $document) {
-            if (isset($document['file']) && isset($document['document_type'])) {
-                // Store the file and retrieve the path
-                $documentPath = $this->storeDocumentFile($document['file'], $tenant->id);
-
-                // Detect the format for each file
-                $documentFormat = $this->detectDocumentFormat($document['file']);
-
-      
-        // Create a new Document record for each file
-        Document::create([
-            'documentable_id' => $tenant->id,
-            'documentable_type' => Tenant::class,
-            'document_type' => $document['document_type'], // Get the corresponding document type
-            'document_format' => $documentFormat,
-          //  'date' => $validatedData['date'],
-            'file_path' => $documentPath,
-        ]);
-    }
-}
-}
-        DB::commit();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Tenant, contract, payment, and document created successfully.',
-            'data' => $tenant,
-        ], 201);
-
-      
+    public function store(Request $request)
+    {
+        DB::beginTransaction();
     
-        // Return response with success message
-      
-
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return response()->json([
-            'success' => false,
-            'message' => 'An unexpected error occurred: ' . $e->getMessage(),
-        ], 500);
+        try {
+            // Step 1: Validate the request data
+            $validatedData = $this->validateTenantData($request);
+    
+            // Step 2: Find Floor to get building_id and category_id
+            $floor = Floor::findOrFail($validatedData['floor_id']);
+            $validatedData['building_id'] = $floor->building_id;
+            $validatedData['category_id'] = $floor->category_id;
+    
+            // Step 3: Calculate due date (one month from expiring_date)
+            $validatedData['due_date'] = date('Y-m-d', strtotime($validatedData['expiring_date'] . ' +1 month'));
+    
+            // Step 4: Create the Tenant record
+            $tenant = Tenant::create(array_merge(
+                $validatedData,
+                ['tenant_number' => uniqid('TEN-')]
+            ));
+    
+            // Step 5: Create a Contract for the Tenant
+            $contract = $this->createContract($tenant->id, $validatedData);
+    
+            // Step 6: Create Payment for Tenant (only if type is tenant)
+            $paymentfortenant = null;
+            if ($tenant->tenant_type === 'tenant') {
+                $paymentfortenant = $this->createTenantPayment($tenant->id, $validatedData);
+                Log::info('Created Payment for Tenant:', ['paymentfortenant' => $paymentfortenant]);
+            }
+    
+            // Step 7: Store Document files and detect format
+            if ($request->has('documents')) {
+                foreach ($request->documents as $document) {
+                    if (isset($document['file']) && isset($document['document_type'])) {
+                        // Store the file and retrieve the path
+                        $documentPath = $this->storeDocumentFile($document['file'], $tenant->id);
+    
+                        // Detect the format for each file
+                        $documentFormat = $this->detectDocumentFormat($document['file']);
+    
+                        // Initialize foreign keys
+                        $foreignKeys = [
+                            'contract_id' => null,
+                            'payment_for_tenant_id' => null,
+                            'payment_for_buyer_id' => null,
+                        ];
+    
+                        // Assign foreign keys based on document type
+                        if ($document['document_type'] === 'payment_receipt') {
+                            if ($tenant->tenant_type === 'tenant' && $paymentfortenant) {
+                                $foreignKeys['payment_for_tenant_id'] = $paymentfortenant->id;
+                            } elseif ($tenant->tenant_type === 'buyer') {
+                                $foreignKeys['payment_for_buyer_id'] = $tenant->id;
+                            }
+                        } elseif ($document['document_type'] === 'lease_agreement') {
+                            $foreignKeys['contract_id'] = $contract->id;
+                        }
+    
+                        Log::info('Document Foreign Keys:', $foreignKeys);
+    
+                        // Create a new Document record for each file
+                        Document::create(array_merge($foreignKeys, [
+                            'documentable_id' => $tenant->id,
+                            'documentable_type' => Tenant::class,
+                            'document_type' => $document['document_type'],
+                            'document_format' => $documentFormat,
+                            'file_path' => $documentPath,
+                        ]));
+                    }
+                }
+            }
+    
+            DB::commit();
+    
+            return response()->json([
+                'success' => true,
+                'message' => 'Tenant, contract, payment, and document created successfully.',
+                'data' => $tenant,
+                'contract_id' => $contract->id,
+            ], 201);
+    
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('An error occurred:', ['error' => $e->getMessage()]);
+            return response()->json([
+                'success' => false,
+                'message' => 'An unexpected error occurred: ' . $e->getMessage(),
+            ], 500);
+        }
     }
-}
+    
+    
 
 private function storeDocumentFile(UploadedFile $file, $tenantId)
 {
@@ -300,16 +320,29 @@ public function storeBuyer(Request $request)
 
                 // Detect the format for each file
                 $documentFormat = $this->detectDocumentFormat($document['file']);
+                $foreignKeys = [
+                    'contract_id' => null,
+                    'payment_for_tenant_id' => $tenant->tenant_type === 'tenant' ? $tenant->id : null,
+                    'payment_for_buyer_id' => $tenant->tenant_type === 'buyer' ? $tenant->id : null,
+                ];
+            if ($document['document_type'] === 'payment_receipt') {
+                    if ($tenant->tenant_type === 'tenant') {
+                        $foreignKeys['payment_for_tenant_id'] = $tenant->id;
+                    } elseif ($tenant->tenant_type === 'buyer') {
+                        $foreignKeys['payment_for_buyer_id'] = $tenant->id;
+                    }
+                } elseif ($document['document_type'] === 'lease_agreement') {
+                    $foreignKeys['contract_id'] = $contract->id;
+                }
 
-            // Create a new Document record for each file
-            Document::create([
-                'documentable_id' => $tenant->id,
-                'documentable_type' => Tenant::class,
-                'document_type' => $document['document_type'],//Get the corresponding document type
-                'document_format' => $documentFormat,
-               // 'date' => $validatedData['date'],
-                'file_path' => $documentPath,
-            ]);
+                // Create a new Document record for each file
+                Document::create(array_merge($foreignKeys, [
+                    'documentable_id' => $tenant->id,
+                    'documentable_type' => Tenant::class,
+                    'document_type' => $document['document_type'],
+                    'document_format' => $documentFormat,
+                    'file_path' => $documentPath,
+                ]));
     
             }
     }
@@ -405,10 +438,24 @@ private function createBuyerPayment($tenantId, $validatedData)
                 'building',
                 'category',
                 'floor',
-                'contracts',     // Assuming a relationship is defined in Tenant model for contracts
-                'payments',      // Assuming a relationship is defined in Tenant model for payments
-                'documents'      // Assuming a relationship is defined in Tenant model for documents
+                'contracts' => function ($query) {
+                    $query->orderBy('created_at', 'desc'); // Order contracts by created_at descending
+                },
+               
+                'documents' => function ($query) {
+                    $query->orderBy('created_at', 'desc'); // Order documents by created_at descending
+                }   // Assuming a relationship is defined in Tenant model for documents
             ])->findOrFail($id);
+              // Conditionally load payments based on tenant type
+        if ($tenant->tenant_type === 'tenant') {
+            $tenant->load(['paymentsForTenant' => function ($query) {
+                $query->orderBy('created_at', 'desc'); // Order payments by created_at descending
+            }]);
+        } elseif ($tenant->tenant_type === 'buyer') {
+            $tenant->load(['paymentsForBuyer' => function ($query) {
+                $query->orderBy('created_at', 'desc'); // Order payments by created_at descending
+            }]);
+        }
     
             return response()->json([
                 'success' => true,

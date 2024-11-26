@@ -128,15 +128,15 @@ Route::post('/payments/{id}/restore', [PaymentForBuyerController::class, 'restor
 Route::put('/payments/{id}/renew', [PaymentForBuyerController::class, 'renew']);
 });
 
-Route::get('payments', [PaymentForTenantController::class, 'index'])->name('payments.index');
-Route::get('payments/{id}', [PaymentForTenantController::class, 'show'])->name('payments.show');
+Route::get('tenantpayments', [PaymentForTenantController::class, 'index'])->name('payments.index');
+Route::get('tenant_payments/{id}', [PaymentForTenantController::class, 'show'])->name('payments.show');
 
 Route::middleware(['permission:manage payments'])->group(function () {
-Route::post('payments', [PaymentForTenantController::class, 'store'])->name('payments.store');
-Route::put('payments/{id}', [PaymentForTenantController::class, 'update'])->name('payments.update');
-Route::delete('payments/{id}', [PaymentForTenantController::class, 'destroy'])->name('payments.destroy');
-Route::patch('payments/restore/{id}', [PaymentForTenantController::class, 'restore'])->name('payments.restore');
-Route::get('payments/tenant/{tenantId}', [PaymentForTenantController::class, 'searchByTenantId'])->name('payments.searchByTenantId');
+Route::post('tenantpayments', [PaymentForTenantController::class, 'store'])->name('payments.store');
+Route::post('tenantpayments/{id}', [PaymentForTenantController::class, 'update'])->name('payments.update');
+Route::delete('tenantpayments/{id}', [PaymentForTenantController::class, 'destroy'])->name('payments.destroy');
+Route::patch('tenantpayments_restore/{id}', [PaymentForTenantController::class, 'restore'])->name('payments.restore');
+Route::get('payments_tenant/{tenantId}', [PaymentForTenantController::class, 'searchByTenantId'])->name('payments.searchByTenantId');
 });
 
 Route::middleware(['permission:manage documents'])->group(function () {

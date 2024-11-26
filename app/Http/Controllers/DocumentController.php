@@ -10,7 +10,7 @@ class DocumentController extends Controller
     public function listAllDocuments()
     {
         try {
-            $documents = Document::all();
+            $documents = Document::all()->orderBy('created_at', 'desc')->get();
 
             return response()->json([
                 'success' => true,
@@ -61,8 +61,7 @@ class DocumentController extends Controller
         try {
             $documents = Document::where('documentable_id', $tenantId)
                                  ->where('documentable_type', 'App\Models\Tenant') // Adjust based on the model namespace
-                                 ->get();
-
+                                 ->orderBy('created_at', 'desc')->get();
             if ($documents->isEmpty()) {
                 return response()->json([
                     'success' => false,

@@ -53,9 +53,14 @@ class Tenant extends Model
         return \Carbon\Carbon::parse($value)->format('Y-m-d');
     }
   
-    public function payments()
+    public function paymentsForTenant()
     {
-        return $this->hasMany(PaymentForBuyer::class); // Adjust as per your actual relationship
+        return $this->hasMany(PaymentForTenant::class, 'tenant_id');
+    }
+    
+    public function paymentsForBuyer()
+    {
+        return $this->hasMany(PaymentForBuyer::class, 'tenant_id');
     }
 
    

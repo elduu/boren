@@ -28,7 +28,7 @@ class ContractController extends Controller
     {
        
         try {
-            $contracts = Contract::all();
+            $contracts = Contract::all()->orderBy('created_at', 'desc')->get();;
 
             if ($contracts->isEmpty()) {
                 return response()->json(['success' => false, 'message' => 'No contracts found.'], 404);
@@ -204,7 +204,7 @@ class ContractController extends Controller
             // Get contracts for the given tenant
             $tenant = Tenant::findOrFail($tenantId);
 
-            $contracts = $tenant->contracts;
+            $contracts = $tenant->contracts()->orderBy('created_at', 'desc')->get();;
 
             return response()->json(['success' => true, 'data' => $contracts], 200);
         } catch (\Exception $e) {
