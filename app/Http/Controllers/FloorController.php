@@ -7,6 +7,13 @@ use App\Models\Floor;
 use App\Models\Building;
 
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use App\Models\PaymentForBuyer;
+use App\Models\PaymentForTenant;
+use App\Models\Tenant;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
+use App\Models\Document;
+use App\Models\Contract;
 
 class FloorController extends Controller
 {
@@ -110,6 +117,133 @@ class FloorController extends Controller
         return response()->json([
             'success' => false,
             'message' => 'An error occurred while retrieving tenants.',
+        ], 500);
+    }
+
+}
+
+
+public function listPaymentsInFloor(Request $request)
+{
+    DB::beginTransaction();
+    try {
+        // Validate the floor ID
+        $validated = $request->validate([
+            'floor_id' => 'required|exists:floors,id',
+        ]);
+
+        // Get the floor data
+        $floor = Floor::findOrFail($validated['floor_id']);
+
+        // Get the tenants in the floor (tenant_type and payment relationships should be defined)
+        $tenants = Tenant::where('floor_id', $floor->id)->get();
+
+        $tenantPayments = [];
+        $buyerPayments = [];
+
+        foreach ($tenants as $tenant) {
+            // Check tenant type and assign payment
+            if ($tenant->tenant_type === 'tenant') {
+                $paymentfortenant = PaymentForTenant::where('tenant_id', $tenant->id)->get();
+                $tenantPayments = array_merge($tenantPayments, $paymentfortenant->toArray());
+            } elseif ($tenant->tenant_type === 'buyer') {
+                $paymentforbuyer = PaymentForBuyer::where('buyer_id', $tenant->id)->get();
+                $buyerPayments = array_merge($buyerPayments, $paymentforbuyer->toArray());
+            }
+        }
+
+        DB::commit();
+
+        // Return the payments data
+        return response()->json([
+            'success' => true,
+            'tenant_payments' => $tenantPayments,
+            'buyer_payments' => $buyerPayments
+        ]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Error retrieving payments for floor:', ['error' => $e->getMessage()]);
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred while fetching payments.'
+        ], 500);
+    }
+}
+public function listDocumentsInFloor(Request $request)
+{
+    DB::beginTransaction();
+    try {
+        // Validate the floor ID
+        $validated = $request->validate([
+            'floor_id' => 'required|exists:floors,id',
+        ]);
+
+        // Get the floor data
+        $floor = Floor::findOrFail($validated['floor_id']);
+
+        // Get all tenants in the floor
+        $tenants = Tenant::where('floor_id', $floor->id)->get();
+
+        $documents = [];
+
+        foreach ($tenants as $tenant) {
+            // Get documents for each tenant
+            $tenantDocuments = Document::where('documentable_type', Tenant::class)
+                                        ->where('documentable_id', $tenant->id)
+                                        ->get();
+            $documents = array_merge($documents, $tenantDocuments->toArray());
+        }
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'documents' => $documents
+        ]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Error retrieving documents for floor:', ['error' => $e->getMessage()]);
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred while fetching documents.'
+        ], 500);
+    }
+}
+public function listContractsInFloor(Request $request)
+{
+    DB::beginTransaction();
+    try {
+        // Validate the floor ID
+        $validated = $request->validate([
+            'floor_id' => 'required|exists:floors,id',
+        ]);
+
+        // Get the floor data
+        $floor = Floor::findOrFail($validated['floor_id']);
+
+        // Get all tenants in the floor
+        $tenants = Tenant::where('floor_id', $floor->id)->get();
+
+        $contracts = [];
+
+        foreach ($tenants as $tenant) {
+            // Get contracts for each tenant (Ensure Tenant has a 'contracts' relationship defined)
+            $tenantContracts = Contract::where('tenant_id', $tenant->id)->get();
+            $contracts = array_merge($contracts, $tenantContracts->toArray());
+        }
+
+        DB::commit();
+
+        return response()->json([
+            'success' => true,
+            'contracts' => $contracts
+        ]);
+    } catch (\Exception $e) {
+        DB::rollBack();
+        Log::error('Error retrieving contracts for floor:', ['error' => $e->getMessage()]);
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred while fetching contracts.'
         ], 500);
     }
 }

@@ -23,8 +23,31 @@ class Floor extends Model
         {
             return $this->belongsTo(Category::class);
         }
-        public function tenants()
+
+public function tenants()
 {
     return $this->hasMany(Tenant::class);
+}
+
+// Define the relationship between Floor and Contract (through Tenant)
+public function contracts()
+{
+    return $this->hasManyThrough(Contract::class, Tenant::class);
+}
+
+// Define the relationship between Floor and Payment (through Tenant)
+public function paymentfortenants()
+{
+    return $this->hasManyThrough(PaymentForTenant::class, Tenant::class);
+}
+
+public function paymentforbuyers()
+{
+    return $this->hasManyThrough(PaymentForBuyer::class, Tenant::class);
+}
+
+public function documents()
+{
+    return $this->hasManyThrough(Document::class, Tenant::class);
 }
     }

@@ -23,5 +23,9 @@ class Document extends Model
 {
     return $this->belongsTo(Tenant::class, 'documentable_id');
 }
+public function floor()
+{
+    return $this->belongsTo(Floor::class); // Assuming each contract belongs to a floor
+}
 
 }

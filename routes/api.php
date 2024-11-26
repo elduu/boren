@@ -80,7 +80,9 @@ Route::middleware(['permission:manage floors'])->group(function () {
     Route::delete('floors/{id}', [FloorController::class, 'destroy']);
     Route::patch('floors_restore/{id}', [FloorController::class, 'restore']);
 });
-
+Route::post('/floorpayments', [FloorController::class, 'listPaymentsInFloor']);
+Route::post('/floordocuments', [FloorController::class, 'listDocumentsInFloor']);
+Route::post('/floorcontracts', [FloorController::class, 'listContractsInFloor']);
 Route::get('floors', [FloorController::class, 'index']);
 Route::get('floors/search', [FloorController::class, 'search']);
 Route::get('floors/{floorId}/tenants', [FloorController::class, 'listTenantsInFloor']);

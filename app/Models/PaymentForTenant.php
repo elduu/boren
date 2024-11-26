@@ -29,4 +29,8 @@ class PaymentForTenant extends Model
     {
         return $this->hasMany(Document::class);
     }
+    public function floor()
+{
+    return $this->belongsTo(Floor::class); // Assuming each contract belongs to a floor
+}
 }
