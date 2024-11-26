@@ -79,7 +79,7 @@ class PaymentForTenantController extends Controller
                             Document::create([
                                 'documentable_id' => $validatedData['tenant_id'],
                                 'documentable_type' => Tenant::class,
-                               'document_type' => $documentType,
+                                'document_type' => $documentType,
                                 'document_format' => $documentFormat,
                                 'file_path' => $documentPath,
                             ]);

@@ -157,6 +157,7 @@ public function listPaymentsInFloor(Request $request)
         // Return the payments data
         return response()->json([
             'success' => true,
+            'name'=> $tenant->name,
             'tenant_payments' => $tenantPayments,
             'buyer_payments' => $buyerPayments
         ]);
@@ -198,6 +199,7 @@ public function listDocumentsInFloor(Request $request)
 
         return response()->json([
             'success' => true,
+            'name'=> $tenant->name,
             'documents' => $documents
         ]);
     } catch (\Exception $e) {
