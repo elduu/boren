@@ -12,6 +12,7 @@ use Exception;
 use Carbon\Carbon;
 
 use App\Models\Document;
+use Illuminate\Support\Facades\Storage;
 use App\Models\Tenant;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Validator;
@@ -181,7 +182,7 @@ class PaymentForBuyerController extends Controller
          // Store the file and get the path
          $path = $file->store($directory, 'public');
      
-         return $path;
+         return Storage::url($path);
      }
      private function detectDocumentFormat(UploadedFile $file)
 {

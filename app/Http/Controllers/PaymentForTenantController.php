@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use App\Models\Document;
 use App\Models\Tenant;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 class PaymentForTenantController extends Controller
 {  /**
@@ -163,11 +164,10 @@ class PaymentForTenantController extends Controller
             // Define the directory path where documents will be stored
             $directory = "documents/tenants/{$tenantId}";
         
-            // Store the file in the public disk
+            // Store the file and get the path
             $path = $file->store($directory, 'public');
         
-            // Return the path with the 'public/' prefix
-            return 'public/' . $path;
+            return Storage::url($path);
         }
         private function detectDocumentFormat(UploadedFile $file)
 {

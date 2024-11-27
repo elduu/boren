@@ -132,7 +132,9 @@ class TenantController extends Controller
     private function storeDocumentFile(UploadedFile $file, $tenantId)
     {
         $directory = "documents/tenants/{$tenantId}";
-        return $file->store($directory, 'public');
+        
+        $path= $file->store($directory, 'public');
+        return Storage::url($path);
     }
     
     private function validateTenantData(Request $request)

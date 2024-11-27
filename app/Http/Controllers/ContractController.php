@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\UploadedFile;
 use App\Models\Document;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 class ContractController extends Controller
 {
     public function show($id)
@@ -108,7 +109,7 @@ class ContractController extends Controller
         // Store the file and get the path
         $path = $file->store($directory, 'public');
     
-        return $path;
+        return Storage::url($path);
     }
     private function detectDocumentFormat(UploadedFile $file)
 {
