@@ -16,18 +16,44 @@ class PaymentForTenantController extends Controller
 {  /**
          * List all payments
          */
-        public function index()
-{
-    try {
-        // Fetch all payments with their associated tenants and documents
-        $payments = PaymentForTenant::with('tenant', 'documents')
-            ->get();
+        public function index(Request $request)
+        {   try {
+        // Validation for floor_id
+        $validator = Validator::make($request->all(), [
+            'floor_id' => 'nullable|integer|exists:floors,id',
+        ], [
+            'floor_id.integer' => 'The floor ID must be an integer.',
+            'floor_id.exists' => 'The provided floor ID does not exist.',
+        ]);
+
+        // Return validation errors if any
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        // Fetch floor_id from the request
+        $floorId = $request->input('floor_id');
+
+        // Fetch payments filtered by floor_id if provided
+        $paymentsQuery = PaymentForTenant::with('tenant', 'documents');
+
+        if ($floorId) {
+            // Apply filter if floor_id is provided
+            $paymentsQuery->whereHas('tenant', function ($query) use ($floorId) {
+                $query->where('floor_id', $floorId);
+            });
+        }
+
+        $payments = $paymentsQuery->get();
 
         // Map through each payment to include tenant details and documents
         $data = $payments->map(function ($payment) {
             return [
                 'payment' => $payment,
-       // Include related documents
             ];
         });
 

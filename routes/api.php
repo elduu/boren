@@ -121,7 +121,7 @@ Route::get('contracts', [ContractController::class, 'index']);
 Route::get('tenantcontracts/{tenantId}', [ContractController::class, 'getTenantContracts']);  // List all contracts
 Route::get('contracts/{id}', [ContractController::class, 'show']);  // View contract
 
-Route::get('/payments', [PaymentForBuyerController::class, 'index']);
+Route::post('/payments', [PaymentForBuyerController::class, 'index']);
 Route::get('/payments/{id}', [PaymentForBuyerController::class, 'show']);
 Route::get('/tenantpayments/{tenantId}', [PaymentForBuyerController::class, 'searchByTenantId']);
 
