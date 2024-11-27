@@ -133,7 +133,7 @@ Route::post('/payments/{id}/restore', [PaymentForBuyerController::class, 'restor
 Route::put('/payments/{id}/renew', [PaymentForBuyerController::class, 'renew']);
 });
 
-Route::get('tenantpayments', [PaymentForTenantController::class, 'index'])->name('payments.index');
+Route::post('gettenantpayments', [PaymentForTenantController::class, 'index'])->name('payments.index');
 Route::get('tenant_payments/{id}', [PaymentForTenantController::class, 'show'])->name('payments.show');
 
 Route::middleware(['permission:manage payments'])->group(function () {
