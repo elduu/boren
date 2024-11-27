@@ -20,7 +20,7 @@ class PaymentForTenantController extends Controller
         {   try {
         // Validation for floor_id
         $validator = Validator::make($request->all(), [
-            'floor_id' => 'nullable|integer|exists:floors,id',
+            'floor_id' => 'required|integer|exists:floors,id',
         ], [
             'floor_id.integer' => 'The floor ID must be an integer.',
             'floor_id.exists' => 'The provided floor ID does not exist.',
