@@ -22,57 +22,73 @@ class PaymentForBuyerController extends Controller
      * Display a listing of all payments.
      */
     public function index(Request $request)
-    {   try {
-    // Validation for floor_id
-    $validator = Validator::make($request->all(), [
-        'floor_id' => 'nullable|integer|exists:floors,id',
-    ], [
-        'floor_id.integer' => 'The floor ID must be an integer.',
-        'floor_id.exists' => 'The provided floor ID does not exist.',
-    ]);
-
-    // Return validation errors if any
-    if ($validator->fails()) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Validation failed',
-            'errors' => $validator->errors(),
-        ], 422);
+    {
+        try {
+            // Validation for floor_id
+            $validator = Validator::make($request->all(), [
+                'floor_id' => 'nullable|integer|exists:floors,id',
+            ], [
+                'floor_id.integer' => 'The floor ID must be an integer.',
+                'floor_id.exists' => 'The provided floor ID does not exist.',
+            ]);
+    
+            // Return validation errors if any
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+    
+            // Fetch floor_id from the request
+            $floorId = $request->input('floor_id');
+    
+            // Fetch payments filtered by floor_id if provided
+            $paymentsQuery = PaymentForBuyer::with(['tenant.documents']);
+    
+            if ($floorId) {
+                // Apply filter if floor_id is provided
+                $paymentsQuery->whereHas('tenant', function ($query) use ($floorId) {
+                    $query->where('floor_id', $floorId);
+                });
+            }
+    
+            $payments = $paymentsQuery->get();
+    
+            // Map through each payment to include tenant details and documents
+            $data = $payments->map(function ($payment) {
+                return [
+                    'payment_id' => $payment->id ?? null, // Assuming tenant has a floor_id
+                    'tenant_name' => $payment->tenant->name ?? 'N/A',
+                    'tenant_id' => $payment->tenant->id ?? null,
+                    'property_price' => $payment->property_price,
+                    'utility_fee' => $payment->utility_fee,
+                    'start_date' => $payment->start_date,
+                    'documents' => $payment->tenant->documents->map(function ($document) {
+                        return [
+                            'id' => $document->id,
+                            'document_type' => $document->document_type,
+                            'document_format' => $document->document_format,
+                            'file_path' => $document->file_path,
+                            'created_at' => $document->created_at,
+                            'updated_at' => $document->updated_at,
+                        ];
+                    }),
+                ];
+            });
+    
+            return response()->json([
+                'success' => true,
+                'data' => $data,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch payments: ' . $e->getMessage(),
+            ], 500);
+        }
     }
-
-    // Fetch floor_id from the request
-    $floorId = $request->input('floor_id');
-
-    // Fetch payments filtered by floor_id if provided
-    $paymentsQuery = PaymentForBuyer::with('tenant', 'documents');
-
-    if ($floorId) {
-        // Apply filter if floor_id is provided
-        $paymentsQuery->whereHas('tenant', function ($query) use ($floorId) {
-            $query->where('floor_id', $floorId);
-        });
-    }
-
-    $payments = $paymentsQuery->get();
-
-    // Map through each payment to include tenant details and documents
-    $data = $payments->map(function ($payment) {
-        return [
-            'payment' => $payment,
-        ];
-    });
-
-    return response()->json([
-        'success' => true,
-        'data' => $data,
-    ], 200);
-} catch (\Exception $e) {
-    return response()->json([
-        'success' => false,
-        'message' => 'Failed to fetch payments: ' . $e->getMessage(),
-    ], 500);
-}
-}
     /**
      * Display the specified payment by ID.
      */
@@ -117,8 +133,8 @@ class PaymentForBuyerController extends Controller
              $validatedData = $validator->validated();
      
              // Calculate due_date as one week before end_date
-             $endDate = Carbon::parse($validatedData['end_date']);
-             $validatedData['due_date'] = $endDate->subWeek()->format('Y-m-d');
+            //  $endDate = Carbon::parse($validatedData['end_date']);
+            //  $validatedData['due_date'] = $endDate->subWeek()->format('Y-m-d');
      
              // Create payment record
              $payment = PaymentForBuyer::create($validatedData);
@@ -141,7 +157,7 @@ class PaymentForBuyerController extends Controller
                              'document_type' => $documentType,
                              'document_format' => $documentFormat,
                              'file_path' => $documentPath,
-                             'payment_for_tenant_id'=>$payment->id,
+                             'payment_for_buyer_id'=>$payment->id,
                          ]);
                      }
                  }
@@ -187,31 +203,81 @@ class PaymentForBuyerController extends Controller
          return 'unknown';
  }
 }
-
-
-
     /**
      * Update the specified payment.
      */
     public function update(Request $request, $id)
     {
         try {
-            $payment = PaymentForBuyer::findOrFail($id);
-
-            $request->validate([
-                'property_price' => 'sometimes|required|numeric|min:0',
-                'utility_fee' => 'sometimes|required|numeric|min:0',
-                'start_date' => 'sometimes|required|date',
+            // Validate input data
+            $validator = Validator::make($request->all(), [
+                'tenant_id' => 'sometimes|exists:tenants,id',
+                'property_price' => 'sometimes|numeric|min:0',
+                'utility_fee' => 'sometimes|numeric|min:0',
+                'start_date' => 'sometimes|date',
+                'documents' => 'array',
+                'documents.*.file' => 'sometimes|file',
+                'documents.*.document_type' => 'sometimes|string',
             ]);
-
-            $payment->update($request->all());
-            return response()->json(['message' => 'Payment updated successfully', 'payment' => $payment]);
-        } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Payment not found'], 404);
-        } catch (ValidationException $e) {
-            return response()->json(['message' => 'Validation error', 'errors' => $e->errors()], 422);
-        } catch (Exception $e) {
-            return response()->json(['message' => 'Error updating payment', 'error' => $e->getMessage()], 500);
+    
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+    
+            // Find the payment record
+            $payment = PaymentForBuyer::find($id);
+            if (!$payment) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment record not found.',
+                ], 404);
+            }
+    
+            // Merge validated data with existing data
+            $validatedData = array_merge($payment->toArray(), $validator->validated());
+    
+            // Update the payment record
+            $payment->update([
+                'tenant_id' => $validatedData['tenant_id'] ?? $payment->tenant_id,
+                'property_price' => $validatedData['property_price'] ?? $payment->property_price,
+                'utility_fee' => $validatedData['utility_fee'] ?? $payment->utility_fee,
+                'start_date' => $validatedData['start_date'] ?? $payment->start_date,
+            ]);
+    
+            // Handle document updates
+            if ($request->has('documents')) {
+                foreach ($request->documents as $document) {
+                    if (isset($document['file'])) {
+                        // Store the new file and retrieve the path
+                        $documentPath = $this->storeDocumentFile($document['file'], $validatedData['tenant_id'] ?? $payment->tenant_id);
+    
+                        // Detect the format for the new file
+                        $documentFormat = $this->detectDocumentFormat($document['file']);
+                        $documentType = $document['document_type'] ?? 'payment_receipt';
+    
+                        // Create a new Document record
+                        Document::create([
+                            'documentable_id' => $payment->tenant_id,
+                            'documentable_type' => Tenant::class,
+                            'document_type' => $documentType,
+                            'document_format' => $documentFormat,
+                            'file_path' => $documentPath,
+                            'payment_for_buyer_id' => $payment->id,
+                        ]);
+                    }
+                }
+            }
+    
+            return response()->json(['success' => true, 'data' => $payment->fresh()], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update payment and documents: ' . $e->getMessage(),
+            ], 500);
         }
     }
 

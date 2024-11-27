@@ -179,4 +179,5 @@ public function filterFloorsInCategory(Request $request)
 }
 
 
+
 }

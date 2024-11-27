@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Floor;
 use App\Models\Building;
-
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use App\Models\PaymentForBuyer;
 use App\Models\PaymentForTenant;
@@ -247,6 +247,87 @@ public function listContractsInFloor(Request $request)
         return response()->json([
             'success' => false,
             'message' => 'An error occurred while fetching contracts.'
+        ], 500);
+    }
+}
+public function getBuildingData(Request $request)
+{
+    try {
+        // Validate the request
+        $validator = Validator::make($request->all(), [
+            'building_id' => 'required|exists:buildings,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        // Fetch the building with related data
+        $building = Building::where('id', $request->building_id)
+            ->whereHas('category', function ($query) {
+                $query->where('name', 'commercial');
+            })
+            ->with([
+                'floors' => function ($query) {
+                    $query->with([
+                        'tenants' => function ($tenantQuery) {
+                            $tenantQuery->with([
+                                'paymentsForTenant',
+                                'contracts',
+                            ]);
+                        },
+                    ]);
+                },
+            ])
+            ->first();
+
+        if (!$building) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Building not found or not in the commercial category.',
+            ], 404);
+        }
+
+        // Prepare the response data
+        $buildingData = [
+            'building_name' => $building->name,
+            'floors' => $building->floors->map(function ($floor) {
+                return [
+                    'floor_name' => $floor->name,
+                    'tenants' => $floor->tenants->map(function ($tenant) {
+                        $paymentData = $tenant->paymentsForTenant->first(); // Assuming one payment per tenant
+                        $contractData = $tenant->contract; // Single contract per tenant
+                        return [
+                            'tenant_id' => $tenant->id,
+                            'tenant_name' => $tenant->name,
+                            'tenant_phone' => $tenant->phone_number,
+                            'room_number' => $tenant->room_number,
+                            'area_m2' => $paymentData?->area_m2 ?? null,
+                            'unit_price' => $paymentData?->unit_price ?? null,
+                            'monthly_paid' => $paymentData?->monthly_paid ?? null,
+                            'utility_fee' => $paymentData?->utility_fee ?? null,
+                            'payment_made_until' => $paymentData?->payment_made_until ?? null,
+                            'signing_date' => $contractData?->signing_date ?? null,
+                            'expiring_date' => $contractData?->expiring_date ?? null,
+                            'due_date' => $contractData?->due_date ?? null,
+                        ];
+                    }),
+                ];
+            }),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $buildingData,
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to fetch building data: ' . $e->getMessage(),
         ], 500);
     }
 }

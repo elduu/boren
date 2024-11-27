@@ -91,6 +91,7 @@ Route::get('floors/search', [FloorController::class, 'search']);
 Route::get('floors/{floorId}/tenants', [FloorController::class, 'listTenantsInFloor']);
 Route::get('floorsinbuilding/{id}', [BuildingController::class, 'listFloorsInBuilding']);
 Route::get('buildings/filterFloorsInCategory', [BuildingController::class, 'filterFloorsInCategory']);
+Route::post('getdata', [FloorController::class, 'getBuildingData']);
 
 Route::prefix('tenants')->middleware(['permission:manage tenants'])->group(function () {
 
@@ -121,16 +122,16 @@ Route::post('contracts', [ContractController::class, 'index']);
 Route::get('tenantcontracts/{tenantId}', [ContractController::class, 'getTenantContracts']);  // List all contracts
 Route::get('contracts/{id}', [ContractController::class, 'show']);  // View contract
 
-Route::post('/payments', [PaymentForBuyerController::class, 'index']);
-Route::get('/payments/{id}', [PaymentForBuyerController::class, 'show']);
+Route::post('getpayments', [PaymentForBuyerController::class, 'index']);
+Route::get('payments/{id}', [PaymentForBuyerController::class, 'show']);
 Route::get('/tenantpayments/{tenantId}', [PaymentForBuyerController::class, 'searchByTenantId']);
 
 Route::middleware(['permission:manage payments'])->group(function () {
 Route::post('/payments', [PaymentForBuyerController::class, 'store']);
-Route::put('/payments/{id}', [PaymentForBuyerController::class, 'update']);
+Route::post('payments/{id}', [PaymentForBuyerController::class, 'update']);
 Route::delete('/payments/{id}', [PaymentForBuyerController::class, 'destroy']);
 Route::post('/payments/{id}/restore', [PaymentForBuyerController::class, 'restore']);
-Route::put('/payments/{id}/renew', [PaymentForBuyerController::class, 'renew']);
+Route::post('/payments/{id}/renew', [PaymentForBuyerController::class, 'renew']);
 });
 
 Route::post('gettenantpayments', [PaymentForTenantController::class, 'index'])->name('payments.index');
@@ -153,6 +154,6 @@ Route::middleware(['permission:manage documents'])->group(function () {
 Route::get('/documents', [DocumentController::class, 'listAllDocuments']);
 Route::get('/filterdocbytype', [DocumentController::class, 'filterByDocumentType']);
 Route::get('/filterdocbytenant/{tenantId}', [DocumentController::class, 'filterByTenantId']);
-
+Route::post('/getdocuments', [DocumentController::class, 'getDocumentsByFloor']);
 
 });
