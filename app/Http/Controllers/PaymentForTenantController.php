@@ -19,19 +19,16 @@ class PaymentForTenantController extends Controller
         public function index()
 {
     try {
-        // Fetch all payments
-        $payments = PaymentForTenant::all();
+        // Fetch all payments with their associated tenants and documents
+        $payments = PaymentForTenant::with('tenant', 'documents')
+            ->get();
 
         // Map through each payment to include tenant details and documents
         $data = $payments->map(function ($payment) {
-            $tenant = Tenant::find($payment->tenant_id); // Get the associated tenant
-            $documents = Document::where('payment_for_tenant_id', $payment->id)->get(); // Get related documents
-            
-            // Return formatted payment data
             return [
                 'payment' => $payment,
-                'name' => $tenant ? $tenant->name : null, // Include tenant name if tenant exists
-                'documents' => $documents,
+                'name' => $payment->tenant->name ?? null, // Include tenant name if tenant exists
+                'documents' => $payment->documents, // Include related documents
             ];
         });
 

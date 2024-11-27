@@ -7,6 +7,8 @@ use App\Models\Contract;
 use App\Models\Tenant;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\UploadedFile;
+use App\Models\Document;
 class ContractController extends Controller
 {
     public function show($id)
@@ -26,20 +28,66 @@ class ContractController extends Controller
      */
     public function index()
     {
-       
         try {
-            $contracts = Contract::all()->orderBy('created_at', 'desc')->get();;
-
+            // Fetch all contracts and include tenant names
+            $contracts = Contract::with('tenant:id,name') // Include only relevant tenant fields
+                ->orderBy('created_at', 'desc')
+                ->get();
+    
             if ($contracts->isEmpty()) {
                 return response()->json(['success' => false, 'message' => 'No contracts found.'], 404);
             }
-
-            return response()->json(['success' => true, 'data' => $contracts], 200);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to retrieve contracts.'], 500);
-        }
     
+            // Format the response to include tenant names
+            $data = $contracts->map(function ($contract) {
+                return [
+                    'id' => $contract->id,
+                    'tenant_name' => $contract->tenant->name ?? null,
+                    'type' => $contract->type,
+                    'status' => $contract->status,
+                    'signing_date' => $contract->signing_date,
+                    'expiring_date' => $contract->expiring_date,
+                    'due_date' => $contract->due_date,
+                    'created_at' => $contract->created_at,
+                    'updated_at' => $contract->updated_at,
+                ];
+            });
+    
+            return response()->json(['success' => true, 'data' => $data], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to retrieve contracts: ' . $e->getMessage()], 500);
+        }
     }
+    private function storeDocumentFile(UploadedFile $file, $tenantId)
+    {
+        // Define the directory path where documents will be stored
+        $directory = "documents/tenants/{$tenantId}";
+    
+        // Store the file and get the path
+        $path = $file->store($directory, 'public');
+    
+        return $path;
+    }
+    private function detectDocumentFormat(UploadedFile $file)
+{
+$mimeType = $file->getClientMimeType();
+
+switch ($mimeType) {
+    case 'application/pdf':
+        return 'pdf';
+    case 'application/msword':
+    case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+        return 'word';
+    case 'application/vnd.ms-excel':
+    case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+        return 'excel';
+    case 'image/jpeg':
+    case 'image/png':
+        return 'image';
+    default:
+        return 'unknown';
+}
+}
     public function store(Request $request)
     {
         // Custom validation error messages
@@ -55,31 +103,63 @@ class ContractController extends Controller
             'expiring_date.required' => 'The expiring date is required.',
             'expiring_date.date' => 'The expiring date must be a valid date.',
             'expiring_date.after' => 'The expiring date must be after the signing date.',
+            'documents.array' => 'Documents must be an array.',
+            'documents.*.file.required' => 'Each document must have a file.',
+            'documents.*.file.file' => 'Each document must be a valid file.',
+            'documents.*.document_type.string' => 'Document type must be a string.',
         ];
-
+    
         // Validate the incoming request
-        $request->validate([
+        $validatedData = $request->validate([
             'tenant_id' => 'required|exists:tenants,id',
             'type' => 'required|in:rental,purchased',
             'status' => 'required|in:active,expired',
             'signing_date' => 'required|date',
             'expiring_date' => 'required|date|after:signing_date',
+            'documents' => 'array',
+            'documents.*.file' => 'required|file',
+            'documents.*.document_type' => 'sometimes|string',
         ], $messages);
-
+    
         try {
-            $dueDate = Carbon::parse($request->expiring_date)->subMonth()->format('Y-m-d');
-
+            // Calculate due date as one month before expiring_date
+            $dueDate = Carbon::parse($validatedData['expiring_date'])->subMonth()->format('Y-m-d');
+    
+            // Create the contract
             $contract = Contract::create(array_merge(
-                $request->all(),
+                $validatedData,
                 ['due_date' => $dueDate]
             ));
-
+    
+            // Check if documents are provided
+            if ($request->has('documents')) {
+                foreach ($request->documents as $document) {
+                    if (isset($document['file'])) {
+                        // Store the file and retrieve the path
+                        $documentPath = $this->storeDocumentFile($document['file'], $validatedData['tenant_id']);
+    
+                        // Detect the format for each file
+                        $documentFormat = $this->detectDocumentFormat($document['file']);
+                        $documentType = $document['document_type'] ?? 'lease_agreement';
+    
+                        // Create a new Document record
+                        Document::create([
+                            'documentable_id' => $validatedData['tenant_id'],
+                            'documentable_type' => Tenant::class,
+                            'document_type' => $documentType,
+                            'document_format' => $documentFormat,
+                            'file_path' => $documentPath,
+                            'contract_id' => $contract->id,
+                        ]);
+                    }
+                }
+            }
+    
             return response()->json(['success' => true, 'data' => $contract], 201);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to create contract and documents: ' . $e->getMessage()], 500);
         }
     }
-
     /**
      * Update an existing contract.
      */
