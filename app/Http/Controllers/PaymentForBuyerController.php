@@ -215,9 +215,9 @@ class PaymentForBuyerController extends Controller
                 'property_price' => 'sometimes|numeric|min:0',
                 'utility_fee' => 'sometimes|numeric|min:0',
                 'start_date' => 'sometimes|date',
-                'documents' => 'array',
-                'documents.*.file' => 'sometimes|file',
-                'documents.*.document_type' => 'sometimes|string',
+                // 'documents' => 'array',
+                // 'documents.*.file' => 'sometimes|file',
+                // 'documents.*.document_type' => 'sometimes|string',
             ]);
     
             if ($validator->fails()) {
@@ -249,28 +249,28 @@ class PaymentForBuyerController extends Controller
             ]);
     
             // Handle document updates
-            if ($request->has('documents')) {
-                foreach ($request->documents as $document) {
-                    if (isset($document['file'])) {
-                        // Store the new file and retrieve the path
-                        $documentPath = $this->storeDocumentFile($document['file'], $validatedData['tenant_id'] ?? $payment->tenant_id);
+            // if ($request->has('documents')) {
+            //     foreach ($request->documents as $document) {
+            //         if (isset($document['file'])) {
+            //             // Store the new file and retrieve the path
+            //             $documentPath = $this->storeDocumentFile($document['file'], $validatedData['tenant_id'] ?? $payment->tenant_id);
     
-                        // Detect the format for the new file
-                        $documentFormat = $this->detectDocumentFormat($document['file']);
-                        $documentType = $document['document_type'] ?? 'payment_receipt';
+            //             // Detect the format for the new file
+            //             $documentFormat = $this->detectDocumentFormat($document['file']);
+            //             $documentType = $document['document_type'] ?? 'payment_receipt';
     
-                        // Create a new Document record
-                        Document::create([
-                            'documentable_id' => $payment->tenant_id,
-                            'documentable_type' => Tenant::class,
-                            'document_type' => $documentType,
-                            'document_format' => $documentFormat,
-                            'file_path' => $documentPath,
-                            'payment_for_buyer_id' => $payment->id,
-                        ]);
-                    }
-                }
-            }
+            //             // Create a new Document record
+            //             Document::create([
+            //                 'documentable_id' => $payment->tenant_id,
+            //                 'documentable_type' => Tenant::class,
+            //                 'document_type' => $documentType,
+            //                 'document_format' => $documentFormat,
+            //                 'file_path' => $documentPath,
+            //                 'payment_for_buyer_id' => $payment->id,
+            //             ]);
+            //         }
+            //     }
+            // }
     
             return response()->json(['success' => true, 'data' => $payment->fresh()], 200);
         } catch (\Exception $e) {
