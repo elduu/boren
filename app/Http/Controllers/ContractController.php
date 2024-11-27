@@ -224,8 +224,8 @@ switch ($mimeType) {
         // Validate the incoming request
         $request->validate([
             'tenant_id' => 'required|exists:tenants,id',
-            'type' => 'required|in:rental,purchased',
-            'status' => 'required|in:active,expired',
+            'type' => 'nullable|in:rental,purchased',
+            //'status' => 'required|in:active,expired',
             'signing_date' => 'required|date',
             'expiring_date' => 'required|date|after:signing_date',
         ], $messages);
