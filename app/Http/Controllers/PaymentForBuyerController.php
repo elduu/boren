@@ -54,7 +54,7 @@ class PaymentForBuyerController extends Controller
                 });
             }
     
-            $payments = $paymentsQuery->get();
+            $payments = $paymentsQuery->orderBy('created_at', 'desc')->get();
     
             // Map through each payment to include tenant details and documents
             $data = $payments->map(function ($payment) {
@@ -65,7 +65,7 @@ class PaymentForBuyerController extends Controller
                     'property_price' => $payment->property_price,
                     'utility_fee' => $payment->utility_fee,
                     'start_date' => $payment->start_date,
-                    'documents' => $payment->tenant->documents->map(function ($document) {
+                    'documents' => $payment->documents->map(function ($document) {
                         return [
                             'id' => $document->id,
                             'document_type' => $document->document_type,

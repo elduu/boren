@@ -39,7 +39,7 @@ class PaymentForTenantController extends Controller
         $floorId = $request->input('floor_id');
 
         // Fetch payments filtered by floor_id if provided
-        $paymentsQuery = PaymentForTenant::with(['tenant.documents']);
+        $paymentsQuery = PaymentForTenant::with(['tenant:id,name,floor_id', 'documents']);
     
         if ($floorId) {
             // Apply filter if floor_id is provided
@@ -48,7 +48,7 @@ class PaymentForTenantController extends Controller
             });
         }
 
-        $payments = $paymentsQuery->get();
+        $payments = $paymentsQuery->orderBy('created_at', 'desc')->get();
 
         // Map through each payment to include tenant details and documents
         $data = $payments->map(function ($payment) {
@@ -62,7 +62,7 @@ class PaymentForTenantController extends Controller
                 'utility_fee' => $payment->utility_fee,
                 'start_date' => $payment->start_date,
                 'payment_made_until' => $payment->payment_id,
-                'documents' => $payment->tenant->documents->map(function ($document) {
+                'documents' => $payment->documents->map(function ($document) {
                     return [
                         'id' => $document->id,
                         'document_type' => $document->document_type,
