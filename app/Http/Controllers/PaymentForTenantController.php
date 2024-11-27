@@ -163,10 +163,11 @@ class PaymentForTenantController extends Controller
             // Define the directory path where documents will be stored
             $directory = "documents/tenants/{$tenantId}";
         
-            // Store the file and get the path
+            // Store the file in the public disk
             $path = $file->store($directory, 'public');
         
-            return $path;
+            // Return the path with the 'public/' prefix
+            return 'public/' . $path;
         }
         private function detectDocumentFormat(UploadedFile $file)
 {

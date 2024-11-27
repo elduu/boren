@@ -135,21 +135,31 @@ public function search(Request $request)
 
 
     public function listFloorsInBuilding($buildingId)
-{
-    try {
-        $building = Building::find($buildingId);
-
-        if (!$building) {
-            return response()->json(['success' => false, 'message' => 'Building not found.'], 404);
+    {
+        try {
+            $building = Building::find($buildingId);
+    
+            if (!$building) {
+                return response()->json(['success' => false, 'message' => 'Building not found.'], 404);
+            }
+    
+            // Eager load floors with their category
+            $floors = $building->floors()->with('category')->get();
+    
+            // Format the response to include category name
+            $formattedFloors = $floors->map(function ($floor) {
+                return [
+                    'id' => $floor->id,
+                    'name' => $floor->name,
+                    'category_name' => $floor->category->name ?? null, // Safely access category name
+                ];
+            });
+    
+            return response()->json(['success' => true, 'data' => $formattedFloors], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Failed to fetch floors: ' . $e->getMessage()], 500);
         }
-
-        $floors = $building->floors; // Assuming `floors` relationship exists in Building model
-
-        return response()->json(['success' => true, 'data' => $floors], 200);
-    } catch (\Exception $e) {
-        return response()->json(['success' => false, 'message' => 'Failed to fetch floors: ' . $e->getMessage()], 500);
     }
-}
 public function filterFloorsInCategory(Request $request)
 {
     $categoryName = $request->input('name');
