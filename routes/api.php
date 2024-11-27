@@ -128,11 +128,11 @@ Route::get('payments/{id}', [PaymentForBuyerController::class, 'show']);
 Route::get('/tenantpayments/{tenantId}', [PaymentForBuyerController::class, 'searchByTenantId']);
 
 Route::middleware(['permission:manage payments'])->group(function () {
-Route::post('/payments', [PaymentForBuyerController::class, 'store']);
+Route::post('payments', [PaymentForBuyerController::class, 'store']);
 Route::post('payments/{id}', [PaymentForBuyerController::class, 'update']);
-Route::delete('/payments/{id}', [PaymentForBuyerController::class, 'destroy']);
-Route::post('/payments/{id}/restore', [PaymentForBuyerController::class, 'restore']);
-Route::post('/payments/{id}/renew', [PaymentForBuyerController::class, 'renew']);
+Route::delete('payments/{id}', [PaymentForBuyerController::class, 'destroy']);
+Route::post('payments/{id}/restore', [PaymentForBuyerController::class, 'restore']);
+Route::post('payments/{id}/renew', [PaymentForBuyerController::class, 'renew']);
 });
 
 Route::post('gettenantpayments', [PaymentForTenantController::class, 'index'])->name('payments.index');
