@@ -244,4 +244,27 @@ public function update(Request $request, $id)
         ], 500);
     }
 }
+public function refreshToken()
+{
+    try {
+        // Refresh the JWT token
+        $newToken = JWTAuth::parseToken()->refresh();
+
+        return response()->json([
+            'success' => true,
+            'token' => $newToken,
+        ], 200);
+    } catch (\Tymon\JWTAuth\Exceptions\TokenExpiredException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'The token has expired and cannot be refreshed.',
+        ], 401);
+    } catch (\Tymon\JWTAuth\Exceptions\JWTException $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Unable to refresh the token. Please log in again.',
+        ], 500);
+    }
+}
+
 }

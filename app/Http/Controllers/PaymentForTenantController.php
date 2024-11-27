@@ -190,14 +190,16 @@ class PaymentForTenantController extends Controller
 }
         
         
+
 public function update(Request $request, $id)
 {
+    // Find the payment record
     $payment = PaymentForTenant::find($id);
     if (!$payment) {
         return response()->json(['success' => false, 'message' => 'Payment not found'], 404);
     }
 
-    // Validation
+    // Validate the input fields
     $validator = $request->validate([
         'unit_price' => 'nullable|numeric|min:0',
         'monthly_paid' => 'nullable|numeric|min:0',
@@ -209,16 +211,30 @@ public function update(Request $request, $id)
     ]);
 
     try {
-        $updatedData = $request->all();
+        // Extract only the fields present in the request
+        $updatedData = $request->only([
+            'unit_price',
+            'monthly_paid',
+            'area_m2',
+            'utility_fee',
+            'start_date',
+            'end_date',
+            'payment_made_until'
+        ]);
 
-        // Check if end_date is provided and calculate due_date based on it
-        if ($request->has('end_date')) {
+        // If `end_date` is provided, calculate `due_date` based on it
+        if ($request->filled('end_date')) {
             $endDate = Carbon::parse($request->input('end_date'));
             $updatedData['due_date'] = $endDate->subWeek()->format('Y-m-d');
         }
+        else {
+            // Keep the previous `due_date`
+            $updatedData['due_date'] = $payment->due_date;
+        }
 
-        // Update payment record
-        $payment->update($updatedData);
+        // Update only the provided fields in the database
+        $payment->fill($updatedData);
+        $payment->save();
 
         return response()->json(['success' => true, 'data' => $payment], 200);
     } catch (\Exception $e) {

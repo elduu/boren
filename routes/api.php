@@ -33,6 +33,7 @@ Route::post('tenants', [TenantController::class, 'store']);
 
 Route::post('login', [AuthController::class, 'login']);
 Route::post('logout', [AuthController::class, 'logout']);
+Route::post('refresh-token', [AuthController::class, 'refreshToken']);
 
 
 Route::middleware(['jwt.auth'])->group(function () {
