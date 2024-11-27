@@ -214,6 +214,7 @@ public function update(Request $request, $id)
             'name' => 'string|max:255',
             'email' => 'string|email|max:255|unique:users,email,' . $id,
             'phone' => 'string|max:20',
+            'status.in' => 'Status must be one of: active, inactive, suspended.',
             // Add any other fields you want to allow for update here
         ]);
 

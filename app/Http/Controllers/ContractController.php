@@ -9,6 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\UploadedFile;
 use App\Models\Document;
+use Illuminate\Support\Facades\Validator;
 class ContractController extends Controller
 {
     public function show($id)
@@ -26,48 +27,79 @@ class ContractController extends Controller
     /**
      * List all contracts.
      */
-    public function index()
-{
-    try {
-        // Fetch all contracts and include tenant names and related documents
-        $contracts = Contract::with(['tenant:id,name', 'documents']) // Include tenant fields and documents
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        if ($contracts->isEmpty()) {
-            return response()->json(['success' => false, 'message' => 'No contracts found.'], 404);
+    public function index(Request $request)
+    {
+        try {
+            // Validate floor_id if provided
+            $validator = Validator::make($request->all(), [
+                'floor_id' => 'nullable|integer|exists:floors,id',
+            ], [
+                'floor_id.integer' => 'The floor ID must be an integer.',
+                'floor_id.exists' => 'The provided floor ID does not exist.',
+            ]);
+    
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+    
+            // Fetch floor_id from request
+            $floorId = $request->input('floor_id');
+    
+            // Query contracts with optional filtering by floor_id
+            $contractsQuery = Contract::with(['tenant:id,name,floor_id', 'documents']);
+    
+            if ($floorId) {
+                // Filter by floor_id through the tenant relationship
+                $contractsQuery->whereHas('tenant', function ($query) use ($floorId) {
+                    $query->where('floor_id', $floorId);
+                });
+            }
+    
+            $contracts = $contractsQuery->orderBy('created_at', 'desc')->get();
+    
+            if ($contracts->isEmpty()) {
+                return response()->json(['success' => false, 'message' => 'No contracts found.'], 404);
+            }
+    
+            // Format the response to include tenant names and documents
+            $data = $contracts->map(function ($contract) {
+                return [
+                    'id' => $contract->id,
+                    'tenant_id' => $contract->tenant->id,
+                    'tenant_name' => $contract->tenant->name ?? null, 
+                    // Include tenant name
+                    'type' => $contract->type,
+                    'status' => $contract->status,
+                    'signing_date' => $contract->signing_date,
+                    'expiring_date' => $contract->expiring_date,
+                    'due_date' => $contract->due_date,
+                    'created_at' => $contract->created_at,
+                    'updated_at' => $contract->updated_at,
+                    'documents' => $contract->documents->map(function ($document) { // Include related documents
+                        return [
+                            'id' => $document->id,
+                            'document_type' => $document->document_type,
+                            'document_format' => $document->document_format,
+                            'file_path' => $document->file_path,
+                            'created_at' => $document->created_at,
+                            'updated_at' => $document->updated_at,
+                        ];
+                    }),
+                ];
+            });
+    
+            return response()->json(['success' => true, 'data' => $data], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve contracts: ' . $e->getMessage(),
+            ], 500);
         }
-
-        // Format the response to include tenant names and documents
-        $data = $contracts->map(function ($contract) {
-            return [
-                'id' => $contract->id,
-                'tenant_name' => $contract->tenant->name ?? null, // Include tenant name
-                'type' => $contract->type,
-                'status' => $contract->status,
-                'signing_date' => $contract->signing_date,
-                'expiring_date' => $contract->expiring_date,
-                'due_date' => $contract->due_date,
-                'created_at' => $contract->created_at,
-                'updated_at' => $contract->updated_at,
-                'documents' => $contract->documents->map(function ($document) { // Include related documents
-                    return [
-                        'id' => $document->id,
-                        'document_type' => $document->document_type,
-                        'document_format' => $document->document_format,
-                        'file_path' => $document->file_path,
-                        'created_at' => $document->created_at,
-                        'updated_at' => $document->updated_at,
-                    ];
-                }),
-            ];
-        });
-
-        return response()->json(['success' => true, 'data' => $data], 200);
-    } catch (\Exception $e) {
-        return response()->json(['success' => false, 'message' => 'Failed to retrieve contracts: ' . $e->getMessage()], 500);
     }
-}
     private function storeDocumentFile(UploadedFile $file, $tenantId)
     {
         // Define the directory path where documents will be stored
