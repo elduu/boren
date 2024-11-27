@@ -61,7 +61,7 @@ class PaymentForTenantController extends Controller
                 'area_m2' => $payment->area_m2,
                 'utility_fee' => $payment->utility_fee,
                 'start_date' => $payment->start_date,
-                'payment_made_until' => $payment->payment_id,
+                'payment_made_until' => $payment->payment_made_until,
                 'documents' => $payment->documents->map(function ($document) {
                     return [
                         'id' => $document->id,
