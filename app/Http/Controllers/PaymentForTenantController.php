@@ -17,15 +17,35 @@ class PaymentForTenantController extends Controller
          * List all payments
          */
         public function index()
-        {
-            try {
-                $payments = PaymentForTenant::with('tenant')->get();
-                return response()->json(['success' => true, 'data' => $payments], 200);
-            } catch (\Exception $e) {
-                return response()->json(['success' => false, 'message' => 'Failed to fetch payments: ' . $e->getMessage()], 500);
-            }
-        }
-    
+{
+    try {
+        // Fetch all payments
+        $payments = PaymentForTenant::all();
+
+        // Map through each payment to include tenant details and documents
+        $data = $payments->map(function ($payment) {
+            $tenant = Tenant::find($payment->tenant_id); // Get the associated tenant
+            $documents = Document::where('payment_for_tenant_id', $payment->id)->get(); // Get related documents
+            
+            // Return formatted payment data
+            return [
+                'payment' => $payment,
+                'name' => $tenant ? $tenant->name : null, // Include tenant name if tenant exists
+                'documents' => $documents,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to fetch payments: ' . $e->getMessage(),
+        ], 500);
+    }
+}
         /**
          * Store a new payment
          */
@@ -82,6 +102,7 @@ class PaymentForTenantController extends Controller
                                 'document_type' => $documentType,
                                 'document_format' => $documentFormat,
                                 'file_path' => $documentPath,
+                                'payment_for_tenant_id'=>$payment->id,
                             ]);
                         }
                     }
@@ -209,12 +230,23 @@ public function update(Request $request, $id)
     {
         try {
             $payments = PaymentForTenant::where('tenant_id', $tenantId)->get();
-
+        
             if ($payments->isEmpty()) {
                 return response()->json(['message' => 'No payments found for this tenant'], 404);
             }
-
-            return response()->json($payments);
+        
+            $tenant = Tenant::findOrFail($tenantId); // Fetch tenant details based on the tenant ID
+            $documents = Document::whereIn('payment_for_tenant_id', $payments->pluck('id')) // Filter documents by payment IDs
+                ->get();
+        
+            return response()->json([
+                'data' => [
+                    'payment' => $payments,
+                    'name' => $tenant->name,
+                    'documents' => $documents, // All documents related to the tenant's payments
+                ]
+            ], 200);
+        
         } catch (Exception $e) {
             return response()->json(['message' => 'Error fetching payments', 'error' => $e->getMessage()], 500);
         }
@@ -225,11 +257,10 @@ public function update(Request $request, $id)
     try {
         // Find the payment by ID
         $payment = PaymentForTenant::findOrFail($id);
+        $tenant = Tenant::findOrFail($payment->tenant_id);
 
         // Fetch the tenant along with documents specific to this payment
-        $documents = Document::where('documentable_id', $payment->tenant_id)
-            ->where('documentable_type', Tenant::class)
-            ->where('payment_id', $id) // Filter by this specific payment ID
+        $documents = Document::where('payment_for_tenant_id', $id) // Filter by this specific payment ID
             ->get();
 
         // Combine the payment details with the filtered documents in the response
@@ -237,6 +268,7 @@ public function update(Request $request, $id)
             'success' => true,
             'data' => [
                 'payment' => $payment,
+                'name'=>$tenant->name,
                 'documents' => $documents, // Only documents for this payment
             ]
         ], 200);
