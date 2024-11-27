@@ -27,8 +27,7 @@ class PaymentForTenantController extends Controller
         $data = $payments->map(function ($payment) {
             return [
                 'payment' => $payment,
-                'name' => $payment->tenant->name ?? null, // Include tenant name if tenant exists
-                'documents' => $payment->documents, // Include related documents
+       // Include related documents
             ];
         });
 

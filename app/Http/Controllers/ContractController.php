@@ -27,37 +27,47 @@ class ContractController extends Controller
      * List all contracts.
      */
     public function index()
-    {
-        try {
-            // Fetch all contracts and include tenant names
-            $contracts = Contract::with('tenant:id,name') // Include only relevant tenant fields
-                ->orderBy('created_at', 'desc')
-                ->get();
-    
-            if ($contracts->isEmpty()) {
-                return response()->json(['success' => false, 'message' => 'No contracts found.'], 404);
-            }
-    
-            // Format the response to include tenant names
-            $data = $contracts->map(function ($contract) {
-                return [
-                    'id' => $contract->id,
-                    'tenant_name' => $contract->tenant->name ?? null,
-                    'type' => $contract->type,
-                    'status' => $contract->status,
-                    'signing_date' => $contract->signing_date,
-                    'expiring_date' => $contract->expiring_date,
-                    'due_date' => $contract->due_date,
-                    'created_at' => $contract->created_at,
-                    'updated_at' => $contract->updated_at,
-                ];
-            });
-    
-            return response()->json(['success' => true, 'data' => $data], 200);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to retrieve contracts: ' . $e->getMessage()], 500);
+{
+    try {
+        // Fetch all contracts and include tenant names and related documents
+        $contracts = Contract::with(['tenant:id,name', 'documents']) // Include tenant fields and documents
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        if ($contracts->isEmpty()) {
+            return response()->json(['success' => false, 'message' => 'No contracts found.'], 404);
         }
+
+        // Format the response to include tenant names and documents
+        $data = $contracts->map(function ($contract) {
+            return [
+                'id' => $contract->id,
+                'tenant_name' => $contract->tenant->name ?? null, // Include tenant name
+                'type' => $contract->type,
+                'status' => $contract->status,
+                'signing_date' => $contract->signing_date,
+                'expiring_date' => $contract->expiring_date,
+                'due_date' => $contract->due_date,
+                'created_at' => $contract->created_at,
+                'updated_at' => $contract->updated_at,
+                'documents' => $contract->documents->map(function ($document) { // Include related documents
+                    return [
+                        'id' => $document->id,
+                        'document_type' => $document->document_type,
+                        'document_format' => $document->document_format,
+                        'file_path' => $document->file_path,
+                        'created_at' => $document->created_at,
+                        'updated_at' => $document->updated_at,
+                    ];
+                }),
+            ];
+        });
+
+        return response()->json(['success' => true, 'data' => $data], 200);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => 'Failed to retrieve contracts: ' . $e->getMessage()], 500);
     }
+}
     private function storeDocumentFile(UploadedFile $file, $tenantId)
     {
         // Define the directory path where documents will be stored
