@@ -160,16 +160,22 @@ class PaymentForTenantController extends Controller
         
         // Helper method to store the document file
         private function storeDocumentFile(UploadedFile $file, $tenantId)
-        {
+       {try {
             // Define the directory path where documents will be stored
             $directory = "documents/tenants/{$tenantId}";
-        
+    
             // Store the file and get the path
             $path = $file->store($directory, 'public');
-        
+    
+            // Return the full URL
             return Storage::url($path);
+            
+        } catch (\Exception $e) {
+            // Handle errors gracefully
+            throw new \Exception("Failed to store document: " . $e->getMessage());
         }
-        private function detectDocumentFormat(UploadedFile $file)
+    }       
+     private function detectDocumentFormat(UploadedFile $file)
 {
     $mimeType = $file->getClientMimeType();
 
