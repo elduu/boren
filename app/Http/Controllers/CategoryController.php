@@ -117,8 +117,17 @@ public function trashed()
          }
 
          try {
-             $buildings = $category->buildings; // Assuming 'buildings' relationship exists in Category model
-             return response()->json(['success' => true,'category_name'=>$category->name, 'data' => $buildings,
+             $buildings = $category->buildings;
+             $data = $buildings->map(function ($building) use ($category) {
+                return [
+                    'category_name' => $category->name,
+                    'category_id' => $category->id,
+                    'building_name' => $building->name,
+                    'building_id' => $building->id,
+                ];
+            });
+              // Assuming 'buildings' relationship exists in Category model
+             return response()->json(['success' => true, 'data'=>$data,
             ], 200);
          } catch (\Exception $e) {
              return response()->json(['success' => false, 'message' => 'Failed to fetch buildings in category: ' . $e->getMessage()], 500);

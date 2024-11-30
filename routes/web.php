@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Mail;
 */
 
 Route::get('/', function () {
-    Mail::to('rediyilma57@gmail.com')
+    Mail::to('siyangetahunw@gmail.com')
     ->send(new ContractRenewalMail());
 
 });
