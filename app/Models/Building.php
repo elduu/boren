@@ -21,4 +21,8 @@ class Building extends Model
 {
     return $this->hasMany(Floor::class);
 }
+public function contracts()
+{
+    return $this->hasManyThrough(Contract::class, Tenant::class);
+}
 }

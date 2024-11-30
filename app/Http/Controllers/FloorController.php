@@ -271,7 +271,7 @@ public function getBuildingData(Request $request)
             ->whereHas('category', function ($query) {
                 $query->where('name', 'commercial');
             })
-            ->with([
+            ->with(relations: [
                 'floors' => function ($query) {
                     $query->with([
                         'tenants' => function ($tenantQuery) {
@@ -331,4 +331,241 @@ public function getBuildingData(Request $request)
         ], 500);
     }
 }
+public function getFloorData(Request $request)
+{
+    try {
+        // Validate the request
+        $validator = Validator::make($request->all(), [
+            'floor_id' => 'required|exists:floors,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        // Fetch the floor with related data
+        $floor = Floor::where('id', $request->floor_id)
+            ->with([
+                'building.category' => function ($query) {
+                    $query->where('name', 'commercial'); // Ensure the building's category is 'commercial'
+                },
+                'tenants' => function ($tenantQuery) {
+                    $tenantQuery->with([
+                        'paymentsForTenant',
+                        'contracts',
+                    ]);
+                },
+            ])
+            ->first();
+
+        if (!$floor || !$floor->building || !$floor->building->category) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Floor not found or not part of a commercial building.',
+            ], 404);
+        }
+
+        // Prepare the response data
+        $floorData = [
+            'floor_name' => $floor->name,
+            'building_name' => $floor->building->name,
+         'tenants' => $floor->tenants->map(function ($tenant) {
+    $paymentData = $tenant->paymentsForTenant->first(); // Assuming one payment per tenant
+    $contractData = $tenant->contracts
+        ->sortByDesc('signing_date') // Sort contracts by signing_date in descending order
+        ->first(); // Get the most recent contract
+
+    return [
+        'tenant_id' => $tenant->id,
+        'tenant_name' => $tenant->name,
+        'tenant_phone' => $tenant->phone_number,
+        'room_number' => $tenant->room_number,
+        'area_m2' => $paymentData?->area_m2 ?? null,
+        'unit_price' => $paymentData?->unit_price ?? null,
+        'monthly_paid' => $paymentData?->monthly_paid ?? null,
+        'utility_fee' => $paymentData?->utility_fee ?? null,
+        'payment_made_until' => $paymentData?->payment_made_until ?? null,
+        'signing_date' => $contractData?->signing_date ?? null,
+        'expiring_date' => $contractData?->expiring_date ?? null,
+        'due_date' => $contractData?->due_date ?? null,
+    ];
+}),
+            
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $floorData,
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to fetch floor data: ' . $e->getMessage(),
+        ], 500);
+    }
+}
+public function getFloorDataBuyer(Request $request)
+{
+    try {
+        // Validate the request
+        $validator = Validator::make($request->all(), [
+            'floor_id' => 'required|exists:floors,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        // Fetch the floor with related data
+        $floor = Floor::where('id', $request->floor_id)
+            ->with([
+                'building.category' => function ($query) {
+                    $query->where('name', 'Apartment_buyer'); // Ensure the building's category is 'commercial'
+                },
+                'tenants' => function ($tenantQuery) {
+                    $tenantQuery->with([
+                        'paymentsForBuyer',
+                        'contracts',
+                    ]);
+                },
+            ])
+            ->first();
+
+        if (!$floor || !$floor->building || !$floor->building->category) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Floor not found or not part of a buyer building.',
+            ], 404);
+        }
+
+        // Prepare the response data
+        $floorData = [
+            'floor_name' => $floor->name,
+            'building_name' => $floor->building->name,
+         'tenants' => $floor->tenants->map(function ($tenant) {
+    $paymentData = $tenant->paymentsForBuyer->first(); // Assuming one payment per tenant
+    $contractData = $tenant->contracts
+        ->sortByDesc('start_date') // Sort contracts by signing_date in descending order
+        ->first(); // Get the most recent contract
+
+    return [
+        'tenant_id' => $tenant->id,
+        'tenant_name' => $tenant->name,
+        'tenant_phone' => $tenant->phone_number,
+        'room_number' => $tenant->room_number,
+       // 'area_m2' => $paymentData?->area_m2 ?? null,
+        'property_price' => $paymentData?->property_price ?? null,
+       // 'monthly_paid' => $paymentData?->monthly_paid ?? null,
+        'utility_fee' => $paymentData?->utility_fee ?? null,
+       // 'payment_made_until' => $paymentData?->payment_made_until ?? null,
+        'start_date' => $paymentData?->start_date ?? null,
+      //  'expiring_date' => $contractData?->expiring_date ?? null,
+       // 'due_date' => $contractData?->due_date ?? null,
+    ];
+}),
+            
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $floorData,
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to fetch floor data: ' . $e->getMessage(),
+        ], 500);
+    }
+}
+public function getBuildingDataBuyer(Request $request)
+{
+    try {
+        // Validate the request
+        $validator = Validator::make($request->all(), [
+            'building_id' => 'required|exists:buildings,id',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        // Fetch the building with related data
+        $building = Building::where('id', $request->building_id)
+            ->whereHas('category', function ($query) {
+                $query->where('name', 'Apartment_buyer');
+            })
+            ->with(relations: [
+                'floors' => function ($query) {
+                    $query->with([
+                        'tenants' => function ($tenantQuery) {
+                            $tenantQuery->with([
+                                'paymentsForBuyer',
+                                'contracts',
+                            ]);
+                        },
+                    ]);
+                },
+            ])
+            ->first();
+
+        if (!$building) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Building not found or not in the buyer category.',
+            ], 404);
+        }
+
+        // Prepare the response data
+        $buildingData = [
+            'building_name' => $building->name,
+            'floors' => $building->floors->map(function ($floor) {
+                return [
+                    'floor_name' => $floor->name,
+                    'tenants' => $floor->tenants->map(function ($tenant) {
+                        $paymentData = $tenant->paymentsForBuyert->first(); // Assuming one payment per tenant
+                        $contractData = $tenant->contract; // Single contract per tenant
+                        return [
+                            'tenant_id' => $tenant->id,
+                            'tenant_name' => $tenant->name,
+                            'tenant_phone' => $tenant->phone_number,
+                            'room_number' => $tenant->room_number,
+                            //'area_m2' => $paymentData?->area_m2 ?? null,
+                            'property_price' => $paymentData?->property_price ?? null,
+                           // 'monthly_paid' => $paymentData?->monthly_paid ?? null,
+                            'utility_fee' => $paymentData?->utility_fee ?? null,
+                           // 'payment_made_until' => $paymentData?->payment_made_until ?? null,
+                            'start_date' => $paymentData?->start_date ?? null,
+                           // 'expiring_date' => $contractData?->expiring_date ?? null,
+                           // 'due_date' => $contractData?->due_date ?? null,
+                        ];
+                    }),
+                ];
+            }),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'data' => $buildingData,
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to fetch building data: ' . $e->getMessage(),
+        ], 500);
+    }
+}
+
+
 }

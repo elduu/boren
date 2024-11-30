@@ -93,6 +93,12 @@ Route::get('floors/{floorId}/tenants', [FloorController::class, 'listTenantsInFl
 Route::get('floorsinbuilding/{id}', [BuildingController::class, 'listFloorsInBuilding']);
 Route::get('buildings/filterFloorsInCategory', [BuildingController::class, 'filterFloorsInCategory']);
 Route::post('getdata', [FloorController::class, 'getBuildingData']);
+Route::post('getfloordata', [FloorController::class, 'getFloorData']);
+
+Route::post('getdatabuyer', [FloorController::class, 'getBuildingDataBuyer']);
+Route::post('getfloordatabuyer', [FloorController::class, 'getFloorDataBuyer']);
+
+
 
 Route::prefix('tenants')->middleware(['permission:manage tenants'])->group(function () {
 
