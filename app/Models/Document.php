@@ -12,7 +12,7 @@ class Document extends Model
 
     protected $fillable = [
         'documentable_id', 'documentable_type', 'file_path', 'document_type', 'document_format', 'contract_id',           // Associated contract ID, if applicable
-        'payment_for_tenant_id', 'payment_for_buyer_id',// Associated payment ID for tenant, if applicable
+        'payment_for_tenant_id', 'payment_for_buyer_id','doc_name','doc_size',// Associated payment ID for tenant, if applicable
     ];// 'uploaded_by'
     
 

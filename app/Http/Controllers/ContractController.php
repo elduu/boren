@@ -88,6 +88,8 @@ class ContractController extends Controller
                             'file_path' => $document->file_path,
                             'created_at' => $document->created_at,
                             'updated_at' => $document->updated_at,
+                            'doc_name' => $document->doc_name,
+                            'doc_size'=>$document->doc_size,
                         ];
                     }),
                 ];
@@ -184,7 +186,10 @@ switch ($mimeType) {
                         // Detect the format for each file
                         $documentFormat = $this->detectDocumentFormat($document['file']);
                         $documentType = $document['document_type'] ?? 'lease_agreement';
-    
+                   
+                        $documentName = $document['file']->getClientOriginalName();
+                        $documentSize = $document['file']->getSize(); 
+                                 
                         // Create a new Document record
                         Document::create([
                             'documentable_id' => $validatedData['tenant_id'],
@@ -193,6 +198,8 @@ switch ($mimeType) {
                             'document_format' => $documentFormat,
                             'file_path' => $documentPath,
                             'contract_id' => $contract->id,
+                            'doc_name' => $documentName,
+                            'doc_size'=>$documentSize,
                         ]);
                     }
                 }

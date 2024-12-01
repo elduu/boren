@@ -85,13 +85,20 @@ class TenantController extends Controller
                             'payment_for_tenant_id' => $paymentId,
                             'document_type' => $document['document_type']
                         ]);
+                        
     
                         // Store the document file
                         $documentPath = $this->storeDocumentFile($document['file'], $tenant->id);
     
                         // Detect the format for each file
                         $documentFormat = $this->detectDocumentFormat($document['file']);
-    
+                      // Returns size in bytes
+                        //$formatted_size = $this->formatFileSize($file_size);
+                        
+                            
+
+                        $documentName = $document['file']->getClientOriginalName();
+                        $documentSize = $document['file']->getSize(); // Size in bytes
                         // Create a new Document record for each file
                         $documentRecord = Document::create([
                             'documentable_id' => $tenant->id,
@@ -101,6 +108,9 @@ class TenantController extends Controller
                             'file_path' => $documentPath,
                             'contract_id' => $contractId,
                             'payment_for_tenant_id' => $paymentId,
+                            'doc_name' => $documentName,
+                            'doc_size'=>$documentSize,
+
                         ]);
     
                         Log::info('Document created successfully:', $documentRecord->toArray());
@@ -134,7 +144,27 @@ class TenantController extends Controller
         $directory = "documents/tenants/{$tenantId}";
         
         $path= $file->store($directory, 'public');
+        
         return Storage::url($path);
+
+    }
+    private function storeDocumentFilename(UploadedFile $file, $tenantId)
+    {
+        $directory = "documents/tenants/{$tenantId}";
+        
+        $path= $file->store($directory, 'public');
+        
+        return Storage::url($path);
+
+    }
+    private function storeDocumentFilesize(UploadedFile $file, $tenantId)
+    {
+        $directory = "documents/tenants/{$tenantId}";
+        
+        $path= $file->store($directory, 'public');
+        
+        return Storage::url($path);
+
     }
     
     private function validateTenantData(Request $request)
@@ -331,7 +361,12 @@ public function storeBuyer(Request $request)
     
                         // Detect the format for each file
                         $documentFormat = $this->detectDocumentFormat($document['file']);
-    
+                         
+                       
+
+                        $documentName = $document['file']->getClientOriginalName();
+                        $documentSize = $document['file']->getSize(); 
+                                  
                         // Create a new Document record for each file
                         $documentRecord = Document::create([
                             'documentable_id' => $tenant->id,
@@ -341,6 +376,8 @@ public function storeBuyer(Request $request)
                             'file_path' => $documentPath,
                             'contract_id' => $contractId,
                             'payment_for_buyer_id' => $paymentId,
+                            'doc_name' => $documentName,
+                        'doc_size'=>$documentSize,
                         ]);
     
                         Log::info('Document created successfully:', $documentRecord->toArray());

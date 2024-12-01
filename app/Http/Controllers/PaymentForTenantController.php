@@ -71,6 +71,8 @@ class PaymentForTenantController extends Controller
                         'file_path' => $document->file_path,
                         'created_at' => $document->created_at,
                         'updated_at' => $document->updated_at,
+                        'doc_name' => $document->doc_name,
+                        'doc_size'=>$document->doc_size,
                     ];
                 }),
             ];
@@ -135,7 +137,11 @@ class PaymentForTenantController extends Controller
                             // Detect the format for each file
                             $documentFormat = $this->detectDocumentFormat($document['file']);
                             $documentType = $document['document_type'] ?? 'payment_receipt';
-
+                            $doc_size = $document->getSize(); // Returns size in bytes
+                            //$formatted_size = $this->formatFileSize($file_size)
+                                      $documentname=$document->getClientOriginalName();
+                                      
+                                   
                             // Create a new Document record
                             Document::create([
                                 'documentable_id' => $validatedData['tenant_id'],
@@ -144,6 +150,8 @@ class PaymentForTenantController extends Controller
                                 'document_format' => $documentFormat,
                                 'file_path' => $documentPath,
                                 'payment_for_tenant_id'=>$payment->id,
+                                'doc_name' => $documentname,
+                                'doc_size'=>$doc_size,
                             ]);
                         }
                     }
