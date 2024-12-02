@@ -19,6 +19,7 @@ class PaymentForTenant extends Model
         'payment_made_until',
         'start_date',
         'due_date',
+        'end_date',
     ];
 
     public function tenant()

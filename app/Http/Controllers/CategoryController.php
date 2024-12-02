@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Category;
+use App\Models\Contract;
+
 class CategoryController extends Controller
 {
     public function index()
@@ -123,7 +125,7 @@ public function trashed()
                     'category_name' => $category->name,
                     'category_id' => $category->id,
                     'building_name' => $building->name,
-                    'building_id' => $building->id,
+                    'id' => $building->id,
                 ];
             });
               // Assuming 'buildings' relationship exists in Category model
@@ -158,4 +160,6 @@ public function trashed()
         return response()->json(['success' => false, 'message' => 'Failed to fetch buildings: ' . $e->getMessage()], 500);
     }
 }
+
+ 
 }

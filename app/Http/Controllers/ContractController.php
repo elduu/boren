@@ -412,5 +412,28 @@ public function filterByType(Request $request)
         ], 500);
     }
 }
+public function search(Request $request)
+{try{
+
+
+    $query = $request->input('query');
+    $payments = Contract::with([
+        'tenants' => function ($q) use ($query) {
+            $q->where('name', 'like', "%{$query}%")
+               // ->orWhere('room_number', 'like', "%{$query}%")
+                //->orWhere('tenant_number', 'like', "%{$query}%")
+                //->orWhere('phone_number', 'like', "%{$query}%")
+                ->get();
+        },
+    ]);
+
+  
+
+        return response()->json(['success' => true, 'data' => $payments], 200);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+    }
+}
+
 }
 

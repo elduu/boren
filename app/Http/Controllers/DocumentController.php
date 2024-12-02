@@ -30,29 +30,65 @@ class DocumentController extends Controller
      */
     public function filterByDocumentType(Request $request)
     {
-        try {
-            $documentType = $request->input('document_type');
-            
-            if (!$documentType) {
+            // Get the input values
+           
+            try {
+                // Validate the request
+                $validator = Validator::make($request->all(), [
+                    'floor_id' => 'required|exists:floors,id',
+                    'document_type' =>'required|exists:documents,document_type',
+                ]);
+        
+                if ($validator->fails()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Validation failed',
+                        'errors' => $validator->errors(),
+                    ], 422);
+                }
+        
+                // Fetch tenants on the specified floor with their related documents
+                $tenants = Tenant::where('floor_id', $request->floor_id)
+                    ->with(['documents']) // Assuming a `documents` relationship exists on the Tenant model
+                    ->get();
+        
+                // Check if tenants exist on the specified floor
+                if ($tenants->isEmpty()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No tenants or documents found on the specified floor.',
+                    ], 404);
+                }
+        
+                // Prepare the response data
+                $documentsData = $tenants->map(function ($tenant) {
+                    return [
+                       
+                        'documents' => $tenant->documents->map(function ($document) {
+                            return [
+                                'tenant_name' => $document->tenant->name,
+                                'document_id' => $document->id,
+                                'document_path' => $document->file_path,
+                                'document_type' => $document->document_type,
+                                'document_format'=> $document->document_format,
+                                'created_at' => $document->created_at->format('Y-m-d H:i:s'),
+                            ];
+                        }),
+                    ];
+                });
+        
+                return response()->json([
+                    'success' => true,
+                    'data' => $documentsData,
+                ], 200);
+            } catch (\Exception $e) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Document type is required for filtering.'
-                ], 400);
+                    'message' => 'Failed to fetch documents: ' . $e->getMessage(),
+                ], 500);
             }
-
-            $documents = Document::where('document_type', $documentType)->get();
-
-            return response()->json([
-                'success' => true,
-                'data' => $documents
-            ], 200);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to filter documents by document type: ' . $e->getMessage()
-            ], 500);
         }
-    }
+    
 
     /**
      * Filter documents by tenant ID.

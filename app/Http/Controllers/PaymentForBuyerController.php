@@ -152,10 +152,9 @@ class PaymentForBuyerController extends Controller
                          // Detect the format for each file
                          $documentFormat = $this->detectDocumentFormat($document['file']);
                          $documentType = $document['document_type'] ?? 'payment_receipt';
-                         $doc_size = $document->getSize(); // Returns size in bytes
-                         //$formatted_size = $this->formatFileSize($file_size)
-                                   $documentname=$document->getClientOriginalName();
-                                
+                        
+                         $documentName = $document['file']->getClientOriginalName();
+                         $documentSize = $document['file']->getSize(); 
                          // Create a new Document record
                          Document::create([
                              'documentable_id' => $validatedData['tenant_id'],
@@ -164,8 +163,9 @@ class PaymentForBuyerController extends Controller
                              'document_format' => $documentFormat,
                              'file_path' => $documentPath,
                              'payment_for_buyer_id'=>$payment->id,
-                             'doc_name' => $documentname,
-                             'doc_size'=>$doc_size,
+                             'doc_name' => $documentName,
+                             'doc_size'=>$documentSize,
+                         
                          ]);
                      }
                  }
@@ -286,6 +286,26 @@ class PaymentForBuyerController extends Controller
                 'success' => false,
                 'message' => 'Failed to update payment and documents: ' . $e->getMessage(),
             ], 500);
+        }
+    }
+    public function search(Request $request)
+    {
+        try {
+            $query = $request->input('query');
+    
+            // Search payments and their related tenants
+            $payments = PaymentForBuyer::whereHas('tenant', function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhere('room_number', 'like', "%{$query}%")
+                    ->orWhere('tenant_number', 'like', "%{$query}%")
+                    ->orWhere('phone_number', 'like', "%{$query}%");
+            })
+            ->with('tenant') // Load the related tenants
+            ->get();
+    
+            return response()->json(['success' => true, 'data' => $payments], 200);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 

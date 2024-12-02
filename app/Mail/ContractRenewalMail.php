@@ -9,45 +9,27 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 
+
+
 class ContractRenewalMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    public $tenant;
+    public $contract;
 
-    /**
-     * Create a new message instance.
-     */
-    public function __construct()
+    public function __construct($tenant, $contract)
     {
-        //
+        $this->tenant = $tenant;
+        $this->contract = $contract;
     }
 
-    /**
-     * Get the message envelope.
-     */
-    public function envelope(): Envelope
+    public function build()
     {
-        return new Envelope(
-            subject: 'Contract Renewal Mail',
-        );
-    }
-
-    /**
-     * Get the message content definition.
-     */
-    public function content(): Content
-    {
-        return new Content(
-            view: 'contract',
-        );
-    }
-
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
-    public function attachments(): array
-    {
-        return [];
+        return $this->view('contract')
+            ->subject('Contract Renewal Reminder')
+            ->with([
+                'tenant' => $this->tenant,
+                'contract' => $this->contract,
+            ]);
     }
 }
+

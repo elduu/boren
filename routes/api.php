@@ -11,6 +11,7 @@ use App\Http\Controllers\PaymentForBuyerController;
 use App\Http\Controllers\PaymentForTenantController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\AuthController;
+use App\Models\Contract;
 
 /*
 |--------------------------------------------------------------------------
@@ -48,6 +49,10 @@ Route::middleware(['jwt.auth'])->group(function () {
 
 
     });
+
+    Route::get('searchpaymentbuyer', [PaymentForBuyerController::class, 'search']);
+    Route::get('searchpaymenttenant', [PaymentForTenantController::class, 'search']);
+    Route::get('searchcontracts', [ContractController::class, 'search']);
     Route::middleware(['permission:manage categories'])->group(function () {
 
 Route::post('categories', [CategoryController::class, 'store']); // Create a new category
