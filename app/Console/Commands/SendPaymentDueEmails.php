@@ -32,27 +32,29 @@ class SendPaymentDueEmails extends Command
      */
     public function handle()
 {
+    $dueDate = Carbon::now()->addDays(12);
     // Get all tenants with payments due on or before today
-    $tenants = Tenant::whereHas('paymentsForTenant', function ($query) {
-        $query->where('due_date', '<=', Carbon::now());
-            // Uncomment if you have a 'status' field to filter unpaid payments:
-            // ->where('status', 'unpaid');
-    })->get();
+    $tenants = PaymentForTenant::where('due_date', '<=', $dueDate)
+        ->where('due_date', '<=', $dueDate)
+              ->where('payment_status', 'unpaid') // Ensure this matches your payment status column
+    ->get();
 
     if ($tenants->isEmpty()) {
         $this->info('No tenants with payments due.');
         return;
     }
+    foreach ($tenants as $payment) {
+        $tenant = $payment->tenant; // Assuming `tenant` is the relationship name
+
+        if (!$tenant || !$tenant->email) {
+            $this->error("Payment ID {$payment->id} has no associated tenant email.");
+            continue;
+        }
 
     // Loop through tenants to send payment due emails
-    foreach ($tenants as $tenant) {
-        $payments = $tenant->paymentsForTenant()
-                           ->where('due_date', '<=', Carbon::now())
-                           // Uncomment if filtering by 'unpaid' status
-                           // ->where('status', 'unpaid')
-                           ->get();
 
-        foreach ($payments as $payment) {
+
+        foreach ($tenants as $payment) {
             // Ensure `due_date` is a Carbon instance
             $dueDate = $payment->due_date instanceof \Carbon\Carbon
                 ? $payment->due_date

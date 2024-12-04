@@ -169,20 +169,17 @@ switch ($mimeType) {
         try {
             // Calculate due date as one month before expiring_date
             $dueDate = Carbon::parse($validatedData['expiring_date'])->subMonth()->format('Y-m-d');
-    
+            $tenant = Tenant::findOrFail($validatedData['tenant_id']);
+            $floorId = $tenant->floor_id;
             // Create the contract
             $contract = Contract::create(array_merge(
                 $validatedData,
                 ['due_date' => $dueDate]
             ));
-                   
             $currentDate = Carbon::now()->format('Y-m-d');
-            Contract::whereDate('expiring_date', '<=', $currentDate)
-            ->set(['status' => 'inactive']);
-
-        Contract::whereDate('expiring_date', '>', $currentDate)
-            ->set(['status' => 'active']);
-    
+            $expiringDate = Carbon::parse($validatedData['expiring_date']);
+            $contract->status = $expiringDate->gte($currentDate) ? 'active' : 'expired';
+           
             // Check if documents are provided
             if ($request->has('documents')) {
                 foreach ($request->documents as $document) {
@@ -256,10 +253,10 @@ switch ($mimeType) {
         
             $currentDate = Carbon::now()->format('Y-m-d');
             Contract::whereDate('expiring_date', '<=', $currentDate)
-            ->set(['status' => 'inactive']);
+            ->update(['status' => 'inactive']);
 
         Contract::whereDate('expiring_date', '>', $currentDate)
-            ->set(['status' => 'active']);
+            ->update(['status' => 'active']);
             return response()->json(['success' => true, 'data' => $contract], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['success' => false, 'message' => 'Contract not found.'], 404);

@@ -102,7 +102,7 @@ class PaymentForTenantController extends Controller
                 'area_m2' => 'required|numeric|min:0',
                 'utility_fee' => 'required|numeric|min:0',
                 'start_date' => 'required|date',
-                'end_date' => 'required|date|after_or_equal:start_date',
+              //  'end_date' => 'required|date|after_or_equal:start_date',
                 'payment_made_until' => 'nullable|date|before_or_equal:end_date',
                 'documents' => 'array',
                 'documents.*.file' => 'required|file',
@@ -194,7 +194,7 @@ class PaymentForTenantController extends Controller
             $path = $file->store($directory, 'public');
     
             // Return the full URL
-            return Storage::url($path);
+            return env('APP_URL'). Storage::url($path);
             
         } catch (\Exception $e) {
             // Handle errors gracefully

@@ -54,9 +54,9 @@ Route::middleware(['jwt.auth'])->group(function () {
     });
 
     Route::get('allnotifications', [NotificationController::class, 'index']);
-    Route::get('notifications', [NotificationController::class, '    getUnreadNotificationsr']);
+    Route::get('notifications', [NotificationController::class,'getUnreadNotifications']);
     Route::post('notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead']);
-    Route::post('notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead']);
+    Route::post('notifications_mark-all-as-read', [NotificationController::class, 'markAllAsRead']);
     Route::get('unread-notifications', [NotificationController::class, 'countUnreadNotifications']);
     Route::get('contract-renewal-notifications', [NotificationController::class, 'listContractRenewalNotifications']);
     Route::get('payment-due-notifications', [NotificationController::class, 'listPaymentDueNotifications']);
@@ -133,16 +133,16 @@ Route::get('search', [TenantController::class, 'search'])->middleware('permissio
 Route::post('buyer', [TenantController::class, 'storeBuyer'])->middleware('permission:manage tenants');;
 
 Route::middleware(['permission:manage contracts'])->group(function () {
-    Route::post('contracts', [ContractController::class, 'store']);
+   
     Route::post('contracts/{id}', [ContractController::class, 'update']);
     Route::post('contracts_renew/{id}', [ContractController::class, 'renew']);
     Route::delete('contracts/{id}', [ContractController::class, 'destroy']);
     Route::patch('contracts/{id}/restore', [ContractController::class, 'restore']);
     Route::post('contracts/{id}/status', [ContractController::class, 'updateStatus']);
 });
-
+Route::post('contracts', [ContractController::class, 'store']);
 Route::post('/contractsfilter', [ContractController::class, 'filterByType']);
-Route::post('contracts', [ContractController::class, 'index']);
+Route::post('getcontracts', [ContractController::class, 'index']);
 Route::get('tenantcontracts/{tenantId}', [ContractController::class, 'getTenantContracts']);  // List all contracts
 Route::get('contracts/{id}', [ContractController::class, 'show']);  // View contract
 

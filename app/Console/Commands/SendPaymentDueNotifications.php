@@ -29,10 +29,12 @@ class SendPaymentDueNotifications extends Command
      */
     public function handle()
     {
-        $threeDaysFromNow = Carbon::now();
+        $threeDaysFromNow = Carbon::now()->addDays(12);
         $tenantsDue = PaymentForTenant::where('due_date', '<=', $threeDaysFromNow)
+            ->where('payment_status', 'unpaid')
             ->with('tenant') // Ensure the tenant relationship exists
             ->get();
+           
 
         if ($tenantsDue->isEmpty()) {
             $this->info('No tenants with payment due dates found.');

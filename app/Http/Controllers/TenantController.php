@@ -360,7 +360,7 @@ public function storeBuyer(Request $request)
 
         // Step 4: Calculate due date (one month from expiring_date), but only for non-buyers
         if ($validatedData['tenant_type'] !== 'buyer' && isset($validatedData['expiring_date'])) {
-            $validatedData['due_date'] = date('Y-m-d', strtotime($validatedData['expiring_date'] . ' +1 month'));
+            $validatedData['due_date'] = date('Y-m-d', strtotime($validatedData['utility_date'] . ' -1 month'));
         }
 
         // Step 5: Create the Tenant record
@@ -497,7 +497,8 @@ private function createBuyerPayment($tenantId, $validatedData)
             'tenant_id' => $tenantId,
             'property_price' => $validatedData['property_price'],  // Price of the purchased property
             'utility_fee' => $validatedData['utility_fee'],  // Utility fee for the buyer
-            'start_date' => $validatedData['start_date'],  // Start date
+            'start_date' => $validatedData['start_date'],
+            
         ]);
 
         if (!$payment) {

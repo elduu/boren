@@ -15,10 +15,10 @@ class SendContractRenewalEmails extends Command
 
     public function handle()
     {
-        $dueDate = Carbon::now()->toDateString(); // Get today's date in 'Y-m-d' format
-    
-        // Get contracts with a due date matching today and include tenant data
-        $contracts = Contract::whereDate('due_date', '=', $dueDate)
+        $dueDate = Carbon::now()->addDays(30)->toDateString(); // Get today's date in 'Y-m-d' format
+     
+        $contracts = Contract::whereDate('due_date', '<=', $dueDate)
+        ->where('status', 'active') 
             ->with('tenant') // Ensure tenant relationship is loaded
             ->get();
     
