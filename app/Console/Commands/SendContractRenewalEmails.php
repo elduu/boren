@@ -32,10 +32,10 @@ class SendContractRenewalEmails extends Command
             }
     
             // Skip if contract status is not 'active'
-            if ($contract->status !== 'active') {
-                $this->info("Skipping email for tenant {$tenant->email}, contract is inactive.");
-                continue;
-            }
+            // if ($contract->status !== 'active') {
+            //     $this->info("Skipping email for tenant {$tenant->email}, contract is inactive.");
+            //     continue;
+            // }
     
             // Send the email
             Mail::to($tenant->email)->send(new ContractRenewalMail($tenant, $contract));
