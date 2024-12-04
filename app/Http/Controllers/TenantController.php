@@ -12,6 +12,7 @@ use App\Models\PaymentForBuyer;
 use App\Models\Document;
 use App\Models\Floor;
 use Carbon\Carbon;
+
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Validator; 
@@ -46,7 +47,7 @@ class TenantController extends Controller
             $validatedData['category_id'] = $floor->category_id;
     
             // Step 3: Calculate due date (one month from expiring_date)
-            $validatedData['due_date'] = date('Y-m-d', strtotime($validatedData['expiring_date'] . ' +1 month'));
+           // $validatedData['due_date'] = date('Y-m-d', strtotime($validatedData['expiring_date'] . ' -1 month'));
     
             // Step 4: Create the Tenant record
             $tenant = Tenant::create(array_merge(
@@ -54,6 +55,15 @@ class TenantController extends Controller
                 ['tenant_number' => uniqid('TEN-')]
             ));
     
+            try {
+                
+        
+                // Calculate due_date as one week before end_date
+                $endDate = Carbon::parse($validatedData['end_date']);
+                $validatedData['due_date'] = $endDate->subWeek()->format('Y-m-d');
+            } catch (\Exception $e) {
+               
+            }
             // Step 5: Create the Contract for the Tenant
             $contract = $this->createContract($tenant->id, $validatedData);
     
@@ -148,24 +158,7 @@ class TenantController extends Controller
         return Storage::url($path);
 
     }
-    private function storeDocumentFilename(UploadedFile $file, $tenantId)
-    {
-        $directory = "documents/tenants/{$tenantId}";
-        
-        $path= $file->store($directory, 'public');
-        
-        return Storage::url($path);
 
-    }
-    private function storeDocumentFilesize(UploadedFile $file, $tenantId)
-    {
-        $directory = "documents/tenants/{$tenantId}";
-        
-        $path= $file->store($directory, 'public');
-        
-        return Storage::url($path);
-
-    }
     
     private function validateTenantData(Request $request)
     {
@@ -185,11 +178,14 @@ class TenantController extends Controller
             'monthly_paid' => 'required_if:tenant_type,tenant|numeric',
             'area_m2' => 'required_if:tenant_type,tenant|numeric',
             'utility_fee' => 'required_if:tenant_type,tenant|numeric',
+            
             'payment_made_until' => 'required_if:tenant_type,tenant|date',
             'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
             'documents' => 'required|array|min:1',
             'documents.*.file' => 'required|file|mimes:pdf,doc,docx,xlsx,xls,jpg,jpeg,png|max:2048',
             'documents.*.document_type' => 'required|in:payment_receipt,lease_agreement,tenant_info',
+
         ]);
     }
     
@@ -197,6 +193,14 @@ class TenantController extends Controller
     {
         try {
             $dueDate = Carbon::parse($validatedData['expiring_date'])->subMonth()->format('Y-m-d');
+      
+            $currentDate = Carbon::now()->toDateString();
+
+            Contract::whereDate('expiring_date', '<=', $currentDate)
+                ->set(['status' => 'active']);
+    
+            Contract::whereDate('expiring_date', '>', $currentDate)
+                ->set(['status' => 'inactive']);
     
             $contract = Contract::create([
                 'tenant_id' => $tenantId,
@@ -218,6 +222,15 @@ class TenantController extends Controller
     
     private function createTenantPayment($tenantId, $validatedData)
     {
+        $validatedData['due_date'] = date('Y-m-d', strtotime($validatedData['payment_made_until'] . ' -1 week'));
+        $currentDate = Carbon::now()->format('Y-m-d');
+
+        // Update all payments where the current date is not equal to payment_made_until
+        PaymentForTenant::whereDate('payment_made_until', '>', $currentDate)
+            ->update(['status' => 'paid']);
+
+            PaymentForTenant::whereDate('payment_made_until', '<=', $currentDate)
+            ->update(['status' => 'unpaid']);
         $payment = PaymentForTenant::create([
             'tenant_id' => $tenantId,
             'unit_price' => $validatedData['unit_price'],
@@ -227,6 +240,7 @@ class TenantController extends Controller
             'payment_made_until' => $validatedData['payment_made_until'],
             'start_date' => $validatedData['start_date'],
             'due_date' => $validatedData['due_date'],
+            'end_date'=>$validatedData['end_date'],
         ]);
     
         Log::info('Payment Created', ['payment_id' => $payment->id]);
@@ -418,7 +432,8 @@ private function createBuyerContract($tenantId, $validatedData)
             'status' => $validatedData['contract_status'],
             'signing_date' => $validatedData['signing_date'],
             'expiring_date' => $validatedData['expiring_date'] ?? null, // Nullable expiring date for buyers
-            'due_date' => $dueDate, // Add calculated due date
+            'due_date' => $dueDate, 
+          // Add calculated due date
         ]);
 
         if (!$contract) {

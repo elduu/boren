@@ -52,6 +52,29 @@ class User extends Authenticatable implements JWTSubject
     {
         return $this->getKey();
     }
+    
+    public function notifications()
+    {
+        return $this->morphMany(Notification::class, 'notifiable');
+    }
+    public function unreadNotifications()
+    {
+        return $this->notifications()->whereNull('read_at')->get();
+    }
+    public function scopeAdmins($query)
+{
+    return $query->where('role', 'admin');
+}
+
+    /**
+     * Retrieve only read notifications for the user.
+     *
+     * @return \Illuminate\Database\Eloquent\Collection
+     */
+    public function readNotifications()
+    {
+        return $this->notifications()->whereNotNull('read_at')->get();
+    }
 
     /**
      * Return a key value array, containing any custom claims to be added to the JWT.

@@ -12,7 +12,7 @@ use App\Http\Controllers\PaymentForTenantController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\AuthController;
 use App\Models\Contract;
-
+use App\Http\Controllers\NotificationController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -37,6 +37,9 @@ Route::post('logout', [AuthController::class, 'logout']);
 Route::post('refresh-token', [AuthController::class, 'refreshToken']);
 
 
+
+
+
 Route::middleware(['jwt.auth'])->group(function () {
     Route::middleware(['auth:api', 'role:admin'])->group(function () {
         Route::post('register', [AuthController::class, 'register']);
@@ -49,6 +52,15 @@ Route::middleware(['jwt.auth'])->group(function () {
 
 
     });
+
+    Route::get('allnotifications', [NotificationController::class, 'index']);
+    Route::get('notifications', [NotificationController::class, '    getUnreadNotificationsr']);
+    Route::post('notifications/{id}/mark-as-read', [NotificationController::class, 'markAsRead']);
+    Route::post('notifications/mark-all-as-read', [NotificationController::class, 'markAllAsRead']);
+    Route::get('unread-notifications', [NotificationController::class, 'countUnreadNotifications']);
+    Route::get('contract-renewal-notifications', [NotificationController::class, 'listContractRenewalNotifications']);
+    Route::get('payment-due-notifications', [NotificationController::class, 'listPaymentDueNotifications']);
+    
 
     Route::get('searchpaymentbuyer', [PaymentForBuyerController::class, 'search']);
     Route::get('searchpaymenttenant', [PaymentForTenantController::class, 'search']);
@@ -162,7 +174,8 @@ Route::middleware(['permission:manage documents'])->group(function () {
     Route::delete('/documents/{id}', [DocumentController::class, 'destroy']);  // Only manage documents permission can delete
 });
 
-
+Route::delete('/documents/{id}', [DocumentController::class, 'deleteDocument']);
+Route::patch('/documents/{id}/restore', [DocumentController::class, 'recoverDocument']);
 Route::get('/documents', [DocumentController::class, 'listAllDocuments']);
 Route::get('/filterdocbytype', [DocumentController::class, 'filterByDocumentType']);
 Route::get('/filterdocbytenant/{tenantId}', [DocumentController::class, 'filterByTenantId']);

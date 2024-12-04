@@ -121,9 +121,16 @@ class PaymentForTenantController extends Controller
                 $validatedData = $validator->validated();
         
                 // Calculate due_date as one week before end_date
-                $endDate = Carbon::parse($validatedData['end_date']);
+                $endDate = Carbon::parse($validatedData['payment_made_until']);
                 $validatedData['due_date'] = $endDate->subWeek()->format('Y-m-d');
-        
+                
+                $currentDate = Carbon::now()->format('Y-m-d');
+
+                PaymentForTenant::whereDate('payment_made_until', '>', $currentDate)
+                ->set(['status' => 'paid']);
+            
+                PaymentForTenant::whereDate('payment_made_until', '<=', $currentDate)
+                ->set(['status' => 'unpaid']);
                 // Create payment record
                 $payment = PaymentForTenant::create($validatedData);
         
@@ -221,6 +228,7 @@ public function update(Request $request, $id)
         'start_date' => 'nullable|date',
         'end_date' => 'nullable|date|after_or_equal:start_date',
         'payment_made_until' => 'nullable|date|before_or_equal:end_date',
+    
     ]);
 
     try {
@@ -234,9 +242,17 @@ public function update(Request $request, $id)
             'end_date',
             'payment_made_until'
         ]);
+        $currentDate = Carbon::now()->format('Y-m-d');
+
+// Update all payments where the current date is not equal to payment_made_until
+ PaymentForTenant::whereDate('payment_made_until', '>', $currentDate)
+    ->update(['status' => 'paid']);
+
+    PaymentForTenant::whereDate('payment_made_until', '<=', $currentDate)
+    ->update(['status' => 'unpaid']);
 
         // If `end_date` is provided, calculate `due_date` based on it
-        if ($request->filled('end_date')) {
+        if ($request->filled('paymment_made_until')) {
             $endDate = Carbon::parse($request->input('end_date'));
             $updatedData['due_date'] = $endDate->subWeek()->format('Y-m-d');
         }

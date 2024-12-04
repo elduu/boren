@@ -7,6 +7,7 @@ use App\Models\PaymentForTenant;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
+use Carbon\Carbon;
 
 class PaymentDueMail extends Mailable
 {
@@ -39,8 +40,11 @@ class PaymentDueMail extends Mailable
                     ->view('payment')
                     ->with([
                         'tenantName' => $this->tenant->name,
-                       'amount' => $this->payment->monthly_paid,
-                      'dueDate' => $this->payment->due_date,
+                        'roomNumber' => $this->tenant->room_number ?? 'N/A',
+                        'dueDate' => Carbon::parse($this->payment->due_date)->format('F j, Y'),
+                        'amountDue' => $this->payment->amount,
                     ]);
     }
+
+    
 }

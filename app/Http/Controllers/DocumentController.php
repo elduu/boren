@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\Document;
 use App\Models\Tenant;
 use Illuminate\Support\Facades\Validator;
+use App\Models\User;
 class DocumentController extends Controller
 {
     public function listAllDocuments()
@@ -71,6 +72,8 @@ class DocumentController extends Controller
                                 'document_path' => $document->file_path,
                                 'document_type' => $document->document_type,
                                 'document_format'=> $document->document_format,
+                                'doc_name' => $document->doc_name,
+                                'doc_size'=>$document->doc_size,
                                 'created_at' => $document->created_at->format('Y-m-d H:i:s'),
                             ];
                         }),
@@ -227,4 +230,49 @@ class DocumentController extends Controller
         ], 500);
     }
 }
+public function deleteDocument($id)
+    {
+        // Find the document by ID
+        $document = Document::find($id);
+
+        // Check if document exists
+        if (!$document) {
+            return response()->json(['error' => 'Document not found'], 404);
+        }
+
+        // Soft delete the document
+        $document->delete();
+
+        return response()->json(['message' => 'Document deleted successfully'], 200);
+    }
+
+    /**
+     * Recover a document (restore soft deleted document).
+     * Only admin users can recover documents.
+     */
+    public function recoverDocument($id)
+    {
+        // Check if the authenticated user is an admin
+         
+    $AuthUser = auth()->user();
+    $user = User::find($AuthUser->id);
+
+    // Ensure the authenticated user exists and has the 'admin' role
+    if (!$user || !$user->hasRole('admin')) {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+        // Find the soft deleted document by ID
+        $document = Document::withTrashed()->find($id);
+
+        // Check if document exists and is soft deleted
+        if (!$document || !$document->trashed()) {
+            return response()->json(['error' => 'Document not found or not deleted'], 404);
+        }
+
+        // Recover (restore) the document
+        $document->restore();
+
+        return response()->json(['message' => 'Document recovered successfully'], 200);
+    }
+
 }

@@ -21,8 +21,9 @@ return new class extends Migration
                   $table->decimal('utility_fee', 10, 2); // Utility fee for the tenant
                   $table->date('payment_made_until')->nullable(); // Date up to which the payment is made
                   $table->date('start_date'); 
-                  $table->date('end_date'); // Payment start date
-                  $table->date('due_date'); // Payment end date
+                  $table->date('end_date')->nullable();  // Payment start date
+                  $table->date('due_date'); 
+                  $table->enum('Utility_status', ['paid', 'unpaid']); // Payment end date
                   $table->softDeletes(); // Soft delete support
                   $table->timestamps();
               });

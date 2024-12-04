@@ -9,14 +9,12 @@ use Illuminate\Support\Facades\Schema;
         public function up()
         {
             Schema::create('notifications', function (Blueprint $table) {
-                $table->id();
-                $table->string('type'); // e.g., contract_renewal, payment_due
-                $table->text('message');
-               // $table->unsignedBigInteger('employee_id')->nullable(); // To notify a specific employee
-                $table->boolean('is_read')->default(false);
-                $table->timestamps();
-    
-                $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+                $table->id(); // Primary key
+                $table->string('type'); // e.g., App\Notifications\ContractRenewalNotification
+                $table->morphs('notifiable'); // For associating with User or other models
+                $table->text('data'); // Stores JSON data for the notification
+                $table->timestamp('read_at')->nullable(); // Marks the notification as read
+                $table->timestamps(); // Created_at and updated_at
             });
         }
     

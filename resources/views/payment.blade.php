@@ -6,10 +6,17 @@
     <title>Payment Due Reminder</title>
 </head>
 <body>
-    <h2>Hello {{ $tenantName }},</h2>
-    <p>This is a friendly reminder that your payment of <strong>{{ $amount }}</strong> is due on <strong>{{ $dueDate }}</strong>.</p>
-    <p>Please make sure to complete the payment by the due date to avoid any penalties.</p>
-    <p>If you have any questions, feel free to reach out to us.</p>
-    <p>Thank you, <br> Your Property Management Team</p>
+    <h1>Payment Due Reminder</h1>
+    <p>Dear {{ $tenantName }},</p>
+
+    <p>This is a friendly reminder that your payment is due.</p>
+    <ul>
+        <li><strong>Room Number:</strong> {{ $roomNumber }}</li>
+        <li><strong>Due Date:</strong> {{ $dueDate }}</li>
+        <li><strong>Amount Due:</strong> ${{ number_format($amountDue, 2) }}</li>
+    </ul>
+
+    <p>Please make the payment at your earliest convenience.</p>
+    <p>Thank you!</p>
 </body>
 </html>

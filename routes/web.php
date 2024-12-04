@@ -33,7 +33,8 @@ Route::get('/', function () {
 
     return "Tenant or Contract not found.";
 });
-Route::get('/send-payment-due-emails', function () {
+
+Route::get('/', function () {
     $recipients = ['siyangetahunw@gmail.com', 'yilmaruth494@gmail.com', 'tsiti2755@gmail.com']; // Example of multiple recipients
 
     // Fetch tenants who have a payment due soon (you can modify this logic to fit your needs)
@@ -44,7 +45,7 @@ Route::get('/send-payment-due-emails', function () {
         $paymentForTenant = $tenant->paymentsForTenant()->latest()->first();
 
         // Check if the payment due date is today or near (you can modify this condition)
-        if ($paymentForTenant && $paymentForTenant->due_date <= now()->addDays(3)) {
+        if ($paymentForTenant) {
             // Send the email for the due payment
             Mail::to($tenant->email)->send(new PaymentDueMail($tenant, $paymentForTenant));
 

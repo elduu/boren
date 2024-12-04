@@ -16,7 +16,9 @@ return new class extends Migration
             $table->foreignId('tenant_id')->constrained('tenants')->onDelete('cascade'); // Relation to tenant
             $table->decimal('property_price', 15, 2); // Price of the purchased property
             $table->decimal('utility_fee', 10, 2); // Utility fee for the buyer
-            $table->date('start_date'); // Start date, also serving as the due date for the utility fee
+            $table->date('due_date');
+            $table->enum('payment_status', ['paid', 'unpaid']);
+              // Start date, also serving as the due date for the utility fee
             $table->softDeletes(); // Soft delete support
             $table->timestamps();
         });
