@@ -59,20 +59,49 @@ class TenantController extends Controller
                 
         
                 // Calculate due_date as one week before end_date
-                $endDate = Carbon::parse($validatedData['end_date']);
+                $endDate = Carbon::parse($validatedData['payment_made_until']);
                 $validatedData['due_date'] = $endDate->subWeek()->format('Y-m-d');
             } catch (\Exception $e) {
                
             }
             // Step 5: Create the Contract for the Tenant
             $contract = $this->createContract($tenant->id, $validatedData);
+             // Set the payment status based on 'payment_made_until'
+             $currentDate = Carbon::now()->format('Y-m-d');
+             $expiringDate = Carbon::parse($validatedData['expiring_date']);
+             $contract->status = $expiringDate->gte($currentDate) ? 'active' : 'expired';
+     
+          
+             // Save the payment status after updating
+           //  $contract->save();
+           if ($contract instanceof Contract) {
+            $contract->save();
+        }
+        
+        
+        
     
             // Step 6: Create Payment for Tenant if tenant_type is 'tenant'
             $paymentForTenant = null;
             if ($tenant->tenant_type === 'tenant') {
                 $paymentForTenant = $this->createTenantPayment($tenant->id, $validatedData);
                 Log::info('Created Payment for Tenant:', ['paymentForTenant' => $paymentForTenant]);
+    
+                // Set the payment status based on 'payment_made_until'
+                $currentDate = Carbon::now()->format('Y-m-d');
+             //   $endDate = Carbon::parse($validatedData['payment_made_until']);
+                if (Carbon::parse($validatedData['payment_made_until'])->gte($currentDate)) {
+                    $paymentForTenant->payment_status = 'paid';
+                } else {
+                    $paymentForTenant->payment_status = 'unpaid';
+                }
+    
+                // Save the payment status after updating
+                if ($paymentForTenant instanceof PaymentForTenant) {
+                    $paymentForTenant->save();
+                }
             }
+
     
             // Step 7: Store Document files and detect format
             if ($request->has('documents')) {
@@ -137,6 +166,7 @@ class TenantController extends Controller
                 'data' => $tenant,
                 'contract_id' => $contract->id,
             ], 201);
+            
     
         } catch (\Exception $e) {
             // Roll back the transaction in case of error
@@ -171,7 +201,7 @@ class TenantController extends Controller
             'room_number' => 'required|string|max:255|unique:tenants,room_number',
             'tenant_type' => 'required|in:buyer,tenant',
             'contract_type' => 'required|string|max:255',
-            'contract_status' => 'required|string|max:255',
+            'contract_status' => 'nullable|string|max:255',
             'signing_date' => 'required|date',
             'expiring_date' => 'required|date',
             'unit_price' => 'required_if:tenant_type,tenant|numeric',
@@ -181,7 +211,7 @@ class TenantController extends Controller
             
             'payment_made_until' => 'required_if:tenant_type,tenant|date',
             'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
             'documents' => 'required|array|min:1',
             'documents.*.file' => 'required|file|mimes:pdf,doc,docx,xlsx,xls,jpg,jpeg,png|max:2048',
             'documents.*.document_type' => 'required|in:payment_receipt,lease_agreement,tenant_info',
@@ -201,17 +231,17 @@ class TenantController extends Controller
             $contract = Contract::create([
                 'tenant_id' => $tenantId,
                 'type' => $validatedData['contract_type'],
-                'status' => $validatedData['contract_status'],
+                //'status' => $validatedData['contract_status'],
                 'signing_date' => $validatedData['signing_date'],
                 'expiring_date' => $validatedData['expiring_date'],
                 'due_date' => $dueDate,
             ]);
 
-            Contract::whereDate('expiring_date', '<=', $currentDate)
-            ->set(['status' => 'inactive']);
+        //     Contract::whereDate('expiring_date', '<=', $currentDate)
+        //     ->set(['status' => 'inactive']);
 
-        Contract::whereDate('expiring_date', '>', $currentDate)
-            ->set(['status' => 'active']);
+        // Contract::whereDate('expiring_date', '>', $currentDate)
+        //     ->set(['status' => 'active']);
     
             Log::info('Contract Created', ['contract_id' => $contract->id]);
             return $contract;
@@ -226,8 +256,7 @@ class TenantController extends Controller
     private function createTenantPayment($tenantId, $validatedData)
     {
         $validatedData['due_date'] = date('Y-m-d', strtotime($validatedData['payment_made_until'] . ' -1 week'));
-        $currentDate = Carbon::now()->format('Y-m-d');
-
+      
         // Update all payments where the current date is not equal to payment_made_until
    
         $payment = PaymentForTenant::create([
@@ -239,13 +268,13 @@ class TenantController extends Controller
             'payment_made_until' => $validatedData['payment_made_until'],
             'start_date' => $validatedData['start_date'],
             'due_date' => $validatedData['due_date'],
-            'end_date'=>$validatedData['end_date'],
+            //'end_date'=>$validatedData['end_date'],
         ]);
-        PaymentForTenant::whereDate('payment_made_until', '>', $currentDate)
-        ->update(['payment_status' => 'paid']);
+        // PaymentForTenant::whereDate('payment_made_until', '>', $currentDate)
+        // ->update(['payment_status' => 'paid']);
 
-        PaymentForTenant::whereDate('payment_made_until', '<=', $currentDate)
-        ->update(['payment_status' => 'unpaid']);
+        // PaymentForTenant::whereDate('payment_made_until', '<=', $currentDate)
+        // ->update(['payment_status' => 'unpaid']);
     
         Log::info('Payment Created', ['payment_id' => $payment->id]);
         return $payment;

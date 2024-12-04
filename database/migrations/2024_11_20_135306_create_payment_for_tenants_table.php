@@ -23,7 +23,7 @@ return new class extends Migration
                   $table->date('start_date'); 
                   $table->date('end_date')->nullable();  // Payment start date
                   $table->date('due_date'); 
-                  $table->enum('Utility_status', ['paid', 'unpaid']); // Payment end date
+                  $table->enum('payment_status', ['paid', 'unpaid']);
                   $table->softDeletes(); // Soft delete support
                   $table->timestamps();
               });
