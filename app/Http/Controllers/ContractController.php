@@ -175,6 +175,13 @@ switch ($mimeType) {
                 $validatedData,
                 ['due_date' => $dueDate]
             ));
+                   
+            $currentDate = Carbon::now()->format('Y-m-d');
+            Contract::whereDate('expiring_date', '<=', $currentDate)
+            ->set(['status' => 'inactive']);
+
+        Contract::whereDate('expiring_date', '>', $currentDate)
+            ->set(['status' => 'active']);
     
             // Check if documents are provided
             if ($request->has('documents')) {
@@ -246,7 +253,13 @@ switch ($mimeType) {
                 $request->all(),
                 ['due_date' => $dueDate]
             ));
+        
+            $currentDate = Carbon::now()->format('Y-m-d');
+            Contract::whereDate('expiring_date', '<=', $currentDate)
+            ->set(['status' => 'inactive']);
 
+        Contract::whereDate('expiring_date', '>', $currentDate)
+            ->set(['status' => 'active']);
             return response()->json(['success' => true, 'data' => $contract], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['success' => false, 'message' => 'Contract not found.'], 404);

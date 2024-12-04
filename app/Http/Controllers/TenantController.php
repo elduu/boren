@@ -196,11 +196,7 @@ class TenantController extends Controller
       
             $currentDate = Carbon::now()->toDateString();
 
-            Contract::whereDate('expiring_date', '<=', $currentDate)
-                ->set(['status' => 'active']);
-    
-            Contract::whereDate('expiring_date', '>', $currentDate)
-                ->set(['status' => 'inactive']);
+          
     
             $contract = Contract::create([
                 'tenant_id' => $tenantId,
@@ -210,9 +206,16 @@ class TenantController extends Controller
                 'expiring_date' => $validatedData['expiring_date'],
                 'due_date' => $dueDate,
             ]);
+
+            Contract::whereDate('expiring_date', '<=', $currentDate)
+            ->set(['status' => 'inactive']);
+
+        Contract::whereDate('expiring_date', '>', $currentDate)
+            ->set(['status' => 'active']);
     
             Log::info('Contract Created', ['contract_id' => $contract->id]);
             return $contract;
+            
     
         } catch (\Exception $e) {
             Log::error('Error creating contract:', ['error' => $e->getMessage()]);
@@ -226,11 +229,7 @@ class TenantController extends Controller
         $currentDate = Carbon::now()->format('Y-m-d');
 
         // Update all payments where the current date is not equal to payment_made_until
-        PaymentForTenant::whereDate('payment_made_until', '>', $currentDate)
-            ->update(['status' => 'paid']);
-
-            PaymentForTenant::whereDate('payment_made_until', '<=', $currentDate)
-            ->update(['status' => 'unpaid']);
+   
         $payment = PaymentForTenant::create([
             'tenant_id' => $tenantId,
             'unit_price' => $validatedData['unit_price'],
@@ -242,6 +241,11 @@ class TenantController extends Controller
             'due_date' => $validatedData['due_date'],
             'end_date'=>$validatedData['end_date'],
         ]);
+        PaymentForTenant::whereDate('payment_made_until', '>', $currentDate)
+        ->update(['payment_status' => 'paid']);
+
+        PaymentForTenant::whereDate('payment_made_until', '<=', $currentDate)
+        ->update(['payment_status' => 'unpaid']);
     
         Log::info('Payment Created', ['payment_id' => $payment->id]);
         return $payment;

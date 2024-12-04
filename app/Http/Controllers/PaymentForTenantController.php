@@ -125,14 +125,15 @@ class PaymentForTenantController extends Controller
                 $validatedData['due_date'] = $endDate->subWeek()->format('Y-m-d');
                 
                 $currentDate = Carbon::now()->format('Y-m-d');
-
-                PaymentForTenant::whereDate('payment_made_until', '>', $currentDate)
-                ->set(['status' => 'paid']);
-            
-                PaymentForTenant::whereDate('payment_made_until', '<=', $currentDate)
-                ->set(['status' => 'unpaid']);
+                
+             
                 // Create payment record
                 $payment = PaymentForTenant::create($validatedData);
+                PaymentForTenant::whereDate('payment_made_until', '>', $currentDate)
+                ->update(['status' => 'paid']);
+            
+                PaymentForTenant::whereDate('payment_made_until', '<=', $currentDate)
+                ->update(['status' => 'unpaid']);
         
                 // Check if documents are provided
                 if ($request->has('documents')) {
