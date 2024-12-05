@@ -142,8 +142,8 @@ class TenantController extends Controller
                         
     
                         // Store the document file
-                        $documentPath = $this->storeDocumentFile($document['file'], $tenant->id);
-    
+                        $documentPath2 = $this->storeDocumentFile($document['file'], $tenant->id);
+                        $documentPath=url($documentPath2);
                         // Detect the format for each file
                         $documentFormat = $this->detectDocumentFormat($document['file']);
                       // Returns size in bytes
@@ -159,7 +159,7 @@ class TenantController extends Controller
                             'documentable_type' => Tenant::class,
                             'document_type' => $document['document_type'],
                             'document_format' => $documentFormat,
-                            'file_path' => $documentPath,
+                            'file_path' =>$documentPath,
                             'contract_id' => $contractId,
                             'payment_for_tenant_id' => $paymentId,
                             'doc_name' => $documentName,
@@ -419,8 +419,8 @@ public function storeBuyer(Request $request)
                         ]);
     
                         // Store the document file
-                        $documentPath = $this->storeDocumentFile($document['file'], $tenant->id);
-    
+                        $documentPath= $this->storeDocumentFile($document['file'], $tenant->id);
+                     
                         // Detect the format for each file
                         $documentFormat = $this->detectDocumentFormat($document['file']);
                          

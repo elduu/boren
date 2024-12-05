@@ -15,6 +15,9 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Document;
 use App\Models\Contract;
 use Carbon\Carbon;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
+
 
 class FloorController extends Controller
 {
@@ -643,21 +646,77 @@ public function storeContract(Request $request)
         $contract->status = $expiringDate->gte($currentDate) ? 'active' : 'expired';
         $contract->save();
 
-        // Handle documents
-        if ($request->hasFile('documents')) {
-            foreach ($request->file('documents') as $index => $file) {
-                $filePath = $file->store('documents', 'public'); // Store the file
-                $contract->documents()->create([
-                    'file_path' => $filePath,
-                    'document_type' => $request->input("documents.$index.document_type", null),
-                ]);
+        if ($request->has('documents')) {
+            foreach ($request->documents as $document) {
+                if (isset($document['file']) ){
+                    // Store the file and retrieve the path
+                    $documentPath = $this->storeDocumentFile($document['file'], $validatedData['tenant_id']);
+
+                    // Detect the format for each file
+                    $documentFormat = $this->detectDocumentFormat($document['file']);
+                    $documentType = $document['document_type'] ?? 'lease_agreement';
+                    
+                $documentName = $document['file']->getClientOriginalName();
+                $documentSize = $document['file']->getSize();                 
+                    // Create a new Document record
+                    Document::create([
+                        'documentable_id' => $validatedData['tenant_id'],
+                        'documentable_type' => Tenant::class,
+                        'document_type' => $documentType,
+                        'document_format' => $documentFormat,
+                        'file_path' => $documentPath,
+                        'contract_id'=>$contract->id,
+                       'doc_name' => $documentName,
+                'doc_size'=>$documentSize,
+                    ]);
+                }
             }
         }
 
-        return response()->json(['success' => true, 'data' => $contract], 200);
-    } catch (ModelNotFoundException $e) {
-        return response()->json(['success' => false, 'message' => 'Tenant not found.'], 404);
+        return response()->json(['success' => true, 'data' => $contract], 201);
     } catch (\Exception $e) {
-        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to create contract and documents: ' . $e->getMessage()
+        ], 500);
     }
-}}
+}
+
+// Helper method to store the document file
+private function storeDocumentFile(UploadedFile $file, $tenantId)
+{try {
+    // Define the directory path where documents will be stored
+    $directory = "documents/tenants/{$tenantId}";
+
+    // Store the file and get the path
+    $path = $file->store($directory, 'public');
+
+    // Return the full URL
+    return Storage::url($path);
+    
+} catch (\Exception $e) {
+    // Handle errors gracefully
+    throw new \Exception("Failed to store document: " . $e->getMessage());
+}
+}       
+private function detectDocumentFormat(UploadedFile $file)
+{
+$mimeType = $file->getClientMimeType();
+
+switch ($mimeType) {
+case 'application/pdf':
+    return 'pdf';
+case 'application/msword':
+case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+    return 'word';
+case 'application/vnd.ms-excel':
+case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+    return 'excel';
+case 'image/jpeg':
+case 'image/png':
+    return 'image';
+default:
+    return 'unknown';
+}
+}
+}

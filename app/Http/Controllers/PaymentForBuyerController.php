@@ -71,7 +71,7 @@ class PaymentForBuyerController extends Controller
                             'id' => $document->id,
                             'document_type' => $document->document_type,
                             'document_format' => $document->document_format,
-                            'file_path' => $document->file_path,
+                            'file_path' =>url($document->file_path),
                             'created_at' => $document->created_at,
                             'updated_at' => $document->updated_at,
                        'doc_name' => $document->doc_name,

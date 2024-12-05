@@ -68,7 +68,7 @@ class PaymentForTenantController extends Controller
                         'id' => $document->id,
                         'document_type' => $document->document_type,
                         'document_format' => $document->document_format,
-                        'file_path' => $document->file_path,
+                        'file_path' =>  url($document->file_path),
                         'created_at' => $document->created_at,
                         'updated_at' => $document->updated_at,
                         'doc_name' => $document->doc_name,
@@ -153,7 +153,7 @@ class PaymentForTenantController extends Controller
                         if (isset($document['file']) ){
                             // Store the file and retrieve the path
                             $documentPath = $this->storeDocumentFile($document['file'], $validatedData['tenant_id']);
-        
+      
                             // Detect the format for each file
                             $documentFormat = $this->detectDocumentFormat($document['file']);
                             $documentType = $document['document_type'] ?? 'payment_receipt';
@@ -194,7 +194,7 @@ class PaymentForTenantController extends Controller
             $path = $file->store($directory, 'public');
     
             // Return the full URL
-            return env('APP_URL'). Storage::url($path);
+            return Storage::url($path);
             
         } catch (\Exception $e) {
             // Handle errors gracefully

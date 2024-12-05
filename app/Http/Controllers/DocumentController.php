@@ -71,7 +71,7 @@ class DocumentController extends Controller
                             return [
                                 'tenant_name' => $document->tenant->name,
                                 'document_id' => $document->id,
-                                'document_path' => $document->file_path,
+                                'document_path' =>url($document->file_path),
                                 'document_type' => $document->document_type,
                                 'document_format'=> $document->document_format,
                                 'doc_name' => $document->doc_name,
@@ -175,7 +175,7 @@ class DocumentController extends Controller
         ], 500);
     }
 }
-    public function getDocumentsByFloor(Request $request)
+public function getDocumentsByFloor(Request $request)
 {
     try {
         // Validate the request
@@ -193,7 +193,7 @@ class DocumentController extends Controller
 
         // Fetch tenants on the specified floor with their related documents
         $tenants = Tenant::where('floor_id', $request->floor_id)
-            ->with(['documents']) // Assuming a `documents` relationship exists on the Tenant model
+            ->with(['documents']) // Assuming a documents relationship exists on the Tenant model
             ->get();
 
         // Check if tenants exist on the specified floor
@@ -203,35 +203,38 @@ class DocumentController extends Controller
                 'message' => 'No tenants or documents found on the specified floor.',
             ], 404);
         }
+    
 
         // Prepare the response data
-        $documentsData = [
-            'documents' => $tenants->flatMap(function ($tenant) {
-                return $tenant->documents->map(function ($document) use ($tenant) {
-                    return [
-                        'tenant_name' => $tenant->name, // Use tenant's name directly
-                        'document_id' => $document->id,
-                        'document_path' => $document->file_path,
-                        'document_type' => $document->document_type,
-                        'document_format' => $document->document_format,
-                        'doc_name' => $document->doc_name,
-                        'doc_size' => $document->doc_size,
-                        'created_at' => $document->created_at->format('Y-m-d H:i:s'),
-                    ];
-                });
-            })->toArray()
-        ];
-        return response()->json([
-            'success' => true,
-            'data' => $documentsData,
-        ], 200);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to fetch documents: ' . $e->getMessage(),
-        ], 500);
-    }
-}
+       
+                // Prepare the response data
+                $documentsData = Document::with('tenant')->get()->map(function ($document)
+                 { return
+                     [ 
+                        'tenant_name' => $document->tenant->name,
+                         'document_id' => $document->id,
+                          'document_path' => url($document->file_path),
+                           'document_type' => $document->document_type,
+                            'document_format' => $document->document_format, 
+                            'doc_name' => $document->doc_name,
+                             'doc_size' =>$document->doc_size, 
+                             'created_at' => $document->created_at->format('Y-m-d H:i:s'), 
+                            ];
+                         });
+                            
+                            return response()->json([ 'success' => true, 
+                'data' => [ 'documents' => $documentsData ],
+             ],
+                 200);
+            } catch (\Exception $e) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to fetch documents: ' . $e->getMessage(),
+                ], 500);
+            }
+        
+        }
+     
 public function deleteDocument($id)
     {
         // Find the document by ID
