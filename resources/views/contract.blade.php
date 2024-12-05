@@ -43,6 +43,9 @@
             font-size: 12px;
             color: #777;
         }
+        .footer p {
+            margin: 0;
+        }
     </style>
 </head>
 <body>
@@ -51,17 +54,14 @@
             <h1>Contract Renewal Reminder</h1>
         </div>
         <div class="content">
-            <p>Dear customer</p>
-            <p>We hope this email finds you well. We wanted to remind you that your contract is set to expire on
-                 {{-- <strong>{{ $customer->contract_expiration->format('F j, Y') }}</strong>.</p> --}}
+            <p>Dear {{ $tenantName }},</p>
+            <p>We hope this email finds you well. This is a reminder that your contract is set to expire on <strong>{{ $contractExpiration }}</strong>.</p>
             <p>Please renew your contract before the expiration date to ensure uninterrupted service.</p>
-            <p>Click the button below to renew your contract now:</p>
-          {{-- <a href="{{ url('/renew/' . $customer->id) }}" class="button">Renew Contract</a> --}}
             <p>If you have any questions or need assistance, please feel free to contact our support team.</p>
             <p>Thank you for choosing our service!</p>
         </div>
         <div class="footer">
-            <p>&copy; {{--  --}} Your Company Name. All rights reserved.</p>
+            <p>&copy; {{ now()->year }} Your Company Name. All rights reserved.</p>
         </div>
     </div>
 </body>

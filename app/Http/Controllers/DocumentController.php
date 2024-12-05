@@ -205,22 +205,22 @@ class DocumentController extends Controller
         }
 
         // Prepare the response data
-        $documentsData = $tenants->map(function ($tenant) {
-            return [
-               
-                'documents' => $tenant->documents->map(function ($document) {
+        $documentsData = [
+            'documents' => $tenants->flatMap(function ($tenant) {
+                return $tenant->documents->map(function ($document) use ($tenant) {
                     return [
-                        'tenant_name' => $document->tenant->name,
+                        'tenant_name' => $tenant->name, // Use tenant's name directly
                         'document_id' => $document->id,
                         'document_path' => $document->file_path,
                         'document_type' => $document->document_type,
-                        'document_format'=> $document->document_format,
+                        'document_format' => $document->document_format,
+                        'doc_name' => $document->doc_name,
+                        'doc_size' => $document->doc_size,
                         'created_at' => $document->created_at->format('Y-m-d H:i:s'),
                     ];
-                }),
-            ];
-        });
-
+                });
+            })->toArray()
+        ];
         return response()->json([
             'success' => true,
             'data' => $documentsData,

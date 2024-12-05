@@ -8,7 +8,7 @@ use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-
+use Carbon\Carbon;
 
 
 class ContractRenewalMail extends Mailable
@@ -24,12 +24,14 @@ class ContractRenewalMail extends Mailable
 
     public function build()
     {
+        $contractExpiration = Carbon::parse($this->contract->expiration_date)->format('F j, Y');
         return $this->view('contract')
             ->subject('Contract Renewal Reminder')
             ->with([
-                'tenant' => $this->tenant,
-                'contract' => $this->contract,
-            ]);
+                'tenantName' => $this->tenant->name,
+               'contractExpiration' =>  $contractExpiration, 
+                
+            ]); 
     }
 }
 
