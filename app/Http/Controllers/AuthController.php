@@ -208,40 +208,14 @@ public function getUserInfo(Request $request)
             
 public function listAllUsers()
 {
-    
     $AuthUser = auth()->user();
     $user = User::find($AuthUser->id);
 
-    // Ensure the authenticated user exists and has the 'admin' role
-    if (!$user || !$user->hasRole('admin')) {
+    if (!$user->hasRole('admin')) {
         return response()->json(['error' => 'Unauthorized'], 403);
     }
 
-    // Retrieve all users and include their roles
-    $users = User::with('roles') // Eager load the roles relationship
-                 ->select('id', 'name', 'email', 'created_at', 'updated_at','password') // Limit fields returned
-                 ->get();
-
-    // Structure the response to include roles information
-  // Structure the response to include roles information
-   $users = $users->map(function ($user) 
-   { $roles = $user->roles->map(function ($role) 
-    { return $role->name; })->implode(', '); // Convert the array to a comma-separated string
-     return [ 'id' => $user->id,
-      'name' => $user->name, 
-      'email' => $user->email,
-       'roles' => $roles, // Assign the formatted roles string
-        'created_at' => $user->created_at,
-         'updated_at' => $user->updated_at, 
-        
-        ];
-    });
-    
-    
-    return response()->json([
-        'status' => 'success',
-        'users' => $users,
-    ], 200);
+    return response()->json(User::all(), 200);
 }
 
 public function update(Request $request, $id)
