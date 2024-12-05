@@ -48,6 +48,7 @@ Route::middleware(['jwt.auth'])->group(function () {
         Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
         Route::post('reset-password', [AuthController::class, 'resetPassword']);
         Route::get('users', [AuthController::class, 'listAllUsers']);
+        Route::get('user-info', [AuthController::class, 'getUserInfo']);
       //  Route::post('contractsadd', [ContractController::class, 'store']);
 
     });
