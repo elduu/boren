@@ -103,7 +103,7 @@ class PaymentForTenantController extends Controller
                 'utility_fee' => 'required|numeric|min:0',
                 'start_date' => 'required|date',
               //  'end_date' => 'required|date|after_or_equal:start_date',
-                'payment_made_until' => 'nullable|date|before_or_equal:end_date',
+                'payment_made_until' => 'nullable|date|after_or_equal:start_date',
                 'documents' => 'array',
                 'documents.*.file' => 'required|file',
                 'documents.*.document_type' => 'sometimes|string'
@@ -138,9 +138,9 @@ class PaymentForTenantController extends Controller
                     // Set the payment status based on 'payment_made_until'
                     $currentDate = Carbon::now()->format('Y-m-d');
                     if (Carbon::parse($payment->payment_made_until)->gte($currentDate)) {
-                        $payment->status = 'paid';
+                        $payment->payment_status = 'paid';
                     } else {
-                        $payment->status = 'unpaid';
+                        $payment->payment_status = 'unpaid';
                     }
         
                     // Save the payment status after updating
@@ -240,7 +240,7 @@ public function update(Request $request, $id)
         'utility_fee' => 'nullable|numeric|min:0',
         'start_date' => 'nullable|date',
         'end_date' => 'nullable|date|after_or_equal:start_date',
-        'payment_made_until' => 'nullable|date|before_or_equal:end_date',
+        'payment_made_until' => 'nullable|date|after_or_equal:start_date',
     
     ]);
 
