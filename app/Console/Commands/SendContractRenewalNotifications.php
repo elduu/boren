@@ -34,7 +34,8 @@ class SendContractRenewalNotifications extends Command
         $thirtyDaysFromNow = Carbon::now()->addDays(30);
          $tenantsDue = Contract::where('due_date', '<=', $thirtyDaysFromNow)
           ->where('status', 'active') 
-          ->with('tenant'); // Ensure the tenant relationship exists ->get();
+          ->with('tenant')
+          ->get(); // Ensure the tenant relationship exists ->get();
         if ($tenantsDue->isEmpty()) {
             $this->info('No tenants with contract renewal  dates found.');
             return;

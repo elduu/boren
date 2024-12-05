@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
 use App\Models\Document;
 use App\Models\Contract;
+use Carbon\Carbon;
 
 class FloorController extends Controller
 {
@@ -583,4 +584,80 @@ public function listDeletedFloors()
         'deleted_floors' => $deletedFloors
     ], 200);
 }
-}
+public function storeContract(Request $request)
+{
+    // Custom validation error messages
+    $messages = [
+        'tenant_id.required' => 'Tenant ID is required.',
+        'tenant_id.exists' => 'The specified Tenant ID does not exist.',
+        'type.required' => 'The contract type is required.',
+        'type.in' => 'The contract type must be either rental or purchased.',
+        'status.required' => 'The contract status is required.',
+        'status.in' => 'The contract status must be either active or expired.',
+        'signing_date.required' => 'The signing date is required.',
+        'signing_date.date' => 'The signing date must be a valid date.',
+        'expiring_date.required' => 'The expiring date is required.',
+        'expiring_date.date' => 'The expiring date must be a valid date.',
+        'expiring_date.after' => 'The expiring date must be after the signing date.',
+        'documents.array' => 'Documents must be an array.',
+        'documents.*.file.required' => 'Each document must have a file.',
+        'documents.*.file.file' => 'Each document must be a valid file.',
+        'documents.*.document_type.string' => 'Document type must be a string.',
+    ];
+
+    // Validate form-data inputs
+    $validator = Validator::make($request->all(), [
+        'tenant_id' => 'required|exists:tenants,id',
+        'type' => 'required|in:rental,purchased',
+        'status' => 'required|in:active,expired',
+        'signing_date' => 'required|date',
+        'expiring_date' => 'required|date|after:signing_date',
+        'documents' => 'nullable|array',
+        'documents.*.file' => 'required_with:documents|file',
+        'documents.*.document_type' => 'nullable|string',
+    ], $messages);
+
+    if ($validator->fails()) {
+        return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+    }
+
+    try {
+        $validatedData = $validator->validated();
+
+        // Calculate due date (one month before expiring date)
+        $dueDate = Carbon::parse($validatedData['expiring_date'])->subMonth()->format('Y-m-d');
+
+        $tenant = Tenant::findOrFail($validatedData['tenant_id']);
+        $floorId = $tenant->floor_id; // Fetch the floor ID if required
+
+        // Create the contract
+        $contract = Contract::create(array_merge(
+            $validatedData,
+            ['due_date' => $dueDate]
+        ));
+
+        // Update contract status based on the current date
+        $currentDate = Carbon::now()->format('Y-m-d');
+        $expiringDate = Carbon::parse($validatedData['expiring_date']);
+
+        $contract->status = $expiringDate->gte($currentDate) ? 'active' : 'expired';
+        $contract->save();
+
+        // Handle documents
+        if ($request->hasFile('documents')) {
+            foreach ($request->file('documents') as $index => $file) {
+                $filePath = $file->store('documents', 'public'); // Store the file
+                $contract->documents()->create([
+                    'file_path' => $filePath,
+                    'document_type' => $request->input("documents.$index.document_type", null),
+                ]);
+            }
+        }
+
+        return response()->json(['success' => true, 'data' => $contract], 200);
+    } catch (ModelNotFoundException $e) {
+        return response()->json(['success' => false, 'message' => 'Tenant not found.'], 404);
+    } catch (\Exception $e) {
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+    }
+}}

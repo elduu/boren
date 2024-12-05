@@ -31,30 +31,32 @@ class DocumentController extends Controller
      */
     public function filterByDocumentType(Request $request)
     {
-            // Get the input values
-           
-            try {
-                // Validate the request
-                $validator = Validator::make($request->all(), [
-                    'floor_id' => 'required|exists:floors,id',
-                    'document_type' =>'required|exists:documents,document_type',
-                ]);
-        
-                if ($validator->fails()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Validation failed',
-                        'errors' => $validator->errors(),
-                    ], 422);
-                }
-        
-                // Fetch tenants on the specified floor with their related documents
-                $tenants = Tenant::where('floor_id', $request->floor_id)
-                    ->with(['documents']) // Assuming a `documents` relationship exists on the Tenant model
-                    ->get();
-        
-                // Check if tenants exist on the specified floor
-                if ($tenants->isEmpty()) {
+        try {
+            // Validate the request
+            $validator = Validator::make($request->all(), [
+                'floor_id' => 'required|exists:floors,id',
+                'document_type' => 'required|exists:documents,document_type',
+            ]);
+    
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+    
+            // Fetch tenants on the specified floor with their related documents of the specified type
+            $tenants = Tenant::where('floor_id', $request->floor_id)
+                ->whereHas('documents', function ($query) use ($request) {
+                    $query->where('document_type', $request->document_type);
+                }) // Ensures only tenants with the specified document type are retrieved
+                ->with(['documents' => function ($query) use ($request) {
+                    $query->where('document_type', $request->document_type);
+                }]) // Includes only the documents with the specified type in the result
+                ->get();
+    
+            if ($tenants->isEmpty()) {
                     return response()->json([
                         'success' => false,
                         'message' => 'No tenants or documents found on the specified floor.',

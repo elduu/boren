@@ -28,7 +28,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('user-info/{userId}', [AuthController::class, 'getUserInfo']);
+Route::get('user-info', [AuthController::class, 'getUserInfo']);
 
 Route::post('tenants', [TenantController::class, 'store']);
 
@@ -36,8 +36,7 @@ Route::post('login', [AuthController::class, 'login']);
 Route::post('logout', [AuthController::class, 'logout']);
 Route::post('refresh-token', [AuthController::class, 'refreshToken']);
 
-
-
+//Route::get('contractsadd', [ContractController::class, 'storecontracts']);
 
 
 Route::middleware(['jwt.auth'])->group(function () {
@@ -49,7 +48,7 @@ Route::middleware(['jwt.auth'])->group(function () {
         Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
         Route::post('reset-password', [AuthController::class, 'resetPassword']);
         Route::get('users', [AuthController::class, 'listAllUsers']);
-
+      //  Route::post('contractsadd', [ContractController::class, 'store']);
 
     });
 
@@ -98,6 +97,7 @@ Route::get('building_search', [BuildingController::class, 'search']); // Get all
 
 Route::middleware(['permission:manage floors'])->group(function () {
     Route::post('floors', [FloorController::class, 'store']);
+    Route::post('contractadd', [FloorController::class, 'storeContract']);
     Route::delete('floors/{id}', [FloorController::class, 'destroy']);
     Route::patch('floors_restore/{id}', [FloorController::class, 'restore']);
 });
@@ -140,7 +140,7 @@ Route::middleware(['permission:manage contracts'])->group(function () {
     Route::patch('contracts/{id}/restore', [ContractController::class, 'restore']);
     Route::post('contracts/{id}/status', [ContractController::class, 'updateStatus']);
 });
-Route::post('contracts', [ContractController::class, 'store']);
+
 Route::post('/contractsfilter', [ContractController::class, 'filterByType']);
 Route::post('getcontracts', [ContractController::class, 'index']);
 Route::get('tenantcontracts/{tenantId}', [ContractController::class, 'getTenantContracts']);  // List all contracts
@@ -177,7 +177,7 @@ Route::middleware(['permission:manage documents'])->group(function () {
 Route::delete('/documents/{id}', [DocumentController::class, 'deleteDocument']);
 Route::patch('/documents/{id}/restore', [DocumentController::class, 'recoverDocument']);
 Route::get('/documents', [DocumentController::class, 'listAllDocuments']);
-Route::get('/filterdocbytype', [DocumentController::class, 'filterByDocumentType']);
+Route::post('/filterdocbytype', [DocumentController::class, 'filterByDocumentType']);
 Route::get('/filterdocbytenant/{tenantId}', [DocumentController::class, 'filterByTenantId']);
 Route::post('/getdocuments', [DocumentController::class, 'getDocumentsByFloor']);
 
