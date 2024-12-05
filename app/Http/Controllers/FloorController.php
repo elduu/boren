@@ -567,5 +567,20 @@ public function getBuildingDataBuyer(Request $request)
     }
 }
 
+public function listDeletedFloors()
+{
+    // Retrieve only deleted floors using the `onlyTrashed` method
+    $deletedFloors = Floor::onlyTrashed()->get();
 
+    // Check if there are any deleted floors
+    if ($deletedFloors->isEmpty()) {
+        return response()->json(['message' => 'No deleted floors found'], 404);
+    }
+
+    // Return the deleted floors
+    return response()->json([
+        'status' => 'success',
+        'deleted_floors' => $deletedFloors
+    ], 200);
+}
 }

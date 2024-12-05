@@ -169,27 +169,25 @@ public function logout(Request $request)
 
     return response()->json(['message' => 'Successfully logged out'], 200);
 }
-public function getUserInfo()
-{
-    // Retrieve the authenticated user based on the token
-    $user = Auth::user();
+public function getUserInfo($id) { // Retrieve the user by the provided ID 
+    $user = User::find($id); if ($user) { // Load the roles relationship to include role information
+         $user->load('roles'); // Assume the user has only one role 
+         
+         $role = $user->roles->first() ? $user->roles->first()->name : 'No role assigned'; // Structure the user's information excluding sensitive data
+          $userData = [ 'id' => $user->id,
+           'name' => $user->name, 
+           'email' => $user->email, 
+           'role' => $role, // Include the user's specific role
+            'created_at' => $user->created_at,
+             'updated_at' => $user->updated_at, 
+            ]; // Return the user's information as a JSON response 
+            return response()->json([ 'status' => 'success', 'data' => $userData ], 200); } 
+            else { // Return an error response if the user is not found
+                 return response()->json([ 'status' => 'error', 'message' => 'User not found' ], 404); } 
+                
+                }
 
-    if ($user) {
-        // Return the user's information as a JSON response
-        return response()->json([
-            'status' => 'success',
-            'data' => $user
-        ], 200);
-    } else {
-        // Return an error response if the user is not found
-        return response()->json([
-            'status' => 'error',
-            'message' => 'User not authenticated'
-        ], 401);
-    }
-}
-
-
+            
 public function listAllUsers()
 {
     
@@ -207,18 +205,21 @@ public function listAllUsers()
                  ->get();
 
     // Structure the response to include roles information
-    $users = $users->map(function ($user) {
-        return [
-            'id' => $user->id,
-            'name' => $user->name,
-            'email' => $user->email,
-            'roles' => $user->roles->pluck('name'), // Get the role names as a collection
-            'created_at' => $user->created_at,
-            'updated_at' => $user->updated_at,
-            'password'=>$user->password,
+  // Structure the response to include roles information
+   $users = $users->map(function ($user) 
+   { $roles = $user->roles->map(function ($role) 
+    { return $role->name; })->implode(', '); // Convert the array to a comma-separated string
+     return [ 'id' => $user->id,
+      'name' => $user->name, 
+      'email' => $user->email,
+       'roles' => $roles, // Assign the formatted roles string
+        'created_at' => $user->created_at,
+         'updated_at' => $user->updated_at, 
+        
         ];
     });
-
+    
+    
     return response()->json([
         'status' => 'success',
         'users' => $users,

@@ -396,6 +396,22 @@ public function search(Request $request)
         return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
     }
 }
+public function listDeletedPayments()
+{
+    // Retrieve only deleted payments
+    $deletedPayments = PaymentForTenant::onlyTrashed()->get();
+
+    // Check if there are any deleted payments
+    if ($deletedPayments->isEmpty()) {
+        return response()->json(['message' => 'No deleted payments found'], 404);
+    }
+
+    // Return the deleted payments
+    return response()->json([
+        'status' => 'success',
+        'deleted_payments' => $deletedPayments
+    ], 200);
+}
     }
     
 

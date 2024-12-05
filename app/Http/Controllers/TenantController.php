@@ -31,7 +31,22 @@ class TenantController extends Controller
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
-
+    public function listDeletedTenants()
+    {
+        // Retrieve only deleted tenants
+        $deletedTenants = Tenant::onlyTrashed()->get();
+    
+        // Check if there are any deleted tenants
+        if ($deletedTenants->isEmpty()) {
+            return response()->json(['message' => 'No deleted tenants found'], 404);
+        }
+    
+        // Return the deleted tenants
+        return response()->json([
+            'status' => 'success',
+            'deleted_tenants' => $deletedTenants
+        ], 200);
+    }
     public function store(Request $request)
     {
         try {

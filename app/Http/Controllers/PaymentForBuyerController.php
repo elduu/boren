@@ -388,4 +388,21 @@ class PaymentForBuyerController extends Controller
             return response()->json(['message' => 'Error fetching payments', 'error' => $e->getMessage()], 500);
         }
     }
+
+    public function listDeletedPayments()
+{
+    // Retrieve only deleted payments
+    $deletedPayments = PaymentForBuyer::onlyTrashed()->get();
+
+    // Check if there are any deleted payments
+    if ($deletedPayments->isEmpty()) {
+        return response()->json(['message' => 'No deleted payments found'], 404);
+    }
+
+    // Return the deleted payments
+    return response()->json([
+        'status' => 'success',
+        'deleted_payments' => $deletedPayments
+    ], 200);
+}
 }

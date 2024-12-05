@@ -28,7 +28,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::get('user-info', [AuthController::class, 'getUserInfo']);
+Route::get('user-info/{userId}', [AuthController::class, 'getUserInfo']);
 
 Route::post('tenants', [TenantController::class, 'store']);
 
@@ -78,7 +78,7 @@ Route::get('categories/{id}', [CategoryController::class, 'show']);
 Route::get('categories', [CategoryController::class, 'index']); // List all categories
 Route::get('category_search/{name}', [CategoryController::class, 'search']);
 Route::patch('categories_restore/{id}', [CategoryController::class, 'restore']);
-Route::get('categories/trashed', [CategoryController::class, 'trashed']);
+Route::get('categories_trashed', [CategoryController::class, 'trashed']);
 Route::get('categoriesinbuildings/{id}', [CategoryController::class, 'buildingsInCategoryid']);
 Route::get('buildingsInCategory', [CategoryController::class, 'buildingsInCategory']);
 
@@ -182,3 +182,10 @@ Route::get('/filterdocbytenant/{tenantId}', [DocumentController::class, 'filterB
 Route::post('/getdocuments', [DocumentController::class, 'getDocumentsByFloor']);
 
 });
+
+Route::get('/deleted-floors', [FloorController::class, 'listDeletedFloors']);
+Route::get('/deleted-contracts', [ContractController::class, 'listDeletedContracts']);
+Route::get('/deleted-payments', [PaymentForTenantController::class, 'listDeletedPayments']);
+Route::get('/deleted-payments-buyer', [PaymentForBuyerController::class, 'listDeletedPayments']);
+Route::get('/deleted-tenants', [TenantController::class, 'listDeletedTenants']);
+Route::get('/deleted-documents', [DocumentController::class, 'listDeletedDocuments']);

@@ -275,4 +275,20 @@ public function deleteDocument($id)
         return response()->json(['message' => 'Document recovered successfully'], 200);
     }
 
+    public function listDeletedDocuments()
+{
+    // Retrieve only deleted documents
+    $deletedDocuments = Document::onlyTrashed()->get();
+
+    // Check if there are any deleted documents
+    if ($deletedDocuments->isEmpty()) {
+        return response()->json(['message' => 'No deleted documents found'], 404);
+    }
+
+    // Return the deleted documents
+    return response()->json([
+        'status' => 'success',
+        'deleted_documents' => $deletedDocuments
+    ], 200);
+}
 }

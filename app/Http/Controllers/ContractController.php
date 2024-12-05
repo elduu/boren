@@ -444,6 +444,21 @@ public function search(Request $request)
         return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
     }
 }
+public function listDeletedContracts()
+{
+    // Retrieve only deleted payments
+    $deletedPayments = Contract::onlyTrashed()->get();
 
+    // Check if there are any deleted payments
+    if ($deletedPayments->isEmpty()) {
+        return response()->json(['message' => 'No deleted Contracts found'], 404);
+    }
+
+    // Return the deleted payments
+    return response()->json([
+        'status' => 'success',
+        'deleted_payments' => $deletedPayments
+    ], 200);
+}
 }
 
