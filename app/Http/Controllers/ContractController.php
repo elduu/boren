@@ -343,27 +343,29 @@ public function filterByType(Request $request)
     }
 }
 public function search(Request $request)
-{try{
+{
 
+    try {
+        $query = $request->input('query');
 
-    $query = $request->input('query');
-    $payments = Contract::with([
-        'tenants' => function ($q) use ($query) {
-            $q->where('name', 'like', "%{$query}%")
-               // ->orWhere('room_number', 'like', "%{$query}%")
-                //->orWhere('tenant_number', 'like', "%{$query}%")
-                //->orWhere('phone_number', 'like', "%{$query}%")
-                ->get();
-        },
-    ]);
+        // Search payments and their related tenants
+        $contracts =  Contract::whereHas('tenant', function ($q) use ($query) {
+            $q->where('name', 'like', "%{$query}%");
+                // ->orWhere('room_number', 'like', "%{$query}%")
+                // ->orWhere('tenant_number', 'like', "%{$query}%")
+                // ->orWhere('phone_number', 'like', "%{$query}%");
+        })
+        ->with('tenant') // Load the related tenants
+        ->get();
 
-  
+   
 
-        return response()->json(['success' => true, 'data' => $payments], 200);
+        return response()->json(['success' => true, 'data' => $contracts], 200);
     } catch (\Exception $e) {
         return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
     }
 }
+
 public function listDeletedContracts()
 {
     // Retrieve only deleted payments

@@ -191,49 +191,47 @@ public function getDocumentsByFloor(Request $request)
             ], 422);
         }
 
-        // Fetch tenants on the specified floor with their related documents
-        $tenants = Tenant::where('floor_id', $request->floor_id)
-            ->with(['documents']) // Assuming a documents relationship exists on the Tenant model
-            ->get();
+        // Fetch documents related to tenants on the specified floor
+        $documents = Document::whereHas('tenant', function ($query) use ($request) {
+            $query->where('floor_id', $request->floor_id);
+        })->get();
 
-        // Check if tenants exist on the specified floor
-        if ($tenants->isEmpty()) {
+        // Check if any documents are found
+        if ($documents->isEmpty()) {
             return response()->json([
                 'success' => false,
-                'message' => 'No tenants or documents found on the specified floor.',
+                'message' => 'No documents found for the specified floor.',
             ], 404);
         }
-    
 
         // Prepare the response data
-       
-                // Prepare the response data
-                $documentsData = Document::with('tenant')->get()->map(function ($document)
-                 { return
-                     [ 
-                        'tenant_name' => $document->tenant->name,
-                         'document_id' => $document->id,
-                          'document_path' => url($document->file_path),
-                           'document_type' => $document->document_type,
-                            'document_format' => $document->document_format, 
-                            'doc_name' => $document->doc_name,
-                             'doc_size' =>$document->doc_size, 
-                             'created_at' => $document->created_at->format('Y-m-d H:i:s'), 
-                            ];
-                         });
-                            
-                            return response()->json([ 'success' => true, 
-                'data' => [ 'documents' => $documentsData ],
-             ],
-                 200);
-            } catch (\Exception $e) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to fetch documents: ' . $e->getMessage(),
-                ], 500);
-            }
-        
-        }
+        $documentsData = $documents->map(function ($document) {
+            return [
+                'tenant_name' => $document->tenant->name ?? 'Unknown Tenant',
+                'document_id' => $document->id,
+                'document_path' => url($document->file_path),
+                'document_type' => $document->document_type,
+                'document_format' => $document->document_format,
+                'doc_name' => $document->doc_name,
+                'doc_size' => $document->doc_size,
+                'created_at' => $document->created_at->format('Y-m-d H:i:s'),
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'documents' => $documentsData,
+            ],
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to fetch documents: ' . $e->getMessage(),
+        ], 500);
+    }
+}
+
      
 public function deleteDocument($id)
     {

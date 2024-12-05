@@ -130,8 +130,8 @@ Route::prefix('tenants')->middleware(['permission:manage tenants'])->group(funct
     Route::get('trashed', [TenantController::class, 'trashed']);
     Route::post('tenants/{id}/status', [TenantController::class, 'updateStatus']);
 });
-Route::get('search', [TenantController::class, 'search'])->middleware('permission:view tenants');;
-Route::post('buyer', [TenantController::class, 'storeBuyer'])->middleware('permission:manage tenants');;
+Route::get('search', [TenantController::class, 'search']);
+Route::post('buyer', [TenantController::class, 'storeBuyer']);
 
 Route::middleware(['permission:manage contracts'])->group(function () {
    
