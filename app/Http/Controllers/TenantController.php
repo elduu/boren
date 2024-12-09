@@ -38,7 +38,7 @@ class TenantController extends Controller
     
         // Check if there are any deleted tenants
         if ($deletedTenants->isEmpty()) {
-            return response()->json(['message' => 'No deleted tenants found'], 404);
+            return response()->json(['message' => 'No deleted tenants found'], 200);
         }
     
         // Return the deleted tenants
@@ -643,13 +643,22 @@ private function createBuyerPayment($tenantId, $validatedData)
     public function search(Request $request)
     {
         $query = $request->input('query');
+    
         try {
             $tenants = Tenant::where('name', 'like', "%{$query}%")
                 ->orWhere('room_number', 'like', "%{$query}%")
                 ->orWhere('tenant_number', 'like', "%{$query}%")
                 ->orWhere('phone_number', 'like', "%{$query}%")
                 ->get();
-
+    
+            if ($tenants->isEmpty()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'No tenants found for the given query.',
+                    'data' => []
+                ], 200); // Keep the HTTP status code as 200
+            }
+    
             return response()->json(['success' => true, 'data' => $tenants], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);

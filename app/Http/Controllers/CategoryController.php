@@ -105,7 +105,7 @@ public function trashed()
     $deletedCategories = Category::onlyTrashed()->get();
 
     if ($deletedCategories->isEmpty()) {
-        return response()->json(['message' => 'No soft-deleted categories found'], 404);
+        return response()->json(['message' => 'No soft-deleted categories found'], 200);
     }
 
     return response()->json($deletedCategories, 200);

@@ -93,7 +93,7 @@ class BuildingController extends Controller
             $deletedBuildings = Building::onlyTrashed()->get();
 
             if ($deletedBuildings->isEmpty()) {
-                return response()->json(['message' => 'No soft-deleted buildings found'], 404);
+                return response()->json(['message' => 'No soft-deleted buildings found'], 200);
             }
 
             return response()->json($deletedBuildings, 200);
