@@ -13,7 +13,7 @@ class Contract extends Model
     protected $fillable = [
         'tenant_id',
         'type',
-        'status',
+       // 'status',
         'signing_date',
         'expiring_date',
         'due_date',
@@ -38,6 +38,17 @@ class Contract extends Model
     public function floor()
 {
     return $this->belongsTo(Floor::class); // Assuming each contract belongs to a floor
+}
+public function getContractStatusAttribute()
+{
+    $currentDate = now();
+    if ($currentDate->lt($this->due_date)) {
+        return 'Active';
+    } elseif ($currentDate->gte($this->due_date) && $currentDate->lt($this->expiring_date)) {
+        return 'Overdue';
+    } else {
+        return 'Expired';
+    }
 }
 }
 

@@ -62,9 +62,9 @@ Route::middleware(['jwt.auth'])->group(function () {
     Route::get('payment-due-notifications', [NotificationController::class, 'listPaymentDueNotifications']);
     
 
-    Route::get('searchpaymentbuyer', [PaymentForBuyerController::class, 'search']);
-    Route::get('searchpaymenttenant', [PaymentForTenantController::class, 'search']);
-    Route::get('searchcontracts', [ContractController::class, 'search']);
+    Route::post('searchpaymentbuyer', [PaymentForBuyerController::class, 'search']);
+    Route::post('searchpaymenttenant', [PaymentForTenantController::class, 'search']);
+    Route::post('searchcontracts', [ContractController::class, 'search']);
     Route::middleware(['permission:manage categories'])->group(function () {
 
 Route::post('categories', [CategoryController::class, 'store']); // Create a new category
@@ -181,6 +181,7 @@ Route::get('/documents', [DocumentController::class, 'listAllDocuments']);
 Route::post('/filterdocbytype', [DocumentController::class, 'filterByDocumentType']);
 Route::get('/filterdocbytenant/{tenantId}', [DocumentController::class, 'filterByTenantId']);
 Route::post('/getdocuments', [DocumentController::class, 'getDocumentsByFloor']);
+Route::post('/searchdoc', [DocumentController::class, 'filterByTenantName']);
 
 });
 

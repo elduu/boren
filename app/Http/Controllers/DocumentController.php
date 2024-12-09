@@ -285,7 +285,7 @@ public function deleteDocument($id)
 
     // Check if there are any deleted documents
     if ($deletedDocuments->isEmpty()) {
-        return response()->json(['message' => 'No deleted documents found'], 404);
+        return response()->json(['message' => 'No deleted documents found'], 200);
     }
 
     // Return the deleted documents

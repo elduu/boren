@@ -83,16 +83,7 @@ class TenantController extends Controller
             $contract = $this->createContract($tenant->id, $validatedData);
              // Set the payment status based on 'payment_made_until'
              $currentDate = Carbon::now()->format('Y-m-d');
-             $expiringDate = Carbon::parse($validatedData['expiring_date']);
-             $contract->status = $expiringDate->gte($currentDate) ? 'active' : 'expired';
-     
-          
-             // Save the payment status after updating
-           //  $contract->save();
-           if ($contract instanceof Contract) {
-            $contract->save();
-        }
-        
+           
         
         
     
@@ -103,18 +94,7 @@ class TenantController extends Controller
                 Log::info('Created Payment for Tenant:', ['paymentForTenant' => $paymentForTenant]);
     
                 // Set the payment status based on 'payment_made_until'
-                $currentDate = Carbon::now()->format('Y-m-d');
-             //   $endDate = Carbon::parse($validatedData['payment_made_until']);
-                if (Carbon::parse($validatedData['payment_made_until'])->gte($currentDate)) {
-                    $paymentForTenant->payment_status = 'paid';
-                } else {
-                    $paymentForTenant->payment_status = 'unpaid';
-                }
-    
-                // Save the payment status after updating
-                if ($paymentForTenant instanceof PaymentForTenant) {
-                    $paymentForTenant->save();
-                }
+                
             }
 
     

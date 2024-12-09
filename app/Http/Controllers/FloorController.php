@@ -578,7 +578,7 @@ public function listDeletedFloors()
 
     // Check if there are any deleted floors
     if ($deletedFloors->isEmpty()) {
-        return response()->json(['message' => 'No deleted floors found'], 404);
+        return response()->json(['message' => 'No deleted floors found'], 200);
     }
 
     // Return the deleted floors
@@ -612,7 +612,7 @@ public function storeContract(Request $request)
     $validator = Validator::make($request->all(), [
         'tenant_id' => 'required|exists:tenants,id',
         'type' => 'required|in:rental,purchased',
-        'status' => 'required|in:active,expired',
+       // 'status' => 'required|in:active,expired',
         'signing_date' => 'required|date',
         'expiring_date' => 'required|date|after:signing_date',
         'documents' => 'nullable|array',
@@ -641,10 +641,10 @@ public function storeContract(Request $request)
 
         // Update contract status based on the current date
         $currentDate = Carbon::now()->format('Y-m-d');
-        $expiringDate = Carbon::parse($validatedData['expiring_date']);
+        // $expiringDate = Carbon::parse($validatedData['expiring_date']);
 
-        $contract->status = $expiringDate->gte($currentDate) ? 'active' : 'expired';
-        $contract->save();
+        // $contract->status = $expiringDate->gte($currentDate) ? 'active' : 'expired';
+        // $contract->save();
 
         if ($request->has('documents')) {
             foreach ($request->documents as $document) {

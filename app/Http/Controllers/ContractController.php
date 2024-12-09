@@ -74,7 +74,7 @@ class ContractController extends Controller
                     'tenant_name' => $contract->tenant->name ?? null, 
                     // Include tenant name
                     'type' => $contract->type,
-                    'status' => $contract->status,
+                    'status' => $contract->contract_status,
                     'signing_date' => $contract->signing_date,
                     'expiring_date' => $contract->expiring_date,
                     'due_date' => $contract->due_date,
@@ -344,27 +344,56 @@ public function filterByType(Request $request)
 }
 public function search(Request $request)
 {
-
     try {
         $query = $request->input('query');
 
-        // Search payments and their related tenants
-        $contracts =  Contract::whereHas('tenant', function ($q) use ($query) {
+        if (!$query) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Query parameter is required.',
+            ], 422);
+        }
+
+        // Search contracts based on tenant's name
+        $contracts = Contract::whereHas('tenant', function ($q) use ($query) {
             $q->where('name', 'like', "%{$query}%");
-                // ->orWhere('room_number', 'like', "%{$query}%")
-                // ->orWhere('tenant_number', 'like', "%{$query}%")
-                // ->orWhere('phone_number', 'like', "%{$query}%");
         })
-        ->with('tenant') // Load the related tenants
+        ->with('tenant') // Load the related tenant
+        ->orderBy('created_at', 'desc') // Order by the most recent contracts
         ->get();
 
-   
+        if ($contracts->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No contracts found for the given tenant name.',
+            ], 200);
+        }
 
-        return response()->json(['success' => true, 'data' => $contracts], 200);
+        // Format the response
+        $data = $contracts->map(function ($contract) {
+            return [
+                'id' => $contract->id,
+                'tenant_id' => $contract->tenant->id,
+                'tenant_name' => $contract->tenant->name,
+                'type' => $contract->type,
+                'status' => $contract->contract_status, // Calculated status
+                'signing_date' => $contract->signing_date,
+                'expiring_date' => $contract->expiring_date,
+                'due_date' => $contract->due_date,
+                'created_at' => $contract->created_at,
+                'updated_at' => $contract->updated_at,
+            ];
+        });
+
+        return response()->json(['success' => true, 'data' => $data], 200);
     } catch (\Exception $e) {
-        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred: ' . $e->getMessage(),
+        ], 500);
     }
 }
+
 
 public function listDeletedContracts()
 {
@@ -373,7 +402,7 @@ public function listDeletedContracts()
 
     // Check if there are any deleted payments
     if ($deletedPayments->isEmpty()) {
-        return response()->json(['message' => 'No deleted Contracts found'], 404);
+        return response()->json(['message' => 'No deleted Contracts found'], 200);
     }
 
     // Return the deleted payments

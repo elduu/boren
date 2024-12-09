@@ -22,6 +22,11 @@ class FloorSeeder extends Seeder
             $commercialBuildings = Building::where('category_id', $commercialCategory->id)->get();
 
             foreach ($commercialBuildings as $building) {
+                Floor::create([
+                    'building_id' => $building->id,
+                    'category_id' => $commercialCategory->id,
+                    'name' => 'Ground Floor',
+                ]);
                 // Create only Floor 1 for each building
                 Floor::create([
                     'building_id' => $building->id,

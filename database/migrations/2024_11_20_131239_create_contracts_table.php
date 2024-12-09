@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('tenant_id')->constrained()->onDelete('cascade');  // Tenant relationship
           
             $table->enum('type', ['rental', 'purchased']);  // Rental or Purchased
-            $table->enum('status', ['active', 'expired']);  // Active or Expired
+          //  $table->enum('status', ['active', 'expired','overdue']);  // Active or Expired
             $table->date('signing_date');  // Date when contract is signed
             $table->date('expiring_date');  // Date when contract will expire
             $table->date('due_date');  // Due date (1 month before expiration date)

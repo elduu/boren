@@ -60,6 +60,7 @@ class PaymentForTenantController extends Controller
                 'unit_price' => $payment->unit_price,
                 'monthly_paid' => $payment->monthly_paid,
                 'area_m2' => $payment->area_m2,
+                'payment_status'=>$payment->payment_status,
                 'utility_fee' => $payment->utility_fee,
                 'start_date' => $payment->start_date,
                 'payment_made_until' => $payment->payment_made_until,
@@ -258,11 +259,11 @@ public function update(Request $request, $id)
         $currentDate = Carbon::now()->format('Y-m-d');
 
 // Update all payments where the current date is not equal to payment_made_until
- PaymentForTenant::whereDate('payment_made_until', '>', $currentDate)
-    ->update(['status' => 'paid']);
+//  PaymentForTenant::whereDate('payment_made_until', '>', $currentDate)
+//     ->update(['status' => 'paid']);
 
-    PaymentForTenant::whereDate('payment_made_until', '<=', $currentDate)
-    ->update(['status' => 'unpaid']);
+//     PaymentForTenant::whereDate('payment_made_until', '<=', $currentDate)
+//     ->update(['status' => 'unpaid']);
 
         // If `end_date` is provided, calculate `due_date` based on it
         if ($request->filled('paymment_made_until')) {
@@ -376,24 +377,54 @@ public function update(Request $request, $id)
         return response()->json(['success' => false, 'message' => 'An error occurred: ' . $e->getMessage()], 500);
     }
 }
+
 public function search(Request $request)
 {
     try {
         $query = $request->input('query');
 
-        // Search payments and their related tenants
+        if (!$query) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Query parameter is required.',
+            ], 422);
+        }
+
+        // Search payments based on tenant's name
         $payments = PaymentForTenant::whereHas('tenant', function ($q) use ($query) {
-            $q->where('name', 'like', "%{$query}%")
-                ->orWhere('room_number', 'like', "%{$query}%")
-                ->orWhere('tenant_number', 'like', "%{$query}%")
-                ->orWhere('phone_number', 'like', "%{$query}%");
+            $q->where('name', 'like', "%{$query}%");
         })
-        ->with('tenant') // Load the related tenants
+        ->with('tenant') // Load the related tenant
+        ->orderBy('created_at', 'desc') // Order by the most recent payments
         ->get();
 
-        return response()->json(['success' => true, 'data' => $payments], 200);
+        if ($payments->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No payments found for the given tenant name.',
+            ], 200);
+        }
+
+        // Format the response
+        $data = $payments->map(function ($payment) {
+            return [
+                'id' => $payment->id,
+                'tenant_id' => $payment->tenant->id,
+                'tenant_name' => $payment->tenant->name,
+                'amount' => $payment->monthly_paid,
+                'payment_date' => $payment->payment_made_until,
+                'status' => $payment->payment_status,
+                'created_at' => $payment->created_at,
+                'updated_at' => $payment->updated_at,
+            ];
+        });
+
+        return response()->json(['success' => true, 'data' => $data], 200);
     } catch (\Exception $e) {
-        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred: ' . $e->getMessage(),
+        ], 500);
     }
 }
 public function listDeletedPayments()
@@ -403,7 +434,7 @@ public function listDeletedPayments()
 
     // Check if there are any deleted payments
     if ($deletedPayments->isEmpty()) {
-        return response()->json(['message' => 'No deleted payments found'], 404);
+        return response()->json(['message' => 'No deleted payments found'], 200);
     }
 
     // Return the deleted payments
