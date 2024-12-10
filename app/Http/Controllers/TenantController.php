@@ -22,15 +22,84 @@ use Illuminate\Support\Facades\DB;
 
 class TenantController extends Controller
 {
-    public function index()
-    {
-        try {
-            $tenants = Tenant::with(['building', 'category', 'floor'])->get();
-            return response()->json(['success' => true, 'data' => $tenants], 200);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+    public function index(Request $request)
+{
+    try {
+        // Validate the floor_id if provided
+        $validator = Validator::make($request->all(), [
+            'floor_id' => 'required|integer|exists:floors,id', // Floor ID validation
+        ], [
+            'floor_id.integer' => 'The floor ID must be an integer.',
+            'floor_id.exists' => 'The provided floor ID does not exist.',
+            'floor_id.required' => 'The floor Id is required.',
+
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $validator->errors(),
+            ], 422);
         }
+
+        $floorId = $request->input('floor_id');
+
+        // Start building the tenant query
+        $tenantQuery = Tenant::with(['building', 'category', 'floor', 'documents' => function($query) {
+            $query->where('document_type', 'tenant_info'); // Filter documents by tenant_info
+        }]);
+
+        // If a floor_id is provided, filter tenants by that floor
+        if ($floorId) {
+            $tenantQuery->where('floor_id', $floorId);
+        }
+
+        // Fetch tenants and related documents
+        $tenants = $tenantQuery->get();
+
+        if ($tenants->isEmpty()) {
+            return response()->json(['success' => false, 'message' => 'No tenants found for the given floor.'], 404);
+        }
+
+        // Format the response to include tenant information and filtered documents
+        $data = $tenants->map(function ($tenant) {
+            return [
+                'id' => $tenant->id,
+                'name' => $tenant->name,
+                'gender' => $tenant->gender,
+                'phone_number' =>  $tenant->phone_number,  // Ethiopian phone number format
+                'email' =>  $tenant->email,
+                'room_number' =>  $tenant->room_number,
+                'tenant_number'=> $tenant->tenant_number,
+                'tenant_type' =>  $tenant->tenant_type,
+                'floor_id' => $tenant->floor_id,
+                'floor_name' => $tenant->floor->name ?? null,
+                'building_name' => $tenant->building->name ?? null,
+                'category_name' => $tenant->category->name ?? null,
+                'documents' => $tenant->documents->map(function ($document) {
+                    return [
+                        'id' => $document->id,
+                        'document_type' => $document->document_type,
+                        'document_format' => $document->document_format,
+                        'file_path' => url($document->file_path),
+                        'created_at' => $document->created_at->format('Y-m-d H:i:s'),
+                        'updated_at' => $document->updated_at->format('Y-m-d H:i:s'),
+                        'doc_name' => $document->doc_name,
+                        'doc_size' => $document->doc_size,
+                    ];
+                }),
+            ];
+        });
+
+        return response()->json(['success' => true, 'data' => $data], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred: ' . $e->getMessage(),
+        ], 500);
     }
+}
     public function listDeletedTenants()
     {
         // Retrieve only deleted tenants
@@ -640,30 +709,104 @@ private function createBuyerPayment($tenantId, $validatedData)
     /**
      * Search for tenants by name or room number.
      */
-    public function search(Request $request)
-    {
-        $query = $request->input('query');
-    
-        try {
-            $tenants = Tenant::where('name', 'like', "%{$query}%")
-                ->orWhere('room_number', 'like', "%{$query}%")
-                ->orWhere('tenant_number', 'like', "%{$query}%")
-                ->orWhere('phone_number', 'like', "%{$query}%")
-                ->get();
-    
-            if ($tenants->isEmpty()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'No tenants found for the given query.',
-                    'data' => []
-                ], 200); // Keep the HTTP status code as 200
-            }
-    
-            return response()->json(['success' => true, 'data' => $tenants], 200);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
-        }
+   
+     public function search(Request $request)
+{
+    // Validate the floor_id if provided
+    $validator = Validator::make($request->all(), [
+        'floor_id' => 'required|integer|exists:floors,id', // Floor ID validation
+        'query' => 'nullable|string|max:255', // Optional query validation
+    ], [
+        'floor_id.integer' => 'The floor ID must be an integer.',
+       
+        'floor_id.exists' => 'The provided floor ID does not exist.',
+         'floor_id.required' => 'The floor Id is required.',
+        'query.string' => 'The query must be a string.',
+        'query.max' => 'The query must not exceed 255 characters.',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Validation failed.',
+            'errors' => $validator->errors(),
+        ], 422);
     }
+
+    $query = $request->input('query');
+    $floorId = $request->input('floor_id');
+
+    try {
+        // Start building the tenant query
+        $tenantQuery = Tenant::with(['building', 'category', 'floor', 'documents' => function($query) {
+            $query->where('document_type', 'tenant_info'); // Filter documents by tenant_info
+        }]);
+
+        // Apply search filters based on query
+        if ($query) {
+            $tenantQuery->where(function($queryBuilder) use ($query) {
+                $queryBuilder->where('name', 'like', "%{$query}%")
+                    ->orWhere('room_number', 'like', "%{$query}%")
+                    ->orWhere('tenant_number', 'like', "%{$query}%")
+                    ->orWhere('phone_number', 'like', "%{$query}%");
+            });
+        }
+
+        // If floor_id is provided, filter tenants by that floor
+        if ($floorId) {
+            $tenantQuery->where('floor_id', $floorId);
+        }
+
+        // Fetch tenants and related documents
+        $tenants = $tenantQuery->get();
+
+        if ($tenants->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No tenants found for the given query or floor.',
+                'data' => []
+            ], 200);
+        }
+
+        // Format the response to include tenant information and filtered documents
+        $data = $tenants->map(function ($tenant) {
+            return [
+                'id' => $tenant->id,
+                'name' => $tenant->name,
+                'gender' => $tenant->gender,
+                'phone_number' => $tenant->phone_number,  // Ethiopian phone number format
+                'email' => $tenant->email,
+                'room_number' => $tenant->room_number,
+                'tenant_number'=> $tenant->tenant_number,
+                'tenant_type' => $tenant->tenant_type,
+                'floor_id' => $tenant->floor_id,
+                'floor_name' => $tenant->floor->name ?? null,
+                'building_name' => $tenant->building->name ?? null,
+                'category_name' => $tenant->category->name ?? null,
+                'documents' => $tenant->documents->map(function ($document) {
+                    return [
+                        'id' => $document->id,
+                        'document_type' => $document->document_type,
+                        'document_format' => $document->document_format,
+                        'file_path' => url($document->file_path),
+                        'created_at' => $document->created_at->format('Y-m-d H:i:s'),
+                        'updated_at' => $document->updated_at->format('Y-m-d H:i:s'),
+                        'doc_name' => $document->doc_name,
+                        'doc_size' => $document->doc_size,
+                    ];
+                }),
+            ];
+        });
+
+        return response()->json(['success' => true, 'data' => $data], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred: ' . $e->getMessage(),
+        ], 500);
+    }
+}
     public function updateStatus(Request $request, $id)
 {
     // Validate the status

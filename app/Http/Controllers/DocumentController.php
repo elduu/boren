@@ -137,7 +137,7 @@ class DocumentController extends Controller
             // Search documents based on tenant details
             $documents = Document::whereHas('tenant', function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
-                    ->orWhere('tenant_number', 'like', "%{$query}%")
+                    ->orWhere('doc_name', 'like', "%{$query}%")
                     ->orWhere('room_number', 'like', "%{$query}%");
             })
             ->with('tenant') // Load the related tenant
