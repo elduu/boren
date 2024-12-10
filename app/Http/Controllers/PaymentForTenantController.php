@@ -90,6 +90,93 @@ class PaymentForTenantController extends Controller
         ], 500);
     }
 }
+
+public function search(Request $request)
+{
+    try {
+        // Validate inputs
+        $validator = Validator::make($request->all(), [
+            'query' => 'required|string',
+            'floor_id' => 'required|integer|exists:floors,id',
+        ], [
+            'query.required' => 'The query parameter is required.',
+            'floor_id.required' => 'The floor ID is required.',
+            'floor_id.integer' => 'The floor ID must be an integer.',
+            'floor_id.exists' => 'The provided floor ID does not exist.',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed.',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        $query = $request->input('query');
+        $floorId = $request->input('floor_id');
+
+        // Search payments filtered by tenant name and floor ID
+        $paymentsQuery = PaymentForTenant::whereHas('tenant', function ($q) use ($query, $floorId) {
+            $q->where('floor_id', $floorId)
+                ->where(function ($subQuery) use ($query) {
+                    $subQuery->where('name', 'like', "%{$query}%")
+                        ->orWhere('room_number', 'like', "%{$query}%")
+                        ->orWhere('tenant_number', 'like', "%{$query}%")
+                        ->orWhere('phone_number', 'like', "%{$query}%");
+                });
+        })->with(['tenant:id,name,floor_id', 'documents']) // Include tenant and documents relationships
+          ->orderBy('created_at', 'desc');
+
+        $payments = $paymentsQuery->get();
+
+        if ($payments->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'No payments found for the given query and floor.',
+                'data' => [],
+            ], 200);
+        }
+
+        // Map through each payment to structure the response
+        $data = $payments->map(function ($payment) {
+            return [
+                'payment_id' => $payment->id,
+                'tenant_id' => $payment->tenant->id,
+                'tenant_name' => $payment->tenant->name,
+                'unit_price' => $payment->unit_price,
+                'monthly_paid' => $payment->monthly_paid,
+                'area_m2' => $payment->area_m2,
+                'payment_status' => $payment->payment_status,
+                'utility_fee' => $payment->utility_fee,
+                'start_date' => $payment->start_date,
+                'payment_made_until' => $payment->payment_made_until,
+                'documents' => $payment->documents->map(function ($document) {
+                    return [
+                        'id' => $document->id,
+                        'document_type' => $document->document_type,
+                        'document_format' => $document->document_format,
+                        'file_path' => url($document->file_path),
+                        'created_at' => $document->created_at,
+                        'updated_at' => $document->updated_at,
+                        'doc_name' => $document->doc_name,
+                        'doc_size' => $document->doc_size,
+                    ];
+                }),
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred while searching payments: ' . $e->getMessage(),
+        ], 500);
+    }
+}
         /**
          * Store a new payment
          */
@@ -378,55 +465,55 @@ public function update(Request $request, $id)
     }
 }
 
-public function search(Request $request)
-{
-    try {
-        $query = $request->input('query');
+// public function search(Request $request)
+// {
+//     try {
+//         $query = $request->input('query');
 
-        if (!$query) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Query parameter is required.',
-            ], 422);
-        }
+//         if (!$query) {
+//             return response()->json([
+//                 'success' => false,
+//                 'message' => 'Query parameter is required.',
+//             ], 422);
+//         }
 
-        // Search payments based on tenant's name
-        $payments = PaymentForTenant::whereHas('tenant', function ($q) use ($query) {
-            $q->where('name', 'like', "%{$query}%");
-        })
-        ->with('tenant') // Load the related tenant
-        ->orderBy('created_at', 'desc') // Order by the most recent payments
-        ->get();
+//         // Search payments based on tenant's name
+//         $payments = PaymentForTenant::whereHas('tenant', function ($q) use ($query) {
+//             $q->where('name', 'like', "%{$query}%");
+//         })
+//         ->with('tenant') // Load the related tenant
+//         ->orderBy('created_at', 'desc') // Order by the most recent payments
+//         ->get();
 
-        if ($payments->isEmpty()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No payments found for the given tenant name.',
-            ], 200);
-        }
+//         if ($payments->isEmpty()) {
+//             return response()->json([
+//                 'success' => false,
+//                 'message' => 'No payments found for the given tenant name.',
+//             ], 200);
+//         }
 
-        // Format the response
-        $data = $payments->map(function ($payment) {
-            return [
-                'id' => $payment->id,
-                'tenant_id' => $payment->tenant->id,
-                'tenant_name' => $payment->tenant->name,
-                'amount' => $payment->monthly_paid,
-                'payment_date' => $payment->payment_made_until,
-                'status' => $payment->payment_status,
-                'created_at' => $payment->created_at,
-                'updated_at' => $payment->updated_at,
-            ];
-        });
+//         // Format the response
+//         $data = $payments->map(function ($payment) {
+//             return [
+//                 'id' => $payment->id,
+//                 'tenant_id' => $payment->tenant->id,
+//                 'tenant_name' => $payment->tenant->name,
+//                 'amount' => $payment->monthly_paid,
+//                 'payment_date' => $payment->payment_made_until,
+//                 'status' => $payment->payment_status,
+//                 'created_at' => $payment->created_at,
+//                 'updated_at' => $payment->updated_at,
+//             ];
+//         });
 
-        return response()->json(['success' => true, 'data' => $data], 200);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'An error occurred: ' . $e->getMessage(),
-        ], 500);
-    }
-}
+//         return response()->json(['success' => true, 'data' => $data], 200);
+//     } catch (\Exception $e) {
+//         return response()->json([
+//             'success' => false,
+//             'message' => 'An error occurred: ' . $e->getMessage(),
+//         ], 500);
+//     }
+// }
 public function listDeletedPayments()
 {
     // Retrieve only deleted payments

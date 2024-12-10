@@ -291,21 +291,81 @@ class PaymentForBuyerController extends Controller
     public function search(Request $request)
     {
         try {
+            // Validate inputs
+            $validator = Validator::make($request->all(), [
+                'query' => 'required|string',
+                'floor_id' => 'required|integer|exists:floors,id',
+            ], [
+                'query.required' => 'The query parameter is required.',
+                'floor_id.required' => 'The floor ID is required.',
+                'floor_id.integer' => 'The floor ID must be an integer.',
+                'floor_id.exists' => 'The provided floor ID does not exist.',
+            ]);
+    
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation failed.',
+                    'errors' => $validator->errors(),
+                ], 422);
+            }
+    
             $query = $request->input('query');
+            $floorId = $request->input('floor_id');
     
-            // Search payments and their related tenants
-            $payments = PaymentForBuyer::whereHas('tenant', function ($q) use ($query) {
-                $q->where('name', 'like', "%{$query}%")
-                    ->orWhere('room_number', 'like', "%{$query}%")
-                    ->orWhere('tenant_number', 'like', "%{$query}%")
-                    ->orWhere('phone_number', 'like', "%{$query}%");
-            })
-            ->with('tenant') // Load the related tenants
-            ->get();
+            // Search payments filtered by tenant name and floor ID
+            $paymentsQuery = PaymentForBuyer::whereHas('tenant', function ($q) use ($query, $floorId) {
+                $q->where('floor_id', $floorId)
+                    ->where(function ($subQuery) use ($query) {
+                        $subQuery->where('name', 'like', "%{$query}%");
+                          
+                    });
+            })->with(['tenant:id,name,floor_id', 'documents']) // Include tenant and documents relationships
+              ->orderBy('created_at', 'desc');
     
-            return response()->json(['success' => true, 'data' => $payments], 200);
+            $payments = $paymentsQuery->get();
+    
+            if ($payments->isEmpty()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'No payments found for the given query and floor.',
+                    'data' => [],
+                ], 200);
+            }
+    
+            // Map through each payment to structure the response
+            $data = $payments->map(function ($payment) {
+                return [
+                    'payment_id' => $payment->id ?? null, // Assuming tenant has a floor_id
+                    'tenant_name' => $payment->tenant->name ?? 'N/A',
+                    'tenant_id' => $payment->tenant->id ?? null,
+                    'property_price' => $payment->property_price,
+                    'utility_fee' => $payment->utility_fee,
+                    'start_date' => $payment->start_date,
+                    'documents' => $payment->documents->map(function ($document) {
+                        return [
+                            'id' => $document->id,
+                            'document_type' => $document->document_type,
+                            'document_format' => $document->document_format,
+                            'file_path' => url($document->file_path),
+                            'created_at' => $document->created_at,
+                            'updated_at' => $document->updated_at,
+                            'doc_name' => $document->doc_name,
+                            'doc_size' => $document->doc_size,
+                        ];
+                    }),
+                ];
+            });
+    
+            return response()->json([
+                'success' => true,
+                'data' => $data,
+            ], 200);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred while searching payments: ' . $e->getMessage(),
+            ], 500);
         }
     }
 
@@ -396,7 +456,7 @@ class PaymentForBuyerController extends Controller
 
     // Check if there are any deleted payments
     if ($deletedPayments->isEmpty()) {
-        return response()->json(['message' => 'No deleted payments found'], 404);
+        return response()->json(['message' => 'No deleted payments found'], 200);
     }
 
     // Return the deleted payments
