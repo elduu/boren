@@ -358,7 +358,7 @@ public function search(Request $request)
         $contracts = Contract::whereHas('tenant', function ($q) use ($query) {
             $q->where('name', 'like', "%{$query}%");
         })
-        ->with('tenant') // Load the related tenant
+        ->with(['tenant:id,name,floor_id', 'documents']) // Load related tenant and documents
         ->orderBy('created_at', 'desc') // Order by the most recent contracts
         ->get();
 
@@ -374,14 +374,26 @@ public function search(Request $request)
             return [
                 'id' => $contract->id,
                 'tenant_id' => $contract->tenant->id,
-                'tenant_name' => $contract->tenant->name,
+                'tenant_name' => $contract->tenant->name ?? null, // Include tenant name
                 'type' => $contract->type,
-                'status' => $contract->contract_status, // Calculated status
+                'status' => $contract->contract_status,
                 'signing_date' => $contract->signing_date,
                 'expiring_date' => $contract->expiring_date,
                 'due_date' => $contract->due_date,
-                'created_at' => $contract->created_at,
-                'updated_at' => $contract->updated_at,
+                'created_at' => $contract->created_at->format('Y-m-d H:i:s'),
+                'updated_at' => $contract->updated_at->format('Y-m-d H:i:s'),
+                'documents' => $contract->documents->map(function ($document) {
+                    return [
+                        'id' => $document->id,
+                        'document_type' => $document->document_type,
+                        'document_format' => $document->document_format,
+                        'file_path' => url($document->file_path),
+                        'created_at' => $document->created_at->format('Y-m-d H:i:s'),
+                        'updated_at' => $document->updated_at->format('Y-m-d H:i:s'),
+                        'doc_name' => $document->doc_name,
+                        'doc_size' => $document->doc_size,
+                    ];
+                }),
             ];
         });
 

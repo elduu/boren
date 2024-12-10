@@ -123,58 +123,59 @@ class DocumentController extends Controller
         }
     }
     public function filterByTenantName(Request $request)
-{
-    try {
-        // Validate the request
-        $validator = Validator::make($request->all(), [
-            'tenant_name' => 'required|string|max:255',
-        ]);
-
-        if ($validator->fails()) {
+    {
+        try {
+            $query = $request->input('query');
+    
+            if (!$query) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Query parameter is required.',
+                ], 422);
+            }
+    
+            // Search documents based on tenant details
+            $documents = Document::whereHas('tenant', function ($q) use ($query) {
+                $q->where('name', 'like', "%{$query}%")
+                    ->orWhere('tenant_number', 'like', "%{$query}%")
+                    ->orWhere('room_number', 'like', "%{$query}%");
+            })
+            ->with('tenant') // Load the related tenant
+            ->orderBy('created_at', 'desc') // Order by the most recent documents
+            ->get();
+    
+            if ($documents->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No documents found for the given query.',
+                ], 404);
+            }
+    
+            // Format the response
+            $data = $documents->map(function ($document) {
+                return [
+                    'id' => $document->id,
+                    'tenant_id' => $document->tenant->id,
+                    'tenant_name' => $document->tenant->name,
+                    'document_type' => $document->document_type,
+                    'document_format' => $document->document_format,
+                    'doc_name' => $document->doc_name,
+                    'doc_size' => $document->doc_size,
+                    'file_path' => url($document->file_path),
+                    'created_at' => $document->created_at,
+                    'updated_at' => $document->updated_at,
+                ];
+            });
+    
+            return response()->json(['success' => true, 'data' => $data], 200);
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Validation failed',
-                'errors' => $validator->errors(),
-            ], 422);
+                'message' => 'An error occurred: ' . $e->getMessage(),
+            ], 500);
         }
-
-        // Find the tenant by name
-        $tenant = Tenant::where('name', 'like', '%' . $request->tenant_name . '%')->first();
-
-        if (!$tenant) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No tenant found with the specified name.',
-            ], 404);
-        }
-
-        // Fetch documents related to the tenant
-        $documents = Document::where('documentable_id', $tenant->id)
-                             ->where('documentable_type', 'App\Models\Tenant') // Adjust based on your namespace
-                             ->orderBy('created_at', 'desc') // Most recent documents first
-                             ->get();
-
-        if ($documents->isEmpty()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No documents found for the specified tenant.',
-            ], 404);
-        }
-
-        return response()->json([
-            'success' => true,
-            'data' => [
-                'tenant_name' => $tenant->name,
-                'documents' => $documents,
-            ],
-        ], 200);
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to filter documents by tenant name: ' . $e->getMessage(),
-        ], 500);
     }
-}
+    
 public function getDocumentsByFloor(Request $request)
 {
     try {
