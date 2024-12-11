@@ -4,25 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
-class PaymentForTenant extends Model
+class Utility extends Model
 {
-    use HasFactory, SoftDeletes;
-
+    use HasFactory;
     protected $fillable = [
         'tenant_id',
-        'unit_price',
-        'monthly_paid',
-        'area_m2',
+        'utility_payment',
         'utility_fee',
-        'payment_made_until',
+        'payment_status',
         'start_date',
-        'due_date',
         'end_date',
+        'due_date',
+        'reason',
+        'utility_type',
     ];
-
-
     public function tenant()
     {
         return $this->belongsTo(Tenant::class);
@@ -35,12 +31,12 @@ class PaymentForTenant extends Model
 {
     return $this->belongsTo(Floor::class); // Assuming each contract belongs to a floor
 }
-public function getPaymentStatusAttribute()
+public function getUtilityStatusAttribute()
 {
     $currentDate = now();
     if ($currentDate->lt($this->due_date)) {
         return 'paid';
-    } elseif ($currentDate->gte($this->due_date) && $currentDate->lt($this->payment_made_until)) {
+    } elseif ($currentDate->gte($this->due_date) && $currentDate->lt($this->end_date)) {
         return 'Overdue';
     } else {
         return 'unpaid';
@@ -50,5 +46,4 @@ public function category()
 {
     return $this->belongsTo(Category::class);
 }
-
 }

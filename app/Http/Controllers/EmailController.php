@@ -14,7 +14,7 @@ class EmailController extends Controller
     // Method to send contract renewal emails
     public function sendContractRenewalEmails()
     {
-        $recipients = ['siyangetahunw@gmail.com', 'yilmaruth494@gmail.com', 'tsiti2755@gmail.com'];
+      
         $tenant = Tenant::first(); // Replace with logic to fetch the correct tenant
         $contract = $tenant->contracts()->latest()->first(); // Replace with logic to fetch the correct contract
 

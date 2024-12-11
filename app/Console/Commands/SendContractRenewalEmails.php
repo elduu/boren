@@ -18,7 +18,7 @@ class SendContractRenewalEmails extends Command
         $dueDate = Carbon::now()->addDays(30)->toDateString(); // Get today's date in 'Y-m-d' format
      
         $contracts = Contract::whereDate('due_date', '<=', $dueDate)
-        ->where('status', 'active') 
+        ->where('status', 'overdue') 
             ->with('tenant') // Ensure tenant relationship is loaded
             ->get();
     

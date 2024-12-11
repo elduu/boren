@@ -50,5 +50,10 @@ public function getContractStatusAttribute()
         return 'Expired';
     }
 }
+public function category()
+{
+    return $this->belongsTo(Category::class);
+}
+
 }
 

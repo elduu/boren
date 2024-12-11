@@ -13,6 +13,7 @@ use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\AuthController;
 use App\Models\Contract;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ReportController;
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -49,6 +50,16 @@ Route::middleware(['jwt.auth'])->group(function () {
         Route::post('reset-password', [AuthController::class, 'resetPassword']);
         Route::get('users', [AuthController::class, 'listAllUsers']);
         Route::get('user-info', [AuthController::class, 'getUserInfo']);
+        Route::get('documents', [ReportController::class, 'getAllDocuments']);
+Route::get('expired-contracts', [ReportController::class, 'getExpiredContracts']);
+Route::get('overdue-contracts', [ReportController::class, 'getOverdueContracts']);
+Route::get('overdue-payments', [ReportController::class, 'getOverduePayments']);
+Route::get('duplicate-documents', [ReportController::class, 'getDuplicateDocuments']);
+Route::get('new-files', [ReportController::class, 'getNewFiles']);
+Route::get('alltenants', [ReportController::class, 'getAllTenants']);
+Route::get('alldocs', [ReportController::class, 'getAllDocuments']);
+Route::get('', [ReportController::class, 'getAllTenants']);
+        
       //  Route::post('contractsadd', [ContractController::class, 'store']);
 
     });

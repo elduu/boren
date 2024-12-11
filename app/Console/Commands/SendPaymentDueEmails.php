@@ -36,7 +36,7 @@ class SendPaymentDueEmails extends Command
     // Get all tenants with payments due on or before today
     $tenants = PaymentForTenant::where('due_date', '<=', $dueDate)
         ->where('due_date', '<=', $dueDate)
-              ->where('payment_status', 'unpaid') // Ensure this matches your payment status column
+              ->where('payment_status', 'overdue') // Ensure this matches your payment status column
     ->get();
 
     if ($tenants->isEmpty()) {
