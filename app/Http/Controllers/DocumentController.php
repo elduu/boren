@@ -304,26 +304,24 @@ public function download($id)
         // Find the document by ID
         $document = Document::findOrFail($id);
 
-        // Extract the file path from the URL
-        $filePath = str_replace('/storage/', '', $document->file_path); // Remove the public URL prefix
+        // Extract the file path from the URL (remove 'public/' prefix if needed)
+        $filePath = str_replace('/storage/', '', $document->file_path); 
 
         // Ensure the file exists on the 'public' disk
         if (!Storage::disk('public')->exists($filePath)) {
             return response()->json([
                 'message' => 'File not found on the server.',
-            ], 404);
+            ], 200);
         }
-       
-        return Storage::download($filePath);
-        // // Use the download method to serve the file
-        // return Storage::disk('public')->download($filePath);
-    } 
-    catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        
+        // Return the download response using response()->download() method
+        return response()->download(storage_path('app/public/' . $filePath));
+
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
         return response()->json([
             'message' => 'Document not found.',
-        ], 404);
-    } 
-    catch (\Exception $e) {
+        ], 200);
+    } catch (\Exception $e) {
         return response()->json([
             'message' => 'An unexpected error occurred while downloading the file.',
             'error' => $e->getMessage(),

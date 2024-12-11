@@ -114,7 +114,7 @@ class ReportController extends Controller
             $currentYear = Carbon::now()->year;
     
             // Query contracts that expired in the current month and year
-            $expiredContracts = Contract::with(['tenant:id,name,floor_id,floor', 'category', 'documents'])
+            $expiredContracts = Contract::with(['tenant:id,name,floor_id','floor', 'category', 'documents'])
                // ->whereYear('expiring_date', $currentYear)
                // ->whereMonth('expiring_date', $currentMonth)
                ->where('expiring_date', '<=', Carbon::now())
