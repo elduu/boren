@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Document;
+use Illuminate\Support\Facades\Log;
 use App\Models\Tenant;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
+use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\Response;
 class DocumentController extends Controller
 {
     public function listAllDocuments()
@@ -294,5 +297,37 @@ public function deleteDocument($id)
         'status' => 'success',
         'deleted_documents' => $deletedDocuments
     ], 200);
+}
+public function download($id)
+{
+    try {
+        // Find the document by ID
+        $document = Document::findOrFail($id);
+
+        // Extract the file path from the URL
+        $filePath = str_replace('/storage/', '', $document->file_path); // Remove the public URL prefix
+
+        // Ensure the file exists on the 'public' disk
+        if (!Storage::disk('public')->exists($filePath)) {
+            return response()->json([
+                'message' => 'File not found on the server.',
+            ], 404);
+        }
+       
+        return Storage::download($filePath);
+        // // Use the download method to serve the file
+        // return Storage::disk('public')->download($filePath);
+    } 
+    catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        return response()->json([
+            'message' => 'Document not found.',
+        ], 404);
+    } 
+    catch (\Exception $e) {
+        return response()->json([
+            'message' => 'An unexpected error occurred while downloading the file.',
+            'error' => $e->getMessage(),
+        ], 500);
+    }
 }
 }

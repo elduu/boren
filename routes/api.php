@@ -58,7 +58,13 @@ Route::get('duplicate-documents', [ReportController::class, 'getDuplicateDocumen
 Route::get('new-files', [ReportController::class, 'getNewFiles']);
 Route::get('alltenants', [ReportController::class, 'getAllTenants']);
 Route::get('alldocs', [ReportController::class, 'getAllDocuments']);
-Route::get('', [ReportController::class, 'getAllTenants']);
+Route::get('expired-contracts-count', [ReportController::class, 'getExpiredContractsCount']);
+Route::get('overdue-contracts-count', [ReportController::class, 'getOverdueContractsCount']);
+Route::get('overdue-payments-count', [ReportController::class, 'getOverduePaymentsCount']);
+
+Route::get('new-files-count', [ReportController::class, 'getNewFilesCount']);
+Route::get('alltenants-count', [ReportController::class, 'getAllTenantsCount']);
+Route::get('alldocs-count', [ReportController::class, 'getAllDocumentsCount']);
         
       //  Route::post('contractsadd', [ContractController::class, 'store']);
 
@@ -193,6 +199,7 @@ Route::post('/filterdocbytype', [DocumentController::class, 'filterByDocumentTyp
 Route::get('/filterdocbytenant/{tenantId}', [DocumentController::class, 'filterByTenantId']);
 Route::post('/getdocuments', [DocumentController::class, 'getDocumentsByFloor']);
 Route::post('/searchdoc', [DocumentController::class, 'filterByTenantName']);
+Route::get('/documentsdownload/{id}', [DocumentController::class, 'download']);
 
 });
 

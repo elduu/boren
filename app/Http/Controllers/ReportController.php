@@ -27,6 +27,19 @@ class ReportController extends Controller
         ],
     );
     }
+    
+    public function getAllDocumentsCount()
+    {
+        $allDocuments = Document::all();
+        $Filescount=$allDocuments->count();               
+
+        return response()->json([
+            'total_file'=> $Filescount,
+        
+        ],
+    );
+    }
+    
 
        
     
@@ -86,6 +99,38 @@ class ReportController extends Controller
             $expiredContractscount = $expiredContracts->count();
             return response()->json(['success' => true, 
              'expired_count' => $expiredContractscount,'data' => $data], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve expired contracts: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+    public function getExpiredContractsCount()
+    {
+        try {
+            // Current month and year
+            $currentMonth = Carbon::now()->month;
+            $currentYear = Carbon::now()->year;
+    
+            // Query contracts that expired in the current month and year
+            $expiredContracts = Contract::with(['tenant:id,name,floor_id,floor', 'category', 'documents'])
+               // ->whereYear('expiring_date', $currentYear)
+               // ->whereMonth('expiring_date', $currentMonth)
+               ->where('expiring_date', '<=', Carbon::now())
+               // ->where('status', '', 'expired')
+                ->orderBy('created_at', 'desc')
+                ->get();
+    
+            if ($expiredContracts->isEmpty()) {
+                return response()->json(['success' => false, 'message' => 'No expired contracts found.'], 200);
+            }
+    
+            // Format the response
+           
+            $expiredContractscount = $expiredContracts->count();
+            return response()->json(['success' => true, 
+             'expired_count' => $expiredContractscount,], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -163,6 +208,41 @@ class ReportController extends Controller
             ], 500);
         }
     }
+    public function getOverdueContractsCount(Request $request)
+    {
+        try {
+            // Current month and year
+            $currentMonth = Carbon::now()->month;
+            $currentYear = Carbon::now()->year;
+    
+            // Query contracts with overdue status
+            $contracts = Contract::with(['tenant:id,name,floor_id','floor', 'category', 'documents'])
+                ->whereYear('due_date', $currentYear)
+                ->whereMonth('due_date', $currentMonth)
+                ->where('due_date', '<=', Carbon::now())
+                ->where('expiring_date', '>=', Carbon::now())
+             //   ->where('status', '', 'overdue')
+                ->orderBy('created_at', 'desc')
+                ->get();
+    
+            if ($contracts->isEmpty()) {
+                return response()->json(['success' => false, 'message' => 'No overdue contracts found.'], 200);
+            }
+
+            $overdueCount = $contracts->count();
+    
+            return response()->json([
+                'success' => true,
+                'overdue_count' => $overdueCount,
+                
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve overdue contracts: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
     /**
      * Get all overdue payments in the current month.
      */public function getOverduePayments()
@@ -219,6 +299,37 @@ class ReportController extends Controller
             'success' => true,
             'total_count' => $totalCount,
             'data' => $data,
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to fetch overdue payments: ' . $e->getMessage(),
+        ], 500);
+    }
+}
+public function getOverduePaymentsCount()
+{
+    try {
+        // Query overdue payments with related tenant and documents
+        $overduePayments = PaymentForTenant::with(['tenant:id,name,floor_id', 'documents'])
+           // ->where('status', 'overdue')
+            ->where('due_date', '<=', Carbon::now())
+            ->where('payment_made_until', '>=', Carbon::now())
+            ->orderBy('due_date', 'desc')
+            ->get();
+
+            if ($overduePayments->isEmpty()) {
+                return response()->json(['success' => false, 'message' => 'No overdue payments  found.'], 200);
+            }
+        // Map results to include tenant details, documents, and additional metadata
+     
+
+        // Count the total number of results
+        $totalCount = $overduePayments->count();
+
+        return response()->json([
+            'success' => true,
+            'total_count' => $totalCount,
         ], 200);
     } catch (\Exception $e) {
         return response()->json([
@@ -301,6 +412,26 @@ class ReportController extends Controller
             'data' => $documentsData,
         ]);
     }
+    public function getNewFilesCount()
+    {
+        $currentMonth = Carbon::now()->month;
+        $currentYear = Carbon::now()->year;
+    
+        // Get the documents created in the current month and year
+        $newFiles = Document::whereYear('created_at', $currentYear)
+                            ->whereMonth('created_at', $currentMonth)
+                            ->get();
+    
+        // Map the documents to the desired structure
+       
+    
+        $newFilesCount = $newFiles->count();
+    
+        return response()->json([
+            'total_new_file' => $newFilesCount,
+        
+        ]);
+    }
 
     /**
      * Get all tenants list.
@@ -337,6 +468,23 @@ class ReportController extends Controller
     return response()->json([
         'total_tenants' => $totalTenants,
         'data' => $tenantsData,
+    ]);
+}
+public function getAllTenantsCount()
+{
+    // Fetch tenants with their related floor and category
+    $tenants = Tenant::with(['floor', 'category'])->get();
+
+    // Map the tenant data to include all tenant fields and the names of floor and category
+   
+
+
+    // Get the total number of tenants
+    $totalTenants = $tenants->count();
+
+    return response()->json([
+        'total_tenants' => $totalTenants,
+       
     ]);
 }
 

@@ -191,8 +191,8 @@ class TenantController extends Controller
                         
     
                         // Store the document file
-                        $documentPath2 = $this->storeDocumentFile($document['file'], $tenant->id);
-                        $documentPath=url($documentPath2);
+                        $documentPath = $this->storeDocumentFile($document['file'], $tenant->id);
+                       
                         // Detect the format for each file
                         $documentFormat = $this->detectDocumentFormat($document['file']);
                       // Returns size in bytes
