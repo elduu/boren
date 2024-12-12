@@ -1,4 +1,3 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -51,11 +50,13 @@
 <body>
     <div class="email-container">
         <div class="header">
-           <h1>{!! $message !!}</h1>  
+            <h1>Contract Renewal Reminder</h1>
         </div>
         <div class="content">
-            <p>Dear {{ $tenantName }},</p> <!-- Tenant Name -->
-           <!-- <p>{!! $body !!}</p>  Body of the email, raw HTML if needed -->
+      
+            <p>Dear {{ $tenantName }},</p> 
+            <p>We hope this email finds you well. </p><!-- Tenant Name -->
+            <p>{!! $body !!}</p>  
         </div>
         <div class="footer">
             <p>&copy; {{ now()->year }} Your Company Name. All rights reserved.</p>

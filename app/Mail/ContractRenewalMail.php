@@ -32,7 +32,7 @@ class ContractRenewalMail extends Mailable
     {
         // Set the 'from' address here
         return $this->from(env('MAIL_FROM_ADDRESS', 'rediyilma57@gmail.com')) // Default fallback from env
-                    ->subject($this->message) // Email subject
+                   // Email subject
                     ->view('contract') // Assuming you have this view file
                     ->with([
                        'tenantName' => $this->tenant->name,

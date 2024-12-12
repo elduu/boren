@@ -31,11 +31,10 @@ class PaymentDueMail extends Mailable
     public function build()
     {
         // Build the email with dynamic subject and body
-        return $this->subject($this->message) // Set dynamic subject
+        return $this->from(env('MAIL_FROM_ADDRESS', 'rediyilma57@gmail.com')) // Set dynamic subject
                     ->view('payment') // Blade view for the email
                     ->with([
                         'tenantName' => $this->tenant->name,
-                        'dueDate' => $this->paymentForTenant->due_date->toFormattedDateString(),
                         'body' => $this->body, // Pass the body content to the view
                     ]);
     }

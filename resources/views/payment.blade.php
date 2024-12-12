@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -43,18 +43,24 @@
             font-size: 12px;
             color: #777;
         }
-        .footer p {
-            margin: 0;
+        ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        li {
+            margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
     <div class="email-container">
         <div class="header">
-            <h1>{{ $message }}</h1> <!-- Dynamic message (Subject) -->
+            <h1>Payment Due Reminder</h1>
         </div>
         <div class="content">
-            <p>Dear {{ $tenantName }},</p> <!-- Tenant Name -->
+            <p>Dear {{ $tenantName }},</p>
+            <p>We hope this email finds you well. </p>
+             <!-- Tenant Name -->
             <p>{!! $body !!}</p> <!-- Body of the email, raw HTML if needed -->
         </div>
         <div class="footer">
