@@ -379,7 +379,7 @@ class PaymentForBuyerController extends Controller
             $payment->delete();
             return response()->json(['message' => 'Payment deleted successfully']);
         } catch (ModelNotFoundException $e) {
-            return response()->json(['message' => 'Payment not found'], 404);
+            return response()->json(['message' => 'Payment not found'], 200);
         } catch (Exception $e) {
             return response()->json(['message' => 'Error deleting payment', 'error' => $e->getMessage()], 500);
         }
@@ -440,7 +440,7 @@ class PaymentForBuyerController extends Controller
             $payments = PaymentForBuyer::where('tenant_id', $tenantId)->get();
 
             if ($payments->isEmpty()) {
-                return response()->json(['message' => 'No payments found for this tenant'], 404);
+                return response()->json(['message' => 'No payments found for this tenant'], 200);
             }
 
             return response()->json($payments);

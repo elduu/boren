@@ -63,7 +63,7 @@ class ContractController extends Controller
             $contracts = $contractsQuery->orderBy('created_at', 'desc')->get();
     
             if ($contracts->isEmpty()) {
-                return response()->json(['success' => false, 'message' => 'No contracts found.'], 404);
+                return response()->json(['success' => false, 'message' => 'No contracts found.'], 200);
             }
     
             // Format the response to include tenant names and documents
@@ -172,11 +172,11 @@ switch ($mimeType) {
             ));
         
             $currentDate = Carbon::now()->format('Y-m-d');
-            Contract::whereDate('expiring_date', '<=', $currentDate)
-            ->update(['status' => 'inactive']);
+        //     Contract::whereDate('expiring_date', '<=', $currentDate)
+        //     ->update(['status' => 'inactive']);
 
-        Contract::whereDate('expiring_date', '>', $currentDate)
-            ->update(['status' => 'active']);
+        // Contract::whereDate('expiring_date', '>', $currentDate)
+        //     ->update(['status' => 'active']);
             return response()->json(['success' => true, 'data' => $contract], 200);
         } catch (ModelNotFoundException $e) {
             return response()->json(['success' => false, 'message' => 'Contract not found.'], 404);
