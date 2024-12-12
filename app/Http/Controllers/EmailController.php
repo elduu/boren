@@ -21,6 +21,15 @@ class EmailController extends Controller
             'message' => 'required|string', // Email subject
             'body' => 'required|string',    // Email body content
             'tenant_email' => 'required|email', // Tenant email address
+        ], [
+            'message.required' => 'The message field is required.',
+            'message.string' => 'The message must be a valid string.',
+            
+            'body.required' => 'The body field is required.',
+            'body.string' => 'The body must be a valid string.',
+            
+            'tenant_email.required' => 'The tenant email field is required.',
+            'tenant_email.email' => 'The tenant email must be a valid email address.',
         ]);
     
         // Fetch the tenant using the provided email
@@ -60,8 +69,16 @@ class EmailController extends Controller
         'message' => 'required|string', // Email subject
         'body' => 'required|string',    // Email body content
         'tenant_email' => 'required|email', // Tenant email address
+    ], [
+        'message.required' => 'The message field is required.',
+        'message.string' => 'The message must be a valid string.',
+        
+        'body.required' => 'The body field is required.',
+        'body.string' => 'The body must be a valid string.',
+        
+        'tenant_email.required' => 'The tenant email field is required.',
+        'tenant_email.email' => 'The tenant email must be a valid email address.',
     ]);
-
     // Fetch the tenant using the provided email
     $tenant = Tenant::where('email', $validatedData['tenant_email'])->first();
 

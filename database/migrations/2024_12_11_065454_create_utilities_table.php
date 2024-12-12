@@ -15,14 +15,21 @@ return new class extends Migration
             $table->id(); 
             $table->foreignId('tenant_id')->constrained('tenants')->onDelete('cascade');
 
-            $table->decimal('utility_fee', 10, 2)->default(0.00);
+            $table->decimal('electric_bill_fee', 10, 2)->default(0.00);
+            
+            $table->decimal('other_fee', 10, 2)->default(0.00);
+            
+            $table->decimal('generator_bill', 10, 2)->default(0.00);
+            
+            $table->decimal('water_bill', 10, 2)->default(0.00);
             $table->date('start_date')->nullable();
             $table->date('end_date')->nullable();
             $table->date('due_date')->nullable();
             $table->text('reason')->nullable();
             $table->enum('utility_type', ['electric_bill', 'water', 'generator', 'other'])->nullable();
             $table->softDeletes(); // Soft delete support
-            $table->timestamps();       });
+            $table->timestamps();    
+           });
     }
 
     /**

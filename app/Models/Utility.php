@@ -4,15 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Utility extends Model
 {
-    use HasFactory;
+    use HasFactory ; 
+    use SoftDeletes; 
     protected $fillable = [
         'tenant_id',
  
-        'utility_fee',
-        
+        'other_fee',
+        'electric_bill_fee',
+        'generator_bill',
+        'water_bill',
         'start_date',
         'end_date',
         'due_date',

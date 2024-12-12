@@ -23,11 +23,28 @@ class UtilityController extends Controller
             ]);
     
             // Fetch utilities filtered by the provided building_id with related models
-            $utilities = Utility::with(['tenant', 'category', 'floor', 'tenantType'])
-                ->whereHas('tenant', function ($query) use ($request) {
-                    $query->where('building_id', $request->building_id); // Filter by building ID
-                })
-                ->get();
+           
+                // Determine the building IDs to include based on the requested building_id
+                $buildingIds = match ($request->building_id) {
+                    1 => [1, 3],
+                    2 => [2, 4],
+                    default => [$request->building_id],
+                };
+        
+                // Fetch utilities filtered by the determined building IDs with related models
+                $utilities = Utility::with(['tenant', 'category', 'floor', 'tenantType'])
+                    ->whereHas('tenant', function ($query) use ($buildingIds) {
+                        $query->whereIn('building_id', $buildingIds);
+                    })
+                    ->get();
+        
+                // Check if no utilities were found
+                if ($utilities->isEmpty()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'No utilities found for the specified building(s).',
+                    ], 200);
+                }
     
             // Check if no utilities were found
             if ($utilities->isEmpty()) {
@@ -47,7 +64,11 @@ class UtilityController extends Controller
                     'floor_name' => $utility->tenant->floor->name ?? 'Unknown Floor',
                     'tenant_type' => $utility->tenant->tenant_type ?? 'Unknown Type',
                    // 'utility_payment' => $utility->utility_fee,
-                    'utility_fee' => $utility->utility_fee,
+                   
+                    'other_fee'=>$utility->other_fee,
+                    'electric-bill_fee'=>$utility->electric_bill_fee,
+                    'generator_bill'=>$utility->generator_bill,
+                    'water-bill'=>$utility->water_bill,
                     //'payment_status' => $utility->payment_status,
                     'start_date' => $utility->start_date,
                     'end_date' => $utility->end_date,
@@ -86,7 +107,11 @@ class UtilityController extends Controller
             $request->validate([
                 'tenant_id' => 'required|exists:tenants,id',
               //  'utility_payment' => 'required|numeric|min:0',
-                'utility_fee' => 'required|numeric|min:0',
+              'other_fee'=>'nullable|numeric|min:0',
+              'electric_bill_fee'=>'nullable|numeric|min:0',
+              
+              'generator_bill'=>'nullable|numeric|min:0',
+              'water_bill'=>'required|numeric|min:0',
               //  'payment_status' => 'required|string|in:pending,paid,overdue',
                 'start_date' => 'nullable|date',
                 'end_date' => 'nullable|date|after_or_equal:start_date',
@@ -141,13 +166,16 @@ class UtilityController extends Controller
         // Validate the request with custom error messages
         $request->validate([
             'tenant_id' => 'nullable|exists:tenants,id',
-            'utility_payment' => 'nullable|numeric|min:0',
-            'utility_fee' => 'nullable|numeric|min:0',
-            'payment_status' => 'nullable|string|in:pending,paid,overdue',
+           
+           
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
             'reason' => 'nullable|string',
             'utility_type' => 'nullable|in:electric_bill,water,Generator,total',
+            'other_fee'=>'nullable|numeric|min:0',
+            'electric_bill_fee'=>'nullable|numeric|min:0',
+            'generator_bill'=>'nullable|numeric|min:0',
+            'water_bill'=>'required|numeric|min:0',
         ], [
             'tenant_id.exists' => 'The selected tenant ID does not exist.',
             'utility_payment.numeric' => 'Utility payment must be a number.',
@@ -179,8 +207,11 @@ class UtilityController extends Controller
         // Update only the provided values (leave others intact)
         $utility->update($request->only([
             'tenant_id',
-            'utility_payment',
-            'utility_fee',
+         
+            'other_fee',
+        'electric-bill_fee',
+        'generator-bill',
+        'water-bill',
             'payment_status',
             'start_date',
             'end_date',
