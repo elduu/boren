@@ -28,8 +28,7 @@ class EmailController extends Controller
 
     // Method to send payment due emails
     public function sendPaymentDueEmails()
-    {
-        $recipients = ['siyangetahunw@gmail.com', 'yilmaruth494@gmail.com', 'tsiti2755@gmail.com']; // Example of multiple recipients
+    { // Example of multiple recipients
 
         // Fetch tenants who have a payment due soon
         $tenants = Tenant::has('paymentsForTenant')->get(); 
@@ -44,4 +43,6 @@ class EmailController extends Controller
 
         return "Payment due emails have been sent to applicable tenants.";
     }
+
+
 }
