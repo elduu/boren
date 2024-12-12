@@ -14,6 +14,8 @@ use App\Http\Controllers\AuthController;
 use App\Models\Contract;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\UtilityController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -158,6 +160,12 @@ Route::middleware(['permission:manage contracts'])->group(function () {
     Route::patch('contracts/{id}/restore', [ContractController::class, 'restore']);
     Route::post('contracts/{id}/status', [ContractController::class, 'updateStatus']);
 });
+Route::post('utilities/{id}', [UtilityController::class, 'update']);
+Route::post('getutilites', [UtilityController::class, 'index']);
+Route::delete('utilities/{id}', [UtilityController::class, 'destroy']);
+Route::patch('utilities/{id}', [UtilityController::class, 'restore']);
+Route::post('utilities', [UtilityController::class, 'store']);
+
 
 Route::post('/contractsfilter', [ContractController::class, 'filterByType']);
 Route::post('getcontracts', [ContractController::class, 'index']);
@@ -209,3 +217,4 @@ Route::get('/deleted-payments', [PaymentForTenantController::class, 'listDeleted
 Route::get('/deleted-payments-buyer', [PaymentForBuyerController::class, 'listDeletedPayments']);
 Route::get('/deleted-tenants', [TenantController::class, 'listDeletedTenants']);
 Route::get('/deleted-documents', [DocumentController::class, 'listDeletedDocuments']);
+Route::get('/deleted-utilities', [UtilityController::class, 'listDeleted']);

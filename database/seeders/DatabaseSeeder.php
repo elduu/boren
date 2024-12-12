@@ -18,7 +18,8 @@ class DatabaseSeeder extends Seeder
             $this->call(FloorSeeder::class);
             $this->call(RolesAndPermissionsSeeder::class);
             $this->call(UserSeeder::class);
+            //$this->call( EmailTemplateSeeder::class);
 
-        
+            
     }
 }

@@ -13,8 +13,12 @@ return new class extends Migration
     {
         Schema::create('email_templates', function (Blueprint $table) {
             $table->id();
+            $table->string('name');
+            $table->string('view'); // Name of the Blade view
+            $table->string('preview_image'); // Path to the preview image
             $table->timestamps();
         });
+    
     }
 
     /**

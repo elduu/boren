@@ -10,9 +10,9 @@ class Utility extends Model
     use HasFactory;
     protected $fillable = [
         'tenant_id',
-        'utility_payment',
+ 
         'utility_fee',
-        'payment_status',
+        
         'start_date',
         'end_date',
         'due_date',
