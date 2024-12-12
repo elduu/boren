@@ -3,6 +3,7 @@
 namespace App\Mail;
 
 use App\Models\Tenant;
+
 use App\Models\PaymentForTenant;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
@@ -11,40 +12,34 @@ use Carbon\Carbon;
 
 class PaymentDueMail extends Mailable
 {
-    use Queueable, SerializesModels;
+      use Queueable, SerializesModels;
 
     public $tenant;
-    public $payment;
+    public $paymentForTenant;
+    public $message;
+    public $body;
 
-    /**
-     * Create a new message instance.
-     *
-     * @param Tenant $tenant
-     * @param PaymentForTenant $payment
-     * @return void
-     */
-    public function __construct(Tenant $tenant, PaymentForTenant $payment)
+    // Constructor accepts tenant, payment, message (subject), and body (email content)
+    public function __construct(Tenant $tenant, PaymentForTenant $paymentForTenant, $message, $body)
     {
         $this->tenant = $tenant;
-        $this->payment = $payment;
+        $this->paymentForTenant = $paymentForTenant;
+        $this->message = $message;
+        $this->body = $body;
     }
 
-    /**
-     * Build the message.
-     *
-     * @return $this
-     */
     public function build()
     {
-        return $this->subject('Payment Due Reminder')
-                    ->view('payment')
+        // Build the email with dynamic subject and body
+        return $this->subject($this->message) // Set dynamic subject
+                    ->view('payment') // Blade view for the email
                     ->with([
                         'tenantName' => $this->tenant->name,
-                        'roomNumber' => $this->tenant->room_number ?? 'N/A',
-                        'dueDate' => Carbon::parse($this->payment->due_date)->format('F j, Y'),
-                        'amountDue' => $this->payment->amount,
+                        'dueDate' => $this->paymentForTenant->due_date->toFormattedDateString(),
+                        'body' => $this->body, // Pass the body content to the view
                     ]);
     }
+}
 
     
-}
+

@@ -8,41 +8,85 @@ use App\Models\PaymentForTenant;
 use App\Mail\ContractRenewalMail;
 use App\Mail\PaymentDueMail;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Http\Request;
+
 
 class EmailController extends Controller
 {
     // Method to send contract renewal emails
-    public function sendContractRenewalEmails()
+    public function sendContractRenewalEmails(Request $request)
     {
-      
-        $tenant = Tenant::first(); // Replace with logic to fetch the correct tenant
-        $contract = $tenant->contracts()->latest()->first(); // Replace with logic to fetch the correct contract
-
-        if ($tenant && $contract) {
-            Mail::to($tenant->email)->send(new ContractRenewalMail($tenant, $contract));
-            return "Email sent successfully.";
+        // Validate the incoming request
+        $validatedData = $request->validate([
+            'message' => 'required|string', // Email subject
+            'body' => 'required|string',    // Email body content
+            'tenant_email' => 'required|email', // Tenant email address
+        ]);
+    
+        // Fetch the tenant using the provided email
+        $tenant = Tenant::where('email', $validatedData['tenant_email'])->first();
+    
+        // Ensure the tenant exists
+        if (!$tenant) {
+            return response()->json(['message' => 'Tenant not found.'], 200);
         }
-
-        return "Tenant or Contract not found.";
+    
+        // Fetch the latest contract for the tenant
+        $contract = $tenant->contracts()->latest()->first();
+    
+        // Ensure a contract exists for the tenant
+        if (!$contract) {
+            return response()->json(['message' => 'Contract not found for the tenant.'], 200);
+        }
+    
+        // Send the email with dynamic subject (message) and body content
+        try {
+            Mail::to($tenant->email)
+                ->send(new ContractRenewalMail($tenant, $contract, $validatedData['message'], $validatedData['body']));
+    
+            return response()->json(['message' => 'Contract renewal reminder email sent successfully.'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Error sending email: ' . $e->getMessage()], 500);
+        }
     }
+
+    
 
     // Method to send payment due emails
-    public function sendPaymentDueEmails()
-    { // Example of multiple recipients
+    public function sendPaymentDueEmails(Request $request)
+{
+    // Validate the incoming request data
+    $validatedData = $request->validate([
+        'message' => 'required|string', // Email subject
+        'body' => 'required|string',    // Email body content
+        'tenant_email' => 'required|email', // Tenant email address
+    ]);
 
-        // Fetch tenants who have a payment due soon
-        $tenants = Tenant::has('paymentsForTenant')->get(); 
+    // Fetch the tenant using the provided email
+    $tenant = Tenant::where('email', $validatedData['tenant_email'])->first();
 
-        foreach ($tenants as $tenant) {
-            $paymentForTenant = $tenant->paymentsForTenant()->latest()->first();
-
-            if ($paymentForTenant && $paymentForTenant->due_date <= now()->addDays(3)) {
-                Mail::to($tenant->email)->send(new PaymentDueMail($tenant, $paymentForTenant));
-            }
-        }
-
-        return "Payment due emails have been sent to applicable tenants.";
+    // Ensure the tenant exists
+    if (!$tenant) {
+        return response()->json(['message' => 'Tenant not found.'], 200
+    );
     }
 
+    // Fetch the latest payment for the tenant
+    $paymentForTenant = $tenant->paymentsForTenant()->latest()->first(); // Get the most recent payment
 
+    // Ensure a payment exists for the tenant
+    if (!$paymentForTenant) {
+        return response()->json(['message' => 'Payment not found for the tenant.'], 404);
+    }
+
+    // Send the email with dynamic subject (message) and body content
+    try {
+        Mail::to($tenant->email)
+            ->send(new PaymentDueMail($tenant, $paymentForTenant, $validatedData['message'], $validatedData['body']));
+
+        return response()->json(['message' => 'Payment due reminder email sent successfully.'], 200);
+    } catch (\Exception $e) {
+        return response()->json(['message' => 'Error sending email: ' . $e->getMessage()], 500);
+    }
+}
 }

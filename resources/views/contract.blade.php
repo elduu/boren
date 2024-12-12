@@ -51,14 +51,11 @@
 <body>
     <div class="email-container">
         <div class="header">
-            <h1>Contract Renewal Reminder</h1>
+           <h1>{!! $message !!}</h1>  
         </div>
         <div class="content">
-            <p>Dear {{ $tenantName }},</p>
-            <p>We hope this email finds you well. This is a reminder that your contract is set to expire on <strong>{{ $contractExpiration }}</strong>.</p>
-            <p>Please renew your contract before the expiration date to ensure uninterrupted service.</p>
-            <p>If you have any questions or need assistance, please feel free to contact our support team.</p>
-            <p>Thank you for choosing our service!</p>
+            <p>Dear {{ $tenantName }},</p> <!-- Tenant Name -->
+           <!-- <p>{!! $body !!}</p>  Body of the email, raw HTML if needed -->
         </div>
         <div class="footer">
             <p>&copy; {{ now()->year }} Your Company Name. All rights reserved.</p>

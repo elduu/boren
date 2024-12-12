@@ -43,34 +43,19 @@
             font-size: 12px;
             color: #777;
         }
-        ul {
-            list-style-type: none;
-            padding-left: 0;
-        }
-        li {
-            margin-bottom: 10px;
+        .footer p {
+            margin: 0;
         }
     </style>
 </head>
 <body>
     <div class="email-container">
         <div class="header">
-            <h1>Payment Due Reminder</h1>
+            <h1>{{ $message }}</h1> <!-- Dynamic message (Subject) -->
         </div>
         <div class="content">
-            <p>Dear {{ $tenantName }},</p>
-
-            <p>This is a friendly reminder that your payment is due.</p>
-            <ul>
-                <li><strong>Room Number:</strong> {{ $roomNumber }}</li>
-                <li><strong>Due Date:</strong> {{ $dueDate }}</li>
-              
-            </ul>
-
-            <p>Please make the payment at your earliest convenience.</p>
-            <p>Thank you!</p>
-
-            <p>If you have any questions, feel free to contact our support team.</p>
+            <p>Dear {{ $tenantName }},</p> <!-- Tenant Name -->
+            <p>{!! $body !!}</p> <!-- Body of the email, raw HTML if needed -->
         </div>
         <div class="footer">
             <p>&copy; {{ now()->year }} Your Company Name. All rights reserved.</p>

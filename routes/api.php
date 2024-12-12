@@ -15,6 +15,7 @@ use App\Models\Contract;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UtilityController;
+use App\Http\Controllers\EmailController;
 
 /*
 |--------------------------------------------------------------------------
@@ -71,6 +72,9 @@ Route::get('alldocs-count', [ReportController::class, 'getAllDocumentsCount']);
       //  Route::post('contractsadd', [ContractController::class, 'store']);
 
     });
+
+    Route::post('send-contract-renewal-emails', [EmailController::class, 'sendContractRenewalEmails']);
+Route::post('send-payment-due-emails', [EmailController::class, 'sendPaymentDueEmails']);
 
     Route::get('allnotifications', [NotificationController::class, 'index']);
     Route::get('notifications', [NotificationController::class,'getUnreadNotifications']);
@@ -162,7 +166,7 @@ Route::middleware(['permission:manage contracts'])->group(function () {
 });
 Route::post('utilities/{id}', [UtilityController::class, 'update']);
 Route::post('getutilites', [UtilityController::class, 'index']);
-Route::delete('utilities/{id}', [UtilityController::class, 'destroy']);
+Route::delete('utilities/{id}', [UtilityController::class, 'delete']);
 Route::patch('utilities/{id}', [UtilityController::class, 'restore']);
 Route::post('utilities', [UtilityController::class, 'store']);
 

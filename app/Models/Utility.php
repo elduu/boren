@@ -23,6 +23,7 @@ class Utility extends Model
     {
         return $this->belongsTo(Tenant::class);
     }
+    public function tenantType() { return $this->belongsTo(Tenant::class); }
     public function documents()
     {
         return $this->hasMany(Document::class);

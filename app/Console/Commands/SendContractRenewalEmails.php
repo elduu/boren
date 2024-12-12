@@ -15,33 +15,34 @@ class SendContractRenewalEmails extends Command
 
     public function handle()
     {
-        $dueDate = Carbon::now()->addDays(30)->toDateString(); // Get today's date in 'Y-m-d' format
+    //     $dueDate = Carbon::now()->addDays(30)->toDateString(); // Get today's date in 'Y-m-d' format
      
-        $contracts = Contract::whereDate('due_date', '<=', $dueDate)
-        ->where('status', 'overdue') 
-            ->with('tenant') // Ensure tenant relationship is loaded
-            ->get();
+    //     $contracts = Contract::whereDate('due_date', '<=', $dueDate)
+    //     ->where('status', 'overdue') 
+    //         ->with('tenant') // Ensure tenant relationship is loaded
+    //         ->get();
     
-        foreach ($contracts as $contract) {
-            $tenant = $contract->tenant;
+    //     foreach ($contracts as $contract) {
+    //         $tenant = $contract->tenant;
     
-            // Skip if tenant doesn't exist or email is missing
-            if (!$tenant || !$tenant->email) {
-                $this->info("Skipping contract ID {$contract->id}, tenant or email missing.");
-                continue;
-            }
+    //         // Skip if tenant doesn't exist or email is missing
+    //         if (!$tenant || !$tenant->email) {
+    //             $this->info("Skipping contract ID {$contract->id}, tenant or email missing.");
+    //             continue;
+    //         }
     
-            // Skip if contract status is not 'active'
-            // if ($contract->status !== 'active') {
-            //     $this->info("Skipping email for tenant {$tenant->email}, contract is inactive.");
-            //     continue;
-            // }
+    //         // Skip if contract status is not 'active'
+    //         // if ($contract->status !== 'active') {
+    //         //     $this->info("Skipping email for tenant {$tenant->email}, contract is inactive.");
+    //         //     continue;
+    //         // }
     
-            // Send the email
-            Mail::to($tenant->email)->send(new ContractRenewalMail($tenant, $contract));
-            $this->info("Sent renewal email to {$tenant->email} for contract ID {$contract->id}");
-        }
+    //         // Send the email
+    //         Mail::to($tenant->email)->send(new ContractRenewalMail($tenant, $contract));
+    //         $this->info("Sent renewal email to {$tenant->email} for contract ID {$contract->id}");
+    //     }
     
-        $this->info('Renewal emails process completed.');
-    }
+    //     $this->info('Renewal emails process completed.');
+    // }
+}
 }
