@@ -515,17 +515,38 @@ public function getCurrentMonthUtilityCostReport()
         }
 
         // Format the data for pie chart (cost comparison)
+        $totalCost = $utilityReport->electric_cost + $utilityReport->water_cost + $utilityReport->generator_cost + $utilityReport->other_cost;
+
+        // Calculate the percentage for each category
+        $electricPercentage = $totalCost > 0 ? ($utilityReport->electric_cost / $totalCost) * 100 : 0;
+        $waterPercentage = $totalCost > 0 ? ($utilityReport->water_cost / $totalCost) * 100 : 0;
+        $generatorPercentage = $totalCost > 0 ? ($utilityReport->generator_cost / $totalCost) * 100 : 0;
+        $otherPercentage = $totalCost > 0 ? ($utilityReport->other_cost / $totalCost) * 100 : 0;
+    
+        // Format the data for the pie chart (cost comparison)
         $chartData = [
             'month' => now()->format('F'),
             'year' => $currentYear,
             'data' => [
-                'Electric Cost' => $utilityReport->electric_cost,
-                'Water Cost' => $utilityReport->water_cost,
-                'Generator Cost' => $utilityReport->generator_cost,
-                'Other Cost' => $utilityReport->other_cost,
+                'Electric Cost' => [
+                    'cost' => $utilityReport->electric_cost,
+                    'percentage' => $electricPercentage,
+                ],
+                'Water Cost' => [
+                    'cost' => $utilityReport->water_cost,
+                    'percentage' => $waterPercentage,
+                ],
+                'Generator Cost' => [
+                    'cost' => $utilityReport->generator_cost,
+                    'percentage' => $generatorPercentage,
+                ],
+                'Other Cost' => [
+                    'cost' => $utilityReport->other_cost,
+                    'percentage' => $otherPercentage,
+                ],
             ],
         ];
-
+    
         return response()->json([
             'success' => true,
             'chart_data' => $chartData,
