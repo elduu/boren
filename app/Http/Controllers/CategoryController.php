@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\Category;
 use App\Models\Contract;
+use App\Models\Building;
+
 
 class CategoryController extends Controller
 {
@@ -46,9 +48,9 @@ class CategoryController extends Controller
             $category = Category::findOrFail($id);
             return response()->json($category, 200);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
+           return response()->json([
                 'error' => 'Category not found'
-            ], 404);
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'An error occurred while retrieving the category'
@@ -85,7 +87,7 @@ class CategoryController extends Controller
         $categories = Category::where('name', 'LIKE', '%' . $name . '%')->get();
 
         if ($categories->isEmpty()) {
-            return response()->json(['message' => 'No categories found'], 404);
+            return response()->json(['message' => 'No categories found'], 200);
         }
 
         return response()->json($categories, 200);
@@ -109,32 +111,35 @@ public function trashed()
     }
 
     return response()->json($deletedCategories, 200);
+}public function buildingsExcludingCategoryId3()
+{
+    try {
+        // Fetch buildings excluding those in category ID 3
+        $buildings = Building::whereHas('category', function ($query) {
+            $query->where('id', '!=', 3);
+        })->get();
+
+        // Prepare the response data
+        $data = $buildings->map(function ($building) {
+            return [
+                'category_name' => $building->category->name, // Assuming the 'category' relationship exists
+                'category_id' => $building->category->id,
+                'building_name' => $building->name,
+                'id' => $building->id,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to fetch buildings: ' . $e->getMessage(),
+        ], 500);
+    }
 }
- public function buildingsInCategoryid($categoryId)
-     {
-         $category = Category::find($categoryId);
-
-         if (!$category) {
-             return response()->json(['success' => false, 'message' => 'Category not found'], 404);
-         }
-
-         try {
-             $buildings = $category->buildings;
-             $data = $buildings->map(function ($building) use ($category) {
-                return [
-                    'category_name' => $category->name,
-                    'category_id' => $category->id,
-                    'building_name' => $building->name,
-                    'id' => $building->id,
-                ];
-            });
-              // Assuming 'buildings' relationship exists in Category model
-             return response()->json(['success' => true, 'data'=>$data,
-            ], 200);
-         } catch (\Exception $e) {
-             return response()->json(['success' => false, 'message' => 'Failed to fetch buildings in category: ' . $e->getMessage()], 500);
-         }
-  }
     public function buildingsInCategory(Request $request)
 {
     $categoryName = $request->input('name');
