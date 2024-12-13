@@ -538,7 +538,7 @@ public function getBuildingDataBuyer(Request $request)
                 return [
                     'floor_name' => $floor->name,
                     'tenants' => $floor->tenants->map(function ($tenant) {
-                        $paymentData = $tenant->paymentsForBuyert->first(); // Assuming one payment per tenant
+                        $paymentData = $tenant->paymentsForBuyer->first(); // Assuming one payment per tenant
                         $contractData = $tenant->contract; // Single contract per tenant
                         return [
                             'tenant_id' => $tenant->id,
@@ -551,7 +551,7 @@ public function getBuildingDataBuyer(Request $request)
                             'utility_fee' => $paymentData?->utility_fee ?? null,
                            // 'payment_made_until' => $paymentData?->payment_made_until ?? null,
                             'start_date' => $paymentData?->start_date ?? null,
-                           // 'expiring_date' => $contractData?->expiring_date ?? null,
+                           'expiring_date' => $contractData?->expiring_date ?? null,
                            // 'due_date' => $contractData?->due_date ?? null,
                         ];
                     }),
