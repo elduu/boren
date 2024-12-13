@@ -53,49 +53,48 @@ class DocumentController extends Controller
             $tenants = Tenant::where('floor_id', $request->floor_id)
                 ->whereHas('documents', function ($query) use ($request) {
                     $query->where('document_type', $request->document_type);
-                }) // Ensures only tenants with the specified document type are retrieved
+                })
                 ->with(['documents' => function ($query) use ($request) {
                     $query->where('document_type', $request->document_type);
-                }]) // Includes only the documents with the specified type in the result
+                }])
                 ->get();
     
             if ($tenants->isEmpty()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'No tenants or documents found on the specified floor.',
-                    ], 404);
-                }
-        
-                // Prepare the response data
-                $documentsData = $tenants->map(function ($tenant) {
-                    return [
-                       
-                        'documents' => $tenant->documents->map(function ($document) {
-                            return [
-                                'tenant_name' => $document->tenant->name,
-                                'document_id' => $document->id,
-                                'document_path' =>url($document->file_path),
-                                'document_type' => $document->document_type,
-                                'document_format'=> $document->document_format,
-                                'doc_name' => $document->doc_name,
-                                'doc_size'=>$document->doc_size,
-                                'created_at' => $document->created_at->format('Y-m-d H:i:s'),
-                            ];
-                        }),
-                    ];
-                });
-        
-                return response()->json([
-                    'success' => true,
-                    'data' => $documentsData,
-                ], 200);
-            } catch (\Exception $e) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Failed to fetch documents: ' . $e->getMessage(),
-                ], 500);
+                    'message' => 'No tenants or documents found on the specified floor.',
+                ], 200);
             }
+    
+            // Flatten the tenants' documents into a single array
+            $data = $tenants->flatMap(function ($tenant) {
+                return $tenant->documents->map(function ($document) use ($tenant) {
+                    return [
+                        'id' => $document->id,
+                        'tenant_id' => $tenant->id,
+                        'tenant_name' => $tenant->name,
+                        'document_type' => $document->document_type,
+                        'document_format' => $document->document_format,
+                        'doc_name' => $document->doc_name,
+                        'doc_size' => $document->doc_size,
+                        'file_path' => url($document->file_path),
+                        'created_at' => $document->created_at,
+                        'updated_at' => $document->updated_at,
+                    ];
+                });
+            });
+    
+            // Return the flattened array in a single response
+            return response()->json(['success' => true, 'data' => $data], 200);
+    
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch documents: ' . $e->getMessage(),
+            ], 500);
         }
+    }
+        
     
 
     /**
@@ -111,7 +110,7 @@ class DocumentController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'No documents found for the specified tenant.'
-                ], 404);
+                ], 200);
             }
 
             return response()->json([

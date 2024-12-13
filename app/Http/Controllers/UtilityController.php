@@ -26,13 +26,13 @@ class UtilityController extends Controller
            
                 // Determine the building IDs to include based on the requested building_id
                 $buildingIds = match ($request->building_id) {
-                    1 => [1, 3],
-                    2 => [2, 4],
+                    5=> [1, 3],
+                    6 => [2, 4],
                     default => [$request->building_id],
                 };
         
                 // Fetch utilities filtered by the determined building IDs with related models
-                $utilities = Utility::with(['tenant', 'category', 'floor', 'tenantType'])
+                $utilities = Utility::with(['tenant', 'category', 'floor', 'building'])
                     ->whereHas('tenant', function ($query) use ($buildingIds) {
                         $query->whereIn('building_id', $buildingIds);
                     })
