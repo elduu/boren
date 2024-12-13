@@ -139,7 +139,7 @@ public function trashed()
 }
     public function buildingsInCategory(Request $request)
 {
-    $categoryName = $request->input('name');
+    $categoryName = $request->input('name');//get categories
 
     // Validate input
     if (empty($categoryName)) {
