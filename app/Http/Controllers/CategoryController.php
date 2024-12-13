@@ -11,9 +11,10 @@ use App\Models\Building;
 class CategoryController extends Controller
 {
     public function index()
-    {
-        return response()->json(Category::all(), 200);
-    }
+{
+    $categories = Category::where('id', '!=', 3)->get();
+    return response()->json($categories, 200);
+}
 
     // Store a newly created category in storage.
     public function store(Request $request)
@@ -111,33 +112,29 @@ public function trashed()
     }
 
     return response()->json($deletedCategories, 200);
-}public function buildingsExcludingCategoryId3()
+} public function buildingsInCategoryid($categoryId)
 {
+    $category = Category::find($categoryId);
+
+    if (!$category) {
+        return response()->json(['success' => false, 'message' => 'Category not found'], 404);
+    }
+
     try {
-        // Fetch buildings excluding those in category ID 3
-        $buildings = Building::whereHas('category', function ($query) {
-            $query->where('id', '!=', 3);
-        })->get();
-
-        // Prepare the response data
-        $data = $buildings->map(function ($building) {
-            return [
-                'category_name' => $building->category->name, // Assuming the 'category' relationship exists
-                'category_id' => $building->category->id,
-                'building_name' => $building->name,
-                'id' => $building->id,
-            ];
-        });
-
-        return response()->json([
-            'success' => true,
-            'data' => $data,
-        ], 200);
+        $buildings = $category->buildings;
+        $data = $buildings->map(function ($building) use ($category) {
+           return [
+               'category_name' => $category->name,
+               'category_id' => $category->id,
+               'building_name' => $building->name,
+               'id' => $building->id,
+           ];
+       });
+         // Assuming 'buildings' relationship exists in Category model
+        return response()->json(['success' => true, 'data'=>$data,
+       ], 200);
     } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Failed to fetch buildings: ' . $e->getMessage(),
-        ], 500);
+        return response()->json(['success' => false, 'message' => 'Failed to fetch buildings in category: ' . $e->getMessage()], 500);
     }
 }
     public function buildingsInCategory(Request $request)
