@@ -116,7 +116,7 @@ class UtilityController extends Controller
                 'start_date' => 'nullable|date',
                 'end_date' => 'nullable|date|after_or_equal:start_date',
                 'reason' => 'nullable|string',
-                'utility_type' => 'required|in:electric_bill,water,Generator,other',
+                'utility_type' => 'nullable|in:electric_bill,water,Generator,other',
             ], [
                 'tenant_id.required' => 'The tenant ID is required.',
                 'tenant_id.exists' => 'The selected tenant ID does not exist.',
