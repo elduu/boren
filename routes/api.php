@@ -64,6 +64,8 @@ Route::get('alldocs', [ReportController::class, 'getAllDocuments']);
 Route::get('expired-contracts-count', [ReportController::class, 'getExpiredContractsCount']);
 Route::get('overdue-contracts-count', [ReportController::class, 'getOverdueContractsCount']);
 Route::get('overdue-payments-count', [ReportController::class, 'getOverduePaymentsCount']);
+Route::get('utility-chart', [ReportController::class, 'getCurrentMonthUtilityCostReport']);
+
 
 Route::get('new-files-count', [ReportController::class, 'getNewFilesCount']);
 Route::get('alltenants-count', [ReportController::class, 'getAllTenantsCount']);

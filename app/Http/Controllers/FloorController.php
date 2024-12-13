@@ -447,7 +447,7 @@ public function getFloorDataBuyer(Request $request)
             return response()->json([
                 'success' => false,
                 'message' => 'Floor not found or not part of a buyer building.',
-            ], 404);
+            ], 200);
         }
 
         // Prepare the response data
@@ -528,7 +528,7 @@ public function getBuildingDataBuyer(Request $request)
             return response()->json([
                 'success' => false,
                 'message' => 'Building not found or not in the buyer category.',
-            ], 404);
+            ], 200);
         }
 
         // Prepare the response data

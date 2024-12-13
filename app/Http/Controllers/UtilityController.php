@@ -26,8 +26,8 @@ class UtilityController extends Controller
            
                 // Determine the building IDs to include based on the requested building_id
                 $buildingIds = match ($request->building_id) {
-                    5=> [1, 3],
-                    6 => [2, 4],
+                    1=> [1, 3],
+                    2=> [2, 4],
                     default => [$request->building_id],
                 };
         

@@ -511,7 +511,7 @@ public function getCurrentMonthUtilityCostReport()
             return response()->json([
                 'success' => false,
                 'message' => 'No utility data found for the current month.',
-            ], 404);
+            ], 200);
         }
 
         // Format the data for pie chart (cost comparison)
