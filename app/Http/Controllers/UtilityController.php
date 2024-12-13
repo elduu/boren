@@ -39,20 +39,20 @@ class UtilityController extends Controller
                     ->get();
         
                 // Check if no utilities were found
-                if ($utilities->isEmpty()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'No utilities found for the specified building(s).',
-                    ], 200);
-                }
+                // if ($utilities->isEmpty()) {
+                //     return response()->json([
+                //         'success' => false,
+                //         'message' => 'No utilities found for the specified building(s).',
+                //     ], 200);
+                // }
     
             // Check if no utilities were found
-            if ($utilities->isEmpty()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'No utilities found for the specified building.',
-                ], 200); // You can use 404 if you want to indicate no records found
-            }
+            // if ($utilities->isEmpty()) {
+            //     return response()->json([
+            //         'success' => false,
+            //         'message' => 'No utilities found for the specified building.',
+            //     ], 200); // You can use 404 if you want to indicate no records found
+            // }
     
             // Map the utilities into a structured response
             $data = $utilities->map(function ($utility) {
