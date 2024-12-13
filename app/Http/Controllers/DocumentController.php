@@ -151,7 +151,7 @@ class DocumentController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'No documents found for the given query.',
-                ], 404);
+                ], 200);
             }
     
             // Format the response
@@ -205,7 +205,7 @@ public function getDocumentsByFloor(Request $request)
             return response()->json([
                 'success' => false,
                 'message' => 'No documents found for the specified floor.',
-            ], 404);
+            ], 200);
         }
 
         // Prepare the response data
@@ -244,7 +244,7 @@ public function deleteDocument($id)
 
         // Check if document exists
         if (!$document) {
-            return response()->json(['error' => 'Document not found'], 404);
+            return response()->json(['error' => 'Document not found'], 200);
         }
 
         // Soft delete the document
@@ -273,7 +273,7 @@ public function deleteDocument($id)
 
         // Check if document exists and is soft deleted
         if (!$document || !$document->trashed()) {
-            return response()->json(['error' => 'Document not found or not deleted'], 404);
+            return response()->json(['error' => 'Document not found or not deleted'], 200);
         }
 
         // Recover (restore) the document

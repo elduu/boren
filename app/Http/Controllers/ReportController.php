@@ -8,6 +8,7 @@ use App\Models\Contract;
 use App\Models\Payment;
 use App\Models\PaymentForTenant;
 use App\Models\Tenant;
+use App\Models\Utility;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 
@@ -63,9 +64,9 @@ class ReportController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get();
     
-            if ($expiredContracts->isEmpty()) {
-                return response()->json(['success' => false, 'message' => 'No expired contracts found.'], 200);
-            }
+            // if ($expiredContracts->isEmpty()) {
+            //     return response()->json(['success' => false, 'data' => []], 200);
+            // }
     
             // Format the response
             $data = $expiredContracts->map(function ($contract) {
@@ -118,9 +119,9 @@ class ReportController extends Controller
                 // ->where('status', 'expired')
                 ->count();
         
-            if ($expiredContractsCount == 0) {
-                return response()->json(['success' => false, 'message' => 'No expired contracts found.'], 200);
-            }
+            // if ($expiredContractsCount == 0) {
+            //     return response()->json(['success' => false, 'message' => 'No expired contracts found.'], 200);
+            // }
         
             return response()->json([
                 'success' => true,
@@ -154,9 +155,9 @@ class ReportController extends Controller
                 ->orderBy('created_at', 'desc')
                 ->get();
     
-            if ($contracts->isEmpty()) {
-                return response()->json(['success' => false, 'message' => 'No overdue contracts found.'], 200);
-            }
+            // if ($contracts->isEmpty()) {
+            //     return response()->json(['success' => false, 'data' => 'No overdue contracts found.'], 200);
+            // }
     
             // Format the response
             $data = $contracts->map(function ($contract) {
@@ -218,12 +219,12 @@ class ReportController extends Controller
             // ->where('status', 'overdue')
             ->count();
     
-        if ($overdueCount === 0) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No overdue contracts found.',
-            ], 200);
-        }
+        // if ($overdueCount === 0) {
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'No overdue contracts found.',
+        //     ], 200);
+        // }
     
         return response()->json([
             'success' => true,
@@ -249,9 +250,9 @@ class ReportController extends Controller
             ->orderBy('due_date', 'desc')
             ->get();
 
-            if ($overduePayments->isEmpty()) {
-                return response()->json(['success' => false, 'message' => 'No overdue payments  found.'], 200);
-            }
+            // if ($overduePayments->isEmpty()) {
+            //     return response()->json(['success' => false, 'message' => 'No overdue payments  found.'], 200);
+            // }
         // Map results to include tenant details, documents, and additional metadata
         $data = $overduePayments->map(function ($payment) {
             return [
@@ -313,12 +314,12 @@ public function getOverduePaymentsCount()
             // ->where('status', 'overdue')
             ->count();
     
-        if ($overduePaymentsCount === 0) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No overdue payments found.',
-            ], 200);
-        }
+        // if ($overduePaymentsCount === 0) {
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'No overdue payments found.',
+        //     ], 200);
+        // }
     
         return response()->json([
             'success' => true,
@@ -482,36 +483,58 @@ public function getAllTenantsCount()
     ]);
 }
 
-    /**
-     * Calculate total utility fee comparison in percentage for the current and previous month.
-     */
-//     public function getUtilityFeeComparison()
-//     {
-//         $currentMonth = Carbon::now()->month;
-//         $previousMonth = Carbon::now()->subMonth()->month;
-//         $currentYear = Carbon::now()->year;
+public function getCurrentMonthUtilityCostReport()
+{
+    try {
+        // Get the current year and month
+        $currentYear = now()->year;
+        $currentMonth = now()->month;
 
-//         // Total utility fee for the current month
-//         $currentMonthUtilityFee = PaymentForTenant::whereYear('payment_date', $currentYear)
-//                                          ->whereMonth('payment_date', $currentMonth)
-//                                          ->sum('utility_fee');
+        // Aggregate utility costs for the current month
+        $utilityReport = Utility::selectRaw("
+                SUM(electric_bill_fee) as electric_cost,
+                SUM(water_bill) as water_cost,
+                SUM(generator_bill) as generator_cost,
+                SUM(other_fee) as other_cost
+            ")
+            ->whereYear('start_date', $currentYear)
+            ->whereMonth('start_date', $currentMonth)
+            ->first();
 
-//         // Total utility fee for the previous month
-//         $previousMonthUtilityFee = Payment::whereYear('payment_date', $currentYear)
-//                                            ->whereMonth('payment_date', $previousMonth)
-//                                            ->sum('utility_fee');
+        // Check if no data found for the current month
+        if (
+            $utilityReport->electric_cost == 0 &&
+            $utilityReport->water_cost == 0 &&
+            $utilityReport->generator_cost == 0 &&
+            $utilityReport->other_cost == 0
+        ) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No utility data found for the current month.',
+            ], 404);
+        }
 
-//         // Calculate the percentage difference
-//         if ($previousMonthUtilityFee > 0) {
-//             $percentageDifference = (($currentMonthUtilityFee - $previousMonthUtilityFee) / $previousMonthUtilityFee) * 100;
-//         } else {
-//             $percentageDifference = $currentMonthUtilityFee > 0 ? 100 : 0;
-//         }
+        // Format the data for pie chart (cost comparison)
+        $chartData = [
+            'month' => now()->format('F'),
+            'year' => $currentYear,
+            'data' => [
+                'Electric Cost' => $utilityReport->electric_cost,
+                'Water Cost' => $utilityReport->water_cost,
+                'Generator Cost' => $utilityReport->generator_cost,
+                'Other Cost' => $utilityReport->other_cost,
+            ],
+        ];
 
-//         return response()->json([
-//             'current_month_utility_fee' => $currentMonthUtilityFee,
-//             'previous_month_utility_fee' => $previousMonthUtilityFee,
-//             'percentage_difference' => $percentageDifference,
-//         ]);
-//     }
+        return response()->json([
+            'success' => true,
+            'chart_data' => $chartData,
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to fetch utility report: ' . $e->getMessage(),
+        ], 500);
+    }
+}
 }
