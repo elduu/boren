@@ -14,6 +14,7 @@ class PaymentForBuyer extends Model
         'property_price',
         'utility_fee',
         'start_date',
+        'room_number',
     ];
 
     public function tenant()

@@ -57,6 +57,7 @@ class PaymentForTenantController extends Controller
                 'payment_id' => $payment->id,
                 'tenant_id' => $payment->tenant->id,
                 'tenant_name'=>$payment->tenant->name,
+                'room_number'=>$payment->room_number,
                 'unit_price' => $payment->unit_price,
                 'monthly_paid' => $payment->monthly_paid,
                 'area_m2' => $payment->area_m2,
@@ -144,6 +145,7 @@ public function search(Request $request)
                 'payment_id' => $payment->id,
                 'tenant_id' => $payment->tenant->id,
                 'tenant_name' => $payment->tenant->name,
+                'room_number'=>$payment->room_number,
                 'unit_price' => $payment->unit_price,
                 'monthly_paid' => $payment->monthly_paid,
                 'area_m2' => $payment->area_m2,
@@ -189,6 +191,7 @@ public function search(Request $request)
                 'monthly_paid' => 'required|numeric|min:0',
                 'area_m2' => 'required|numeric|min:0',
                 'utility_fee' => 'required|numeric|min:0',
+                'room_number' => 'required|string|max:255',
                 'start_date' => 'required|date',
               //  'end_date' => 'required|date|after_or_equal:start_date',
                 'payment_made_until' => 'nullable|date|after_or_equal:start_date',
@@ -225,14 +228,14 @@ public function search(Request $request)
                 
                     // Set the payment status based on 'payment_made_until'
                     $currentDate = Carbon::now()->format('Y-m-d');
-                    if (Carbon::parse($payment->payment_made_until)->gte($currentDate)) {
-                        $payment->payment_status = 'paid';
-                    } else {
-                        $payment->payment_status = 'unpaid';
-                    }
+                    // if (Carbon::parse($payment->payment_made_until)->gte($currentDate)) {
+                    //     $payment->payment_status = 'paid';
+                    // } else {
+                    //     $payment->payment_status = 'unpaid';
+                    // }
         
-                    // Save the payment status after updating
-                    $payment->save();
+                    // // Save the payment status after updating
+                    // $payment->save();
             
         
                 // Check if documents are provided
@@ -328,6 +331,7 @@ public function update(Request $request, $id)
         'utility_fee' => 'nullable|numeric|min:0',
         'start_date' => 'nullable|date',
         'end_date' => 'nullable|date|after_or_equal:start_date',
+        'room_number'=>'nullable',
         'payment_made_until' => 'nullable|date|after_or_equal:start_date',
     
     ]);
@@ -341,7 +345,8 @@ public function update(Request $request, $id)
             'utility_fee',
             'start_date',
             'end_date',
-            'payment_made_until'
+            'payment_made_until',
+            'room_number',
         ]);
         $currentDate = Carbon::now()->format('Y-m-d');
 

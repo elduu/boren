@@ -17,6 +17,7 @@ class Contract extends Model
         'signing_date',
         'expiring_date',
         'due_date',
+        'room_number',
     ];
 
     // Define the relationship to the Tenant model

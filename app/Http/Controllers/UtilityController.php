@@ -64,7 +64,7 @@ class UtilityController extends Controller
                     'floor_name' => $utility->tenant->floor->name ?? 'Unknown Floor',
                     'tenant_type' => $utility->tenant->tenant_type ?? 'Unknown Type',
                    // 'utility_payment' => $utility->utility_fee,
-                   
+                   'room_number'=>$utility->room_number,
                     'other_fee'=>$utility->other_fee,
                     'electric_bill_fee'=>$utility->electric_bill_fee,
                     'generator_bill'=>$utility->generator_bill,
@@ -109,7 +109,7 @@ class UtilityController extends Controller
               //  'utility_payment' => 'required|numeric|min:0',
               'other_fee'=>'nullable|numeric|min:0',
               'electric_bill_fee'=>'nullable|numeric|min:0',
-              
+              'room_number' => 'required|string|max:255',
               'generator_bill'=>'nullable|numeric|min:0',
               'water_bill'=>'required|numeric|min:0',
               //  'payment_status' => 'required|string|in:pending,paid,overdue',
@@ -166,7 +166,7 @@ class UtilityController extends Controller
         // Validate the request with custom error messages
         $request->validate([
             'tenant_id' => 'nullable|exists:tenants,id',
-           
+            'room_number' => 'required|string|max:255',
            
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',
@@ -213,6 +213,7 @@ class UtilityController extends Controller
         'generator_bill',
         'water_bill',
             'payment_status',
+            'room_number',
             'start_date',
             'end_date',
             'due_date',

@@ -72,6 +72,7 @@ class ContractController extends Controller
                     'id' => $contract->id,
                     'tenant_id' => $contract->tenant->id,
                     'tenant_name' => $contract->tenant->name ?? null, 
+                    'room_number' => $contract->room_number,
                     // Include tenant name
                     'type' => $contract->type,
                     'status' => $contract->contract_status,
@@ -103,36 +104,36 @@ class ContractController extends Controller
             ], 500);
         }
     }
-    private function storeDocumentFile(UploadedFile $file, $tenantId)
-    {
-        // Define the directory path where documents will be stored
-        $directory = "documents/tenants/{$tenantId}";
+//     private function storeDocumentFile(UploadedFile $file, $tenantId)
+//     {
+//         // Define the directory path where documents will be stored
+//         $directory = "documents/tenants/{$tenantId}";
     
-        // Store the file and get the path
-        $path = $file->store($directory, 'public');
+//         // Store the file and get the path
+//         $path = $file->store($directory, 'public');
     
-        return Storage::url($path);
-    }
-    private function detectDocumentFormat(UploadedFile $file)
-{
-$mimeType = $file->getClientMimeType();
+//         return Storage::url($path);
+//     }
+//     private function detectDocumentFormat(UploadedFile $file)
+// {
+// $mimeType = $file->getClientMimeType();
 
-switch ($mimeType) {
-    case 'application/pdf':
-        return 'pdf';
-    case 'application/msword':
-    case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-        return 'word';
-    case 'application/vnd.ms-excel':
-    case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
-        return 'excel';
-    case 'image/jpeg':
-    case 'image/png':
-        return 'image';
-    default:
-        return 'unknown';
-}
-}
+// switch ($mimeType) {
+//     case 'application/pdf':
+//         return 'pdf';
+//     case 'application/msword':
+//     case 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+//         return 'word';
+//     case 'application/vnd.ms-excel':
+//     case 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet':
+//         return 'excel';
+//     case 'image/jpeg':
+//     case 'image/png':
+//         return 'image';
+//     default:
+//         return 'unknown';
+// }
+// }
 
     /**
      * Update an existing contract.
@@ -156,7 +157,9 @@ switch ($mimeType) {
         // Validate the incoming request
         $request->validate([
             'tenant_id' => 'required|exists:tenants,id',
-            'type' => 'nullable|in:rental,purchased',
+            'type' => 'nullable|in:rental,purchased', 
+            'room_number' => 'required|string|max:255',
+            
             //'status' => 'required|in:active,expired',
             'signing_date' => 'required|date',
             'expiring_date' => 'required|date|after:signing_date',
@@ -376,6 +379,7 @@ public function search(Request $request)
                 'tenant_id' => $contract->tenant->id,
                 'tenant_name' => $contract->tenant->name ?? null, // Include tenant name
                 'type' => $contract->type,
+                'room_number'=>$contract->room_number,
                 'status' => $contract->contract_status,
                 'signing_date' => $contract->signing_date,
                 'expiring_date' => $contract->expiring_date,

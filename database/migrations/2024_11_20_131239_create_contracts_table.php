@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('contracts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('tenant_id')->constrained()->onDelete('cascade');  // Tenant relationship
-          
+            $table->string('room_number');
             $table->enum('type', ['rental', 'purchased']);  // Rental or Purchased
           //  $table->enum('status', ['active', 'expired','overdue']);  // Active or Expired
             $table->date('signing_date');  // Date when contract is signed

@@ -22,6 +22,7 @@ class Utility extends Model
         'due_date',
         'reason',
         'utility_type',
+        'room_number',
     ];
     public function tenant()
     {

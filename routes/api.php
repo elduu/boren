@@ -51,6 +51,8 @@ Route::middleware(['jwt.auth'])->group(function () {
         Route::post('users/{id}/status', [AuthController::class, 'updateStatus']);
         Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
         Route::post('reset-password', [AuthController::class, 'resetPassword']);
+        Route::post('update_admin', [AuthController::class, 'updateAdminCredentials']);
+     
         Route::get('users', [AuthController::class, 'listAllUsers']);
         Route::get('user-info', [AuthController::class, 'getUserInfo']);
         Route::get('documents', [ReportController::class, 'getAllDocuments']);

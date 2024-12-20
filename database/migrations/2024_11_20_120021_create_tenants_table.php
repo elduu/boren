@@ -21,7 +21,7 @@ return new class extends Migration
             $table->enum('gender', ['male', 'female']);
             $table->string('phone_number')->unique();
             $table->string('email')->unique();
-            $table->string('room_number');
+          //  $table->string('room_number');
             $table->enum('tenant_type', ['buyer', 'tenant']);
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->softDeletes(); // Include soft delete support

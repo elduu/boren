@@ -283,5 +283,48 @@ public function refreshToken()
         ], 500);
     }
 }
+public function updateAdminCredentials(Request $request)
+{
+    try {
+        // Step 1: Validate the incoming request data
+        $validatedData = $request->validate([
+            'email' => 'required|email|unique:users,email,' . auth()->id(),
+            'password' => 'nullable|min:8|confirmed',
+        ]);
 
+        // Step 2: Get the authenticated admin user
+        $AuthUser = auth()->user();
+    $user = User::find($AuthUser->id);
+
+    if (!$user->hasRole('admin')) {
+        return response()->json(['error' => 'Unauthorized'], 403);
+    }
+
+        // Step 3: Update the admin's email and password
+        $user->email = $validatedData['email'];
+
+        if (!empty($validatedData['password'])) {
+            $user->password = Hash::make($validatedData['password']);
+        }
+
+        $user->save();
+
+        // Return success response
+        return response()->json([
+            'success' => true,
+            'message' => 'Credentials updated successfully.',
+        ], 200);
+    } catch (\Exception $e) {
+        // Log the error with more details
+        Log::error('Error updating admin credentials:', [
+            'user_id' => auth()->id(),
+            'error' => $e->getMessage(),
+            'stack_trace' => $e->getTraceAsString(),
+        ]);
+        return response()->json([
+            'success' => false,
+            'message' => 'An unexpected error occurred while updating credentials.',
+        ], 500);
+    }
+}
 }

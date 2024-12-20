@@ -23,6 +23,7 @@ return new class extends Migration
                   $table->date('start_date'); 
                   $table->date('end_date')->nullable();  // Payment start date
                   $table->date('due_date'); 
+                  $table->string('room_number');
                 //  $table->enum('payment_status', ['paid', 'unpaid','overdue']);
                   $table->softDeletes(); // Soft delete support
                   $table->timestamps();

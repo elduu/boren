@@ -27,6 +27,7 @@ return new class extends Migration
             $table->date('due_date')->nullable();
             $table->text('reason')->nullable();
             $table->enum('utility_type', ['electric_bill', 'water', 'generator', 'other'])->nullable();
+            $table->string('room_number');
             $table->softDeletes(); // Soft delete support
             $table->timestamps();    
            });

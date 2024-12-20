@@ -65,6 +65,7 @@ class PaymentForBuyerController extends Controller
                     'tenant_id' => $payment->tenant->id ?? null,
                     'property_price' => $payment->property_price,
                     'utility_fee' => $payment->utility_fee,
+                    'room_number'=>$payment->room_number,
                     'start_date' => $payment->start_date,
                     'documents' => $payment->documents->map(function ($document) {
                         return [
@@ -119,6 +120,8 @@ class PaymentForBuyerController extends Controller
                 'property_price' => 'required|numeric|min:0',
                 'utility_fee' => 'required|numeric|min:0',
                 'start_date' => 'required|date',
+                'room_number' => 'required|string|max:255',
+
              'documents' => 'array',
              'documents.*.file' => 'required|file',
              'documents.*.document_type' => 'sometimes|string'
@@ -223,6 +226,7 @@ class PaymentForBuyerController extends Controller
                 'property_price' => 'sometimes|numeric|min:0',
                 'utility_fee' => 'sometimes|numeric|min:0',
                 'start_date' => 'sometimes|date',
+                'room_number'=> 'nullable',
                 // 'documents' => 'array',
                 // 'documents.*.file' => 'sometimes|file',
                 // 'documents.*.document_type' => 'sometimes|string',
@@ -342,6 +346,7 @@ class PaymentForBuyerController extends Controller
                     'property_price' => $payment->property_price,
                     'utility_fee' => $payment->utility_fee,
                     'start_date' => $payment->start_date,
+                    'room_number'=>$payment->room_number,
                     'documents' => $payment->documents->map(function ($document) {
                         return [
                             'id' => $document->id,
