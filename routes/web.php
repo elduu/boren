@@ -66,28 +66,28 @@ Route::get('/send-payment-due-emails', [EmailController::class, 'sendPaymentDueE
 
 //     return "Payment due emails have been sent to applicable tenants.";
 // });
-Route::get('/send-payment-due-emails', function () {
-    $recipients = ['siyangetahunw@gmail.com', 'yilmaruth494@gmail.com', 'tsiti2755@gmail.com']; // Example of multiple recipients
+// Route::get('/send-payment-due-emails', function () {
+//     $recipients = ['siyangetahunw@gmail.com', 'yilmaruth494@gmail.com', 'tsiti2755@gmail.com']; // Example of multiple recipients
 
-    // Fetch tenants who have a payment due soon (you can modify this logic to fit your needs)
-    $tenants = Tenant::has('paymentsForTenant')->get(); // Assuming you have a relationship called 'paymentsForTenant'
+//     // Fetch tenants who have a payment due soon (you can modify this logic to fit your needs)
+//     $tenants = Tenant::has('paymentsForTenant')->get(); // Assuming you have a relationship called 'paymentsForTenant'
 
-    foreach ($tenants as $tenant) {
-        // Get the most recent payment entry for each tenant (adjust the query based on your structure)
-        $paymentForTenant = $tenant->paymentsForTenant()->latest()->first();
+//     foreach ($tenants as $tenant) {
+//         // Get the most recent payment entry for each tenant (adjust the query based on your structure)
+//         $paymentForTenant = $tenant->paymentsForTenant()->latest()->first();
 
-        // Check if the payment due date is today or near (you can modify this condition)
-        if ($paymentForTenant && $paymentForTenant->due_date <= now()->addDays(3)) {
-            // Send the email for the due payment
-            Mail::to($tenant->email)->send(new PaymentDueMail($tenant, $paymentForTenant));
+//         // Check if the payment due date is today or near (you can modify this condition)
+//         if ($paymentForTenant && $paymentForTenant->due_date <= now()->addDays(3)) {
+//             // Send the email for the due payment
+//             Mail::to($tenant->email)->send(new PaymentDueMail($tenant, $paymentForTenant));
 
-            // Optionally, you can log each email that was sent
-          //  Log::info('Payment due email sent to: ' . $tenant->email);
-        }
-    }
+//             // Optionally, you can log each email that was sent
+//           //  Log::info('Payment due email sent to: ' . $tenant->email);
+//         }
+//     }
 
-    return "Payment due emails have been sent to applicable tenants.";
-});
+//     return "Payment due emails have been sent to applicable tenants.";
+// });
 
 
 
