@@ -162,6 +162,45 @@ public function trashed()
         return response()->json(['success' => false, 'message' => 'Failed to fetch buildings: ' . $e->getMessage()], 500);
     }
 }
+public function listCategoriesWithBuildingsAndFloors()
+{
+    try {
+        // Fetch categories with their related buildings and floors
+        $categories = Category::with([
+            'buildings.floors' // Eager-load buildings and their floors
+        ])->get();
 
- 
+        // Map the data into the desired format
+        $result = $categories->map(function ($category) {
+            return [
+                'category_id' => $category->id,
+                'category_name' => $category->name,
+                'buildings' => $category->buildings->map(function ($building) {
+                    return [
+                        'building_id' => $building->id,
+                        'building_name' => $building->name,
+                        'floors' => $building->floors->map(function ($floor) {
+                            return [
+                                'floor_id' => $floor->id,
+                                'floor_name' => $floor->name,
+                            ];
+                        }),
+                    ];
+                }),
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $result,
+        ], 200);
+    } catch (\Exception $e) {
+        // Handle errors
+        return response()->json([
+            'success' => false,
+            'message' => 'Failed to fetch categories with buildings and floors: ' . $e->getMessage(),
+        ], 500);
+    }
+
+}
 }

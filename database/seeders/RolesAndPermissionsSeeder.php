@@ -23,7 +23,7 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Permissions related to user management
         Permission::create(['name' => 'manage users']);     // Add, update, deactivate users
-
+        Permission::create(['name' => 'read only']);
         // Permissions related to tenant management
         Permission::create(['name' => 'view tenants']);     // View tenant information
         Permission::create(['name' => 'manage tenants']);   // Add, update, delete tenant information

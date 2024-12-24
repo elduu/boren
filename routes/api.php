@@ -101,7 +101,7 @@ Route::post('categories', [CategoryController::class, 'store']); // Create a new
 
 Route::post('categories/{id}', [CategoryController::class, 'update']); // Update a category by ID
 Route::delete('categories/{id}', [CategoryController::class, 'destroy']);
-
+Route::get('alllist', [CategoryController::class, 'listCategoriesWithBuildingsAndFloors']);
 });
 // Delete a category by ID
 Route::get('categories/{id}', [CategoryController::class, 'show']);

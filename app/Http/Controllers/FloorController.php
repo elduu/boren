@@ -304,13 +304,15 @@ public function getBuildingData(Request $request)
                 return [
                     'floor_name' => $floor->name,
                     'tenants' => $floor->tenants->map(function ($tenant) {
-                        $paymentData = $tenant->paymentsForTenant->first(); // Assuming one payment per tenant
-                        $contractData = $tenant->contract; // Single contract per tenant
+                        $paymentData=$tenant->paymentsForTenant->sortByDesc('created_at')->first();
+
+                        // Get the latest contract from the loaded collection
+                        $contractData = $tenant->contracts->sortByDesc('created_at')->first();// Single contract per tenant
                         return [
                             'tenant_id' => $tenant->id,
                             'tenant_name' => $tenant->name,
                             'tenant_phone' => $tenant->phone_number,
-                            'room_number' => $contractData->room_number,
+                            'room_number' => $contractData->room_number ?? 'N/A',
                             'area_m2' => $paymentData?->area_m2 ?? null,
                             'unit_price' => $paymentData?->unit_price ?? null,
                             'monthly_paid' => $paymentData?->monthly_paid ?? null,
@@ -371,7 +373,7 @@ public function getFloorData(Request $request)
             return response()->json([
                 'success' => false,
                 'message' => 'Floor not found or not part of a commercial building.',
-            ], 404);
+            ], 200);
         }
 
         // Prepare the response data
@@ -539,8 +541,10 @@ public function getBuildingDataBuyer(Request $request)
                 return [
                     'floor_name' => $floor->name,
                     'tenants' => $floor->tenants->map(function ($tenant) {
-                        $paymentData = $tenant->paymentsForBuyer->first(); // Assuming one payment per tenant
-                        $contractData = $tenant->contract; // Single contract per tenant
+                        $paymentData=$tenant->paymentsForTenant->sortByDesc('created_at')->first();
+
+                        // Get the latest contract from the loaded collection
+                        $contractData = $tenant->contracts->sortByDesc('created_at')->first();/// Single contract per tenant
                         return [
                             'tenant_id' => $tenant->id,
                             'tenant_name' => $tenant->name,
