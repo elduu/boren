@@ -16,6 +16,8 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UtilityController;
 use App\Http\Controllers\EmailController;
+use App\Http\Controllers\AuditLogController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -68,6 +70,7 @@ Route::get('overdue-contracts-count', [ReportController::class, 'getOverdueContr
 Route::get('overdue-payments-count', [ReportController::class, 'getOverduePaymentsCount']);
 Route::get('utility-chart', [ReportController::class, 'getCurrentMonthUtilityCostReport']);
 
+Route::get('audit-logs', [AuditLogController::class, 'index']);
 
 Route::get('new-files-count', [ReportController::class, 'getNewFilesCount']);
 Route::get('alltenants-count', [ReportController::class, 'getAllTenantsCount']);

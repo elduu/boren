@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Storage;
 use App\Models\Tenant;
 use App\Models\Contract;
 use App\Models\PaymentForTenant;
+use App\Models\AuditLog;
 use App\Models\PaymentForBuyer;
 use App\Models\Document;
 use App\Models\Floor;
@@ -162,10 +163,19 @@ class TenantController extends Controller
                            // 'contract_id'=>$contract->id,
                            'doc_name' => $documentName,
                     'doc_size'=>$documentSize,
+                    'uploaded_by' => auth()->id(),
                         ]);
                     }
                 }
             }
+
+            AuditLog::create([
+                'auditable_id' => $tenant->id,
+                'auditable_type' => Tenant::class,
+                'user_id' => auth()->id(),
+                'event' => 'created',
+                'document_for' => 'tenant',
+            ]);
     
             // Commit the transaction
             DB::commit();
@@ -417,6 +427,13 @@ public function storeBuyer(Request $request)
                     }
                 }
             }
+            AuditLog::create([
+                'auditable_id' => $tenant->id,
+                'auditable_type' => Tenant::class,
+                'user_id' => auth()->id(),
+                'event' => 'created',
+                'document_for' => 'buyer',
+            ]);
     
         DB::commit();
 
@@ -583,12 +600,22 @@ public function storeBuyer(Request $request)
             }
     
             // Update tenant data
+
             $tenant->update($request->all());
+            AuditLog::create([
+                'auditable_id' => $tenant->id,
+                'auditable_type' => Tenant::class,
+                'user_id' => auth()->id(),
+                'event' => 'updated',
+                'document_for' => 'tenant',
+            ]);
     
             return response()->json([
                 'success' => true,
                 'data' => $tenant,
             ], 200);
+
+            
     
         } catch (\Exception $e) {
             return response()->json([
@@ -606,7 +633,13 @@ public function storeBuyer(Request $request)
         try {
             $tenant = Tenant::findOrFail($id);
             $tenant->delete();
-
+            AuditLog::create([
+                'auditable_id' => $tenant->id,
+                'auditable_type' => Tenant::class,
+                'user_id' => auth()->id(),
+                'event' => 'deleted',
+                'document_for' => 'tenant',
+            ]);
             return response()->json(['success' => true, 'message' => 'Tenant deleted successfully'], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
@@ -622,6 +655,13 @@ public function storeBuyer(Request $request)
             $tenant = Tenant::withTrashed()->findOrFail($id);
             $tenant->restore();
 
+            AuditLog::create([
+                'auditable_id' => $tenant->id,
+                'auditable_type' => Tenant::class,
+                'user_id' => auth()->id(),
+                'event' => 'restored',
+                'document_for' => 'tenant',
+            ]);
             return response()->json(['success' => true, 'message' => 'Tenant restored successfully'], 200);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);

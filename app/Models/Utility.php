@@ -37,6 +37,10 @@ class Utility extends Model
 {
     return $this->belongsTo(Floor::class); // Assuming each contract belongs to a floor
 }
+public function auditLogs()
+{
+    return $this->morphMany(AuditLog::class, 'auditable');
+}
 public function getUtilityStatusAttribute()
 {
     $currentDate = now();

@@ -5,9 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-class PaymentForBuyer extends Model
+
+   
+class PaymentForBuyer extends Model 
 {
     use HasFactory, SoftDeletes;
+
 
     protected $fillable = [
         'tenant_id',
@@ -24,6 +27,10 @@ class PaymentForBuyer extends Model
     public function documents()
     {
         return $this->hasMany(Document::class);
+    }
+    public function auditLogs()
+    {
+        return $this->morphMany(AuditLog::class, 'auditable');
     }
     public function floor()
 {

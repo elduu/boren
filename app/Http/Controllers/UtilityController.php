@@ -9,6 +9,7 @@ use App\Models\Utility;
 use App\Models\Tenant;
 use App\Models\Floor;
 use Carbon\Carbon;
+use App\Models\AuditLog;
 
 class UtilityController extends Controller
 {public function index(Request $request)
@@ -141,7 +142,13 @@ class UtilityController extends Controller
     
             // Create the utility record with the calculated due_date
             $utility = Utility::create(array_merge($request->all(), ['due_date' => $dueDate]));
-    
+            AuditLog::create([
+                'auditable_id' => $utility->id,
+                'auditable_type' => Utility::class,
+                'user_id' => auth()->id(),
+                'event' => 'created',
+                'document_for' => 'utility',
+            ]);
             return response()->json([
                 'message' => 'Utility record added successfully.',
                 'data' => $utility,
@@ -221,6 +228,14 @@ class UtilityController extends Controller
             'utility_type',
         ]));
 
+        AuditLog::create([
+            'auditable_id' => $utility->id,
+            'auditable_type' => Utility::class,
+            'user_id' => auth()->id(),
+            'event' => 'uppdated',
+            'document_for' => 'utility',
+        ]);
+
         return response()->json([
             'message' => 'Utility record updated successfully.',
             'data' => $utility,
@@ -266,6 +281,13 @@ public function restore($id)
         // Restore the soft deleted utility record
         $utility = Utility::withTrashed()->findOrFail($id);
         $utility->restore();
+        AuditLog::create([
+            'auditable_id' => $utility->id,
+            'auditable_type' => Utility::class,
+            'user_id' => auth()->id(),
+            'event' => 'restored',
+            'document_for' => 'utility',
+        ]);
 
         return response()->json([
             'success' => true,
@@ -288,6 +310,13 @@ public function delete($id)
         // Soft delete the utility record
         $utility->delete();
 
+        AuditLog::create([
+            'auditable_id' => $utility->id,
+            'auditable_type' => Utility::class,
+            'user_id' => auth()->id(),
+            'event' => 'deleted',
+            'document_for' => 'utility',
+        ]);
         return response()->json([
             'success' => true,
             'message' => 'Utility deleted successfully',

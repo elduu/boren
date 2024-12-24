@@ -11,6 +11,7 @@ use Illuminate\Http\UploadedFile;
 use App\Models\Document;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use App\Models\AuditLog;
 class ContractController extends Controller
 {
     public function show($id)
@@ -91,6 +92,7 @@ class ContractController extends Controller
                             'updated_at' => $document->updated_at,
                             'doc_name' => $document->doc_name,
                             'doc_size'=>$document->doc_size,
+                            'uploaded_by' => auth()->id(),
                         ];
                     }),
                 ];
@@ -175,6 +177,14 @@ class ContractController extends Controller
             ));
         
             $currentDate = Carbon::now()->format('Y-m-d');
+
+            AuditLog::create([
+                'auditable_id' => $contract->id,
+                'auditable_type' => Contract::class,
+                'user_id' => auth()->id(),
+                'event' => 'updated',
+                'document_for' => 'contract',
+            ]);
         //     Contract::whereDate('expiring_date', '<=', $currentDate)
         //     ->update(['status' => 'inactive']);
 
@@ -203,6 +213,14 @@ class ContractController extends Controller
 
             // Soft delete the contract
             $contract->delete();
+
+            AuditLog::create([
+                'auditable_id' => $contract->id,
+                'auditable_type' => Contract::class,
+                'user_id' => auth()->id(),
+                'event' => 'deleted',
+                'document_for' => 'contract',
+            ]);
 
             return response()->json(['success' => true, 'message' => 'Contract deleted successfully'], 200);
         } catch (\Exception $e) {
@@ -282,6 +300,13 @@ class ContractController extends Controller
 
         // Restore the deleted contract
         $contract->restore();
+        AuditLog::create([
+            'auditable_id' => $contract->id,
+            'auditable_type' => Contract::class,
+            'user_id' => auth()->id(),
+            'event' => 'restored',
+            'document_for' => 'contract',
+        ]);
 
         // Return success response
         return response()->json([

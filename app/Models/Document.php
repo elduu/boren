@@ -6,9 +6,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class Document extends Model
+
+
+ class Document extends Model 
 {
-    use SoftDeletes; // Enable soft delete functionality
+    use SoftDeletes ;
+  // Enable soft delete functionality
 
     protected $fillable = [
         'documentable_id', 'documentable_type', 'file_path', 'document_type', 'document_format', 'contract_id',           // Associated contract ID, if applicable
@@ -32,6 +35,10 @@ public function floor()
 public function contract()
     {
         return $this->belongsTo(Contract::class);
+    }
+    public function auditLogs()
+    {
+        return $this->morphMany(AuditLog::class, 'auditable');
     }
 
     /**

@@ -6,9 +6,11 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+   
 class Contract extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes; 
+   
 
     protected $fillable = [
         'tenant_id',
@@ -25,7 +27,10 @@ class Contract extends Model
 {
     return $this->belongsTo(Tenant::class);
 }
-
+public function auditLogs()
+{
+    return $this->morphMany(AuditLog::class, 'auditable');
+}
     // Define the relationship to the Building model
 
     // Accessor for formatted dates (optional)

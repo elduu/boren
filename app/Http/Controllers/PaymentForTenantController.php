@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
 use App\Models\Document;
 use App\Models\Tenant;
+use App\Models\AuditLog;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -261,10 +262,19 @@ public function search(Request $request)
                                 'payment_for_tenant_id'=>$payment->id,
                                'doc_name' => $documentName,
                         'doc_size'=>$documentSize,
+                        'uploaded_by' => auth()->id(),
                             ]);
                         }
                     }
                 }
+
+                AuditLog::create([
+                    'auditable_id' => $payment->id,
+                    'auditable_type' => PaymentForTenant::class,
+                    'user_id' => auth()->id(),
+                    'event' => 'created',
+                    'document_for' => 'payment for tenant',
+                ]);
         
                 return response()->json(['success' => true, 'data' => $payment], 201);
             } catch (\Exception $e) {
@@ -371,6 +381,14 @@ public function update(Request $request, $id)
         $payment->fill($updatedData);
         $payment->save();
 
+        AuditLog::create([
+            'auditable_id' => $payment->id,
+            'auditable_type' => PaymentForTenant::class,
+            'user_id' => auth()->id(),
+            'event' => 'updated',
+            'document_for' => 'payment for tenant',
+        ]);
+
         return response()->json(['success' => true, 'data' => $payment], 200);
     } catch (\Exception $e) {
         return response()->json([
@@ -392,6 +410,14 @@ public function update(Request $request, $id)
     
             try {
                 $payment->delete();
+
+                AuditLog::create([
+                    'auditable_id' => $payment->id,
+                    'auditable_type' => PaymentForTenant::class,
+                    'user_id' => auth()->id(),
+                    'event' => 'deleted',
+                    'document_for' => 'payment for tenant',
+                ]);
                 return response()->json(['success' => true, 'message' => 'Payment deleted successfully'], 200);
             } catch (\Exception $e) {
                 return response()->json(['success' => false, 'message' => 'Failed to delete payment: ' . $e->getMessage()], 500);
@@ -410,6 +436,14 @@ public function update(Request $request, $id)
     
             try {
                 $payment->restore();
+
+                AuditLog::create([
+                    'auditable_id' => $payment->id,
+                    'auditable_type' => PaymentForTenant::class,
+                    'user_id' => auth()->id(),
+                    'event' => 'restored',
+                    'document_for' => 'payment for tenant',
+                ]);
                 return response()->json(['success' => true, 'message' => 'Payment restored successfully'], 200);
             } catch (\Exception $e) {
                 return response()->json(['success' => false, 'message' => 'Failed to restore payment: ' . $e->getMessage()], 500);

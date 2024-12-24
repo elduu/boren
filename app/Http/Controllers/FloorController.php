@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\Document;
 use App\Models\Contract;
 use Carbon\Carbon;
+use App\Models\AuditLog;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 
@@ -669,10 +670,19 @@ public function storeContract(Request $request)
                         'contract_id'=>$contract->id,
                        'doc_name' => $documentName,
                 'doc_size'=>$documentSize,
+            'uploaded_by' => auth()->id(),
                     ]);
                 }
             }
         }
+
+        AuditLog::create([
+            'auditable_id' => $contract->id,
+            'auditable_type' => Contract::class,
+            'user_id' => auth()->id(),
+            'event' => 'created',
+            'document_for' => 'contract',
+        ]);
 
         return response()->json(['success' => true, 'data' => $contract], 201);
     } catch (\Exception $e) {

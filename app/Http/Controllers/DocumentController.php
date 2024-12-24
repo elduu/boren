@@ -166,6 +166,7 @@ class DocumentController extends Controller
                     'file_path' => url($document->file_path),
                     'created_at' => $document->created_at,
                     'updated_at' => $document->updated_at,
+                    
                 ];
             });
     

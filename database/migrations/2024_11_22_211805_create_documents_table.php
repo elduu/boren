@@ -8,15 +8,17 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
+     * 
      */
     public function up(): void
     {
+     
         Schema::create('documents', function (Blueprint $table) {
             $table->id();
             // Polymorphic relation columns
             $table->nullableMorphs('documentable'); // This will create 'documentable_id' and 'documentable_type'
             
-            // File columns
+            $table->string('uploaded_by')->nullable();
             $table->string('file_path'); // Path to the uploaded document
             $table->enum('document_type', ['payment_receipt', 'lease_agreement', 'tenant_info']); // Type of document
             $table->enum('document_format', ['pdf', 'word', 'image', 'excel']);
@@ -27,6 +29,7 @@ return new class extends Migration
             $table->foreignId('payment_for_buyer_id')->nullable()->constrained('payment_for_buyers')->onDelete('cascade'); // Nullable foreign key>foreignId('uploaded_by')->constrained('users')->onDelete('cascade'); // The user who uploaded it
             $table->timestamps();
             $table->softDeletes(); 
+
         });
     }
 

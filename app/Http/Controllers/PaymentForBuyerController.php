@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Validation\ValidationException;
 use Exception;
 use Carbon\Carbon;
+use App\Models\AuditLog;
 
 use App\Models\Document;
 use Illuminate\Support\Facades\Storage;
@@ -168,11 +169,19 @@ class PaymentForBuyerController extends Controller
                              'payment_for_buyer_id'=>$payment->id,
                              'doc_name' => $documentName,
                              'doc_size'=>$documentSize,
+                             'uploaded_by' => auth()->id(),
                          
                          ]);
                      }
                  }
              }
+             AuditLog::create([
+                'auditable_id' => $payment->id,
+                'auditable_type' => PaymentForBuyer::class,
+                'user_id' => auth()->id(),
+                'event' => 'created',
+                'document_for' => 'contract',
+            ]);
      
              return response()->json(['success' => true, 'data' => $payment], 201);
          } catch (\Exception $e) {
@@ -258,6 +267,14 @@ class PaymentForBuyerController extends Controller
                 'property_price' => $validatedData['property_price'] ?? $payment->property_price,
                 'utility_fee' => $validatedData['utility_fee'] ?? $payment->utility_fee,
                 'start_date' => $validatedData['start_date'] ?? $payment->start_date,
+            ]);
+
+            AuditLog::create([
+                'auditable_id' => $payment->id,
+                'auditable_type' => PaymentForBuyer::class,
+                'user_id' => auth()->id(),
+                'event' => 'updated',
+                'document_for' => 'contract',
             ]);
     
             // Handle document updates
@@ -382,6 +399,13 @@ class PaymentForBuyerController extends Controller
         try {
             $payment = PaymentForBuyer::findOrFail($id);
             $payment->delete();
+            AuditLog::create([
+                'auditable_id' => $payment->id,
+                'auditable_type' => PaymentForBuyer::class,
+                'user_id' => auth()->id(),
+                'event' => 'deleted',
+                'document_for' => 'contract',
+            ]);
             return response()->json(['message' => 'Payment deleted successfully']);
         } catch (ModelNotFoundException $e) {
             return response()->json(['message' => 'Payment not found'], 200);
@@ -402,6 +426,13 @@ class PaymentForBuyerController extends Controller
                 $payment->restore();
                 return response()->json(['message' => 'Payment restored successfully']);
             }
+            AuditLog::create([
+                'auditable_id' => $payment->id,
+                'auditable_type' => PaymentForBuyer::class,
+                'user_id' => auth()->id(),
+                'event' => 'restored',
+                'document_for' => 'payment',
+            ]);
 
             return response()->json(['message' => 'Payment is not deleted'], 400);
         } catch (ModelNotFoundException $e) {

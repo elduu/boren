@@ -48,6 +48,11 @@ class Tenant extends Model
     {
         return $this->morphMany(Document::class, 'documentable');
     }
+    public function auditLogs()
+    {
+        return $this->morphMany(AuditLog::class, 'auditable');
+    }
+
     public function getDueDateAttribute($value)
     {
         return \Carbon\Carbon::parse($value)->format('Y-m-d');
