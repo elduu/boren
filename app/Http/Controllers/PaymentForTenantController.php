@@ -220,7 +220,13 @@ public function search(Request $request)
                 
              
                 // Create payment record
-                $payment = PaymentForTenant::create($validatedData);
+               
+                $payment = PaymentForTenant::create(array_merge(
+                    $validatedData,
+                    [
+                'payment_number' => uniqid('PAY-')],
+                    
+                ));
                 // PaymentForTenant::whereDate('payment_made_until', '>', $currentDate)
                 // ->update(['payment_status' => 'paid']);
             

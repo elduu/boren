@@ -642,7 +642,10 @@ public function storeContract(Request $request)
         // Create the contract
         $contract = Contract::create(array_merge(
             $validatedData,
-            ['due_date' => $dueDate]
+            [
+                'due_date' => $dueDate,
+                'contract_number' => uniqid('CON-'),
+            ]
         ));
 
         // Update contract status based on the current date

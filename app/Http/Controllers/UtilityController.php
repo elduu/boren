@@ -141,7 +141,7 @@ class UtilityController extends Controller
             $dueDate = $request->end_date ? Carbon::parse($request->end_date)->subWeek() : null;
     
             // Create the utility record with the calculated due_date
-            $utility = Utility::create(array_merge($request->all(), ['due_date' => $dueDate]));
+            $utility = Utility::create(array_merge($request->all(), ['due_date' => $dueDate,'utility_number' => uniqid('UTI-')]));
             AuditLog::create([
                 'auditable_id' => $utility->id,
                 'auditable_type' => Utility::class,

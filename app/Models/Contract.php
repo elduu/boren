@@ -18,6 +18,7 @@ class Contract extends Model
        // 'status',
         'signing_date',
         'expiring_date',
+        'contract_number',
         'due_date',
         'room_number',
     ];

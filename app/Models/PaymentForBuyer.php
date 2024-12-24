@@ -15,6 +15,7 @@ class PaymentForBuyer extends Model
     protected $fillable = [
         'tenant_id',
         'property_price',
+        'payment_number',
         'utility_fee',
         'start_date',
         'room_number',

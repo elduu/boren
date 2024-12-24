@@ -18,6 +18,7 @@ class PaymentForTenant extends Model
         'tenant_id',
         'unit_price',
         'monthly_paid',
+        'payment_number',
         'area_m2',
         'utility_fee',
         'payment_made_until',

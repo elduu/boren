@@ -12,7 +12,7 @@ class Utility extends Model
     use SoftDeletes; 
     protected $fillable = [
         'tenant_id',
- 
+        'utility_number',
         'other_fee',
         'electric_bill_fee',
         'generator_bill',

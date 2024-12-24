@@ -144,7 +144,13 @@ class PaymentForBuyerController extends Controller
             //  $validatedData['due_date'] = $endDate->subWeek()->format('Y-m-d');
      
              // Create payment record
-             $payment = PaymentForBuyer::create($validatedData);
+           
+             $payment = PaymentForBuyer::create(array_merge(
+                $validatedData,
+                [
+            'payment_number' => uniqid('PAY-')],
+                
+            ));
      
              // Check if documents are provided
              if ($request->has('documents')) {

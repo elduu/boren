@@ -24,6 +24,7 @@ return new class extends Migration
                   $table->date('end_date')->nullable();  // Payment start date
                   $table->date('due_date'); 
                   $table->string('room_number');
+                  $table->string('payment_number')->unique(); 
                 //  $table->enum('payment_status', ['paid', 'unpaid','overdue']);
                   $table->softDeletes(); // Soft delete support
                   $table->timestamps();

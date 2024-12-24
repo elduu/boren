@@ -22,6 +22,7 @@ return new class extends Migration
             $table->date('due_date');  // Due date (1 month before expiration date)
             $table->softDeletes();  // Soft delete
             $table->timestamps();  // Created and Updated timestamps
+            $table->string('contract_number')->unique(); 
         });
     }
 

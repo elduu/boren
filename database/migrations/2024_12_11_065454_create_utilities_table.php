@@ -28,6 +28,7 @@ return new class extends Migration
             $table->text('reason')->nullable();
             $table->enum('utility_type', ['electric_bill', 'water', 'generator', 'other'])->nullable();
             $table->string('room_number');
+            $table->string('utility_number')->unique(); 
             $table->softDeletes(); // Soft delete support
             $table->timestamps();    
            });
