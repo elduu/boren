@@ -147,8 +147,7 @@ class ReportController extends Controller
     
             // Query contracts with overdue status
             $contracts = Contract::with(['tenant:id,name,floor_id','floor', 'category', 'documents'])
-                ->whereYear('due_date', $currentYear)
-                ->whereMonth('due_date', $currentMonth)
+              
                 ->where('due_date', '<=', Carbon::now())
                 ->where('expiring_date', '>=', Carbon::now())
              //   ->where('status', '', 'overdue')
