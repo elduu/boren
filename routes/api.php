@@ -128,6 +128,7 @@ Route::get('building_search', [BuildingController::class, 'search']); // Get all
 
 Route::middleware(['permission:manage floors'])->group(function () {
     Route::post('floors', [FloorController::class, 'store']);
+    Route::post('editfloors/{id}', [FloorController::class, 'update']);
     Route::post('contractadd', [FloorController::class, 'storeContract']);
     Route::delete('floors/{id}', [FloorController::class, 'destroy']);
     Route::patch('floors_restore/{id}', [FloorController::class, 'restore']);

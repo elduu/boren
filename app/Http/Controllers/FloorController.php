@@ -64,6 +64,44 @@ class FloorController extends Controller
             ], 500);
         }
     }
+    public function update(Request $request, $id)
+{
+    // Validate the request data
+    $validated = $request->validate([
+        'building_id' => 'required|exists:buildings,id', // Ensure building exists
+        'name' => 'required|string|max:255',            // Floor name is required, max length 255 characters
+    ]);
+
+    try {
+        // Find the existing floor record
+        $floor = Floor::findOrFail($id);
+
+        // Retrieve the category_id from the specified building
+        $building = Building::findOrFail($validated['building_id']);
+        $categoryId = $building->category_id;
+
+        // Update the floor record
+        $floor->update([
+            'building_id' => $validated['building_id'],
+            'category_id' => $categoryId,
+            'name' => $validated['name'],
+        ]);
+
+        return response()->json([
+            'message' => 'Floor updated successfully',
+            'data' => $floor
+        ], 200);
+
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        return response()->json([
+            'error' => 'Floor not found.'
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'An error occurred while updating the floor. Please try again later.'
+        ], 500);
+    }
+}
 
     // Soft delete a floor
     public function destroy($id)

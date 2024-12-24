@@ -126,7 +126,7 @@ public function trashed()
            return [
                'category_name' => $category->name,
                'category_id' => $category->id,
-               'building_name' => $building->name,
+               'name' => $building->name,
                'id' => $building->id,
            ];
        });

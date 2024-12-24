@@ -31,7 +31,7 @@ class ContractRenewalMail extends Mailable
     public function build()
     {
         // Set the 'from' address here
-        return $this->from(env('MAIL_FROM_NAME', 'boren realestate')) // Default fallback from env
+        return $this->from(env('MAIL_FROM_ADDRESS', 'realestateboren@gmail.com'), env('MAIL_FROM_NAME', 'Boren Realestate')) 
                    // Email subject
                     ->view('contract') // Assuming you have this view file
                     ->with([
