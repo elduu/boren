@@ -8,25 +8,31 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class AuditLogController extends Controller
 {
-    public function index()
-    {
-        try {
-            // Retrieve all audit logs with the associated user
-            $auditLogs = AuditLog::with('user')->get();
-
-            // Check if there are no audit logs
-            if ($auditLogs->isEmpty()) {
+        public function index()
+        {
+            try {
+                // Fetch all audit logs with user relationship
+                $auditLogs = AuditLog::with('user')->get();
+    
+                // Format the response as a single array
+                $formattedLogs = $auditLogs->map(function ($log) {
+                    return [
+                        'user_id' => $log->user_id,
+                        'user_name' => $log->user->name ?? 'N/A', // Fallback if user is missing
+                        'event' => $log->event,
+                        'document_for' => $log->document_for,
+                        'auditable_id' => $log->auditable_id,
+                        'auditable_type' => $log->auditable_type,
+                        'created_at' => $log->created_at->toDateTimeString(),
+                    ];
+                });
+    
                 return response()->json([
-                    'message' => 'No audit logs found.',
-                    'data' => []
-                ], 200); // 404 Not Found status
-            }
-
-            return response()->json([
-                'message' => 'Audit logs retrieved successfully.',
-                'data' => $auditLogs
-            ], 200); // 200 OK status
-
+                    'success' => true,
+                    'data' => $formattedLogs,
+                ], 200);
+            
+        
         } catch (ModelNotFoundException $e) {
             // Handle cases where the model is not found
             return response()->json([
