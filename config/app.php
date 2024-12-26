@@ -2,6 +2,8 @@
 
 use Illuminate\Support\Facades\Facade;
 
+use Illuminate\Support\Route;
+
 return [
 
     /*

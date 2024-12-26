@@ -1,7 +1,12 @@
 <?php
 
-use Illuminate\Http\Request;
+
+// Set the application instance
+
+
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+
 use App\Http\Controllers\BuildingController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\FloorController;
@@ -33,6 +38,7 @@ use App\Http\Controllers\AuditLogController;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
 
 Route::get('user-', [AuthController::class, 'getUserInfo']);
 

@@ -68,8 +68,8 @@ class FloorController extends Controller
 {
     // Validate the request data
     $validated = $request->validate([
-        'building_id' => 'required|exists:buildings,id', // Ensure building exists
-        'name' => 'required|string|max:255',            // Floor name is required, max length 255 characters
+        'building_id' => 'nullable|exists:buildings,id', // Ensure building exists
+        'name' => 'nullable|string|max:255',            // Floor name is required, max length 255 characters
     ]);
 
     try {
@@ -419,16 +419,17 @@ public function getFloorData(Request $request)
             'floor_name' => $floor->name,
             'building_name' => $floor->building->name,
          'tenants' => $floor->tenants->map(function ($tenant) {
-    $paymentData = $tenant->paymentsForTenant->first(); // Assuming one payment per tenant
-    $contractData = $tenant->contracts
-        ->sortByDesc('signing_date') // Sort contracts by signing_date in descending order
-        ->first(); // Get the most recent contract
+            $paymentData=$tenant->paymentsForTenant->sortByDesc('created_at')->first();
+
+            // Get the latest contract from the loaded collection
+            $contractData = $tenant->contracts->sortByDesc('created_at')->first();// Single contract per tenant
+             // Get the most recent contract
 
     return [
         'tenant_id' => $tenant->id,
         'tenant_name' => $tenant->name,
         'tenant_phone' => $tenant->phone_number,
-        'room_number' => $contractData->room_number,
+        'room_number' => $contractData->room_number ?? 'N/A',
         'area_m2' => $paymentData?->area_m2 ?? null,
         'unit_price' => $paymentData?->unit_price ?? null,
         'monthly_paid' => $paymentData?->monthly_paid ?? null,
