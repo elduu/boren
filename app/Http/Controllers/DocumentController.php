@@ -304,7 +304,7 @@ public function download($id)
         // Find the document by ID
         $document = Document::findOrFail($id);
 
-        // Extract the file path from the URL (remove 'public/' prefix if needed)
+        // Extract the file path from the URL
         $filePath = str_replace('/storage/', '', $document->file_path); 
 
         // Ensure the file exists on the 'public' disk
@@ -313,9 +313,14 @@ public function download($id)
                 'message' => 'File not found on the server.',
             ], 200);
         }
-        
-        // Return the download response using response()->download() method
-        return response()->download(storage_path('app/public/' . $filePath));
+
+        // Get the absolute file path
+        $absoluteFilePath = storage_path('app/public/' . $filePath);
+
+        // Set appropriate headers for the file type
+        return response()->download($absoluteFilePath, $document->doc_name, [
+            'Content-Type' => mime_content_type($absoluteFilePath),
+        ]);
 
     } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
         return response()->json([

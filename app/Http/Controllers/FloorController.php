@@ -497,10 +497,10 @@ public function getFloorDataBuyer(Request $request)
             'floor_name' => $floor->name,
             'building_name' => $floor->building->name,
          'tenants' => $floor->tenants->map(function ($tenant) {
-    $paymentData = $tenant->paymentsForBuyer->first(); // Assuming one payment per tenant
-    $contractData = $tenant->contracts
-        ->sortByDesc('start_date') // Sort contracts by signing_date in descending order
-        ->first(); // Get the most recent contract
+            $paymentData=$tenant->paymentsForBuyer->sortByDesc('created_at')->first();
+
+            // Get the latest contract from the loaded collection
+            $contractData = $tenant->contracts->sortByDesc('created_at')->first();/// Get the most recent contract
 
     return [
         'tenant_id' => $tenant->id,
@@ -580,7 +580,7 @@ public function getBuildingDataBuyer(Request $request)
                 return [
                     'floor_name' => $floor->name,
                     'tenants' => $floor->tenants->map(function ($tenant) {
-                        $paymentData=$tenant->paymentsForTenant->sortByDesc('created_at')->first();
+                        $paymentData=$tenant->paymentsForBuyer->sortByDesc('created_at')->first();
 
                         // Get the latest contract from the loaded collection
                         $contractData = $tenant->contracts->sortByDesc('created_at')->first();/// Single contract per tenant
