@@ -579,15 +579,15 @@ public function getBuildingDataBuyer(Request $request)
             'floors' => $building->floors->map(function ($floor) {
                 return [
                     'floor_name' => $floor->name,
-                    'tenants' => $floor->tenants->map(function ($tenant) {
+                    'buyers' => $floor->tenants->map(function ($tenant) {
                         $paymentData=$tenant->paymentsForBuyer->sortByDesc('created_at')->first();
 
                         // Get the latest contract from the loaded collection
                         $contractData = $tenant->contracts->sortByDesc('created_at')->first();/// Single contract per tenant
                         return [
-                            'tenant_id' => $tenant->id,
-                            'tenant_name' => $tenant->name,
-                            'tenant_phone' => $tenant->phone_number,
+                            'buyer_id' => $tenant->id,
+                            'buyer_name' => $tenant->name,
+                            'buyer_phone' => $tenant->phone_number,
                             'room_number' => $contractData->room_number ?? null,
                             //'area_m2' => $paymentData?->area_m2 ?? null,
                             'property_price' => $paymentData?->property_price ?? null,
