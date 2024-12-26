@@ -508,7 +508,7 @@ public function getCurrentMonthUtilityCostReport()
             $utilityReport->other_cost == 0
         ) {
             return response()->json([
-                'success' => false,
+                'success' => true,
                 'message' => 'No utility data found for the current month.',
             ], 200);
         }
