@@ -75,7 +75,7 @@ class ReportController extends Controller
                     'tenant_id' => $contract->tenant->id,
                     'tenant_name' => $contract->tenant->name ?? null,
                     'floor_name' => $contract->tenant->floor->name ?? null, // Include floor name
-                    'category_name' => $contract->category->name ?? null,  // Include category name
+                    'category_name' => $contract->tenant->floor->category->name ?? null,  // Include category name
                     'type' => $contract->type,
                     'status' => $contract->contract_status,
                     'signing_date' => $contract->signing_date,
@@ -165,7 +165,7 @@ class ReportController extends Controller
                     'tenant_id' => $contract->tenant->id,
                     'tenant_name' => $contract->tenant->name ?? null,
                     'floor_name' => $contract->tenant->floor->name ?? null, // Include floor name
-                    'category_name' => $contract->category->name ?? null,  // Include category name
+                    'category_name' => $contract->tenant->floor->category->name ?? null,  // Include category name
                     'type' => $contract->type,
                     'status' => $contract->contract_status,
                     'signing_date' => $contract->signing_date,
@@ -259,7 +259,7 @@ class ReportController extends Controller
                 'tenant_id' => $payment->tenant->id,
                 'tenant_name' => $payment->tenant->name,
                 'floor_name' => $payment->tenant->floor->name ?? null, // Include floor name
-                'category_name' => $payment->tenant->category->name ?? null, // Include category name
+                'category_name' => $payment->tenant->floor->category->name ?? null, // Include category name
                 'unit_price' => $payment->unit_price,
                 'monthly_paid' => $payment->monthly_paid,
                 'area_m2' => $payment->area_m2,

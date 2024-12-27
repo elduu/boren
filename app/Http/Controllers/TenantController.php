@@ -57,7 +57,7 @@ class TenantController extends Controller
         }
 
         // Fetch tenants and related documents
-        $tenants = $tenantQuery->get();
+        $tenants = $tenantQuery->orderBy('created_at', 'desc')->get();
 
         if ($tenants->isEmpty()) {
             return response()->json(['success' => false, 'message' => 'No tenants found for the given floor.'], 404);

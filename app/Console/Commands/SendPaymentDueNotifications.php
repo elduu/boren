@@ -51,7 +51,7 @@ class SendPaymentDueNotifications extends Command
         })->toArray();
 
         // Notify all users responsible for reminders
-        $users = User::role('admin')->get(); // Adjust role if necessary
+        $users = User::all(); // Adjust role if necessary
         foreach ($users as $user) {
             $user->notify(new PaymentDueNotification($tenantsData));
         }

@@ -12,11 +12,11 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('contracts:send-renewal-emails')->everyMinute();
-        $schedule->command('payments:send-due-emails')->everyTwoMinutes();
-        $schedule->command('app:send-utility-payment-due-emails')->everyTwoMinutes();
-        $schedule->command('app:send-payment-due-notifications')->everyMinute();
-        $schedule->command('app:send-contract-renewal-notifications')->everyMinute();
+        // $schedule->command('contracts:send-renewal-emails')->everyMinute();
+        // $schedule->command('payments:send-due-emails')->everyTwoMinutes();
+        // $schedule->command('app:send-utility-payment-due-emails')->everyTwoMinutes();
+        $schedule->command('app:send-payment-due-notifications')->everyTwoMinutes();
+        $schedule->command('app:send-contract-renewal-notifications')->daily();
         app:
     ;
 }

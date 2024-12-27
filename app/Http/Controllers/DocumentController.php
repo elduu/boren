@@ -198,7 +198,7 @@ public function getDocumentsByFloor(Request $request)
         // Fetch documents related to tenants on the specified floor
         $documents = Document::whereHas('tenant', function ($query) use ($request) {
             $query->where('floor_id', $request->floor_id);
-        })->get();
+        })->orderBy('created_at', 'desc')->get();
 
         // Check if any documents are found
         if ($documents->isEmpty()) {

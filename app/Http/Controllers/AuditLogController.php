@@ -17,7 +17,7 @@ class AuditLogController extends Controller
     {
         try {
             // Fetch all audit logs with user relationship
-            $auditLogs = AuditLog::with('user')->get();
+            $auditLogs = AuditLog::with('user')->orderBy('created_at', 'desc')->get();
     
             // Format the response as a single array with extra data
             $formattedLogs = $auditLogs->map(function ($log) {
