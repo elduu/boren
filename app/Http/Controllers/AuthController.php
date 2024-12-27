@@ -171,11 +171,18 @@ public function logout(Request $request)
 }
 public function getUserInfo(Request $request)
 {
-    // Retrieve the authenticated user from the token
-    $user = $request->user();
+    
 
-    $AuthUser = auth()->user();
-    $user = User::find($AuthUser->id);
+        // Check if the authenticated user is an admin
+        $currentUser = $request->user();
+        if (!$currentUser || !$currentUser->hasRole('admin')) { // Adjust based on your RBAC implementation
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to update users.',
+            ], 403);
+        }
+// Retrieve the authenticated user from the token
+    $user = $request->user();
 
 
     if ($user) {
@@ -226,10 +233,16 @@ public function listAllUsers()
 public function update(Request $request, $id)
 {
     DB::beginTransaction();
-
-    $AuthUser = auth()->user();
-    $user = User::find($AuthUser->id);
-
+    
+    
+        // k if the authenticated user is an admin
+        $currentUser = $request->user();
+        if (!$currentUser || !$currentUser->hasRole('admin')) { // Adjust based on your RBAC implementation
+            return response()->json([
+                'success' => false,
+                'message' => 'You do not have permission to update users.',
+            ], 403);
+        }
 
     try {
         // Find the user record by ID
