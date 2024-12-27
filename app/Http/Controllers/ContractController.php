@@ -125,11 +125,11 @@ class ContractController extends Controller
         try {
             // Validate the incoming request explicitly
             $validatedData = $request->validate([
-                'tenant_id' => 'required|exists:tenants,id',
+             //   'tenant_id' => 'required|exists:tenants,id',
                 'type' => 'nullable|in:rental,purchased',
-                'room_number' => 'required|string|max:255',
-                'signing_date' => 'required|date',
-                'expiring_date' => 'required|date|after:signing_date',
+                'room_number' => 'nullable|string|max:255',
+                'signing_date' => 'nullable|date',
+                'expiring_date' => 'nullable|date|after:signing_date',
             ], $messages);
 
             // Find the contract
@@ -156,7 +156,7 @@ class ContractController extends Controller
             return response()->json(['success' => true, 'data' => $contract], 200);
         } catch (ModelNotFoundException $e) {
             // Return JSON response for not found
-            return response()->json(['success' => false, 'message' => 'Contract not found.'], 404);
+            return response()->json(['success' => false, 'message' => 'Contract not found.'], 200);
         } catch (\Illuminate\Validation\ValidationException $e) {
             // Return validation errors in JSON format
             return response()->json(['success' => false, 'errors' => $e->errors()], 422);
