@@ -708,7 +708,7 @@ public function storeBuyer(Request $request)
         if ($query) {
             $tenantQuery->where(function($queryBuilder) use ($query) {
                 $queryBuilder->where('name', 'like', "%{$query}%")
-                    ->orWhere('room_number', 'like', "%{$query}%")
+                    // ->orWhere('room_number', 'like', "%{$query}%")
                     ->orWhere('tenant_number', 'like', "%{$query}%")
                     ->orWhere('phone_number', 'like', "%{$query}%");
             });

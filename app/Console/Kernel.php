@@ -15,7 +15,7 @@ class Kernel extends ConsoleKernel
         // $schedule->command('contracts:send-renewal-emails')->everyMinute();
         // $schedule->command('payments:send-due-emails')->everyTwoMinutes();
         // $schedule->command('app:send-utility-payment-due-emails')->everyTwoMinutes();
-        $schedule->command('app:send-payment-due-notifications')->everyTwoMinutes();
+        $schedule->command('app:send-payment-due-notifications')->daily();
         $schedule->command('app:send-contract-renewal-notifications')->daily();
         app:
     ;
