@@ -452,73 +452,7 @@ public function storeBuyer(Request $request)
     }
 }
 
-/**
- * Create a Contract for the Tenant.
- */
-// private function createBuyerContract($tenantId, $validatedData)
-// {
-//     try {
-//         // Calculate the due date (one month before the expiring date)
-//         $dueDate = Carbon::parse($validatedData['expiring_date'] ?? now())->subMonth()->format('Y-m-d');
 
-//         // Create contract
-//         $contract = Contract::create([
-//             'tenant_id' => $tenantId,
-//             'type' => $validatedData['contract_type'],
-//             'status' => $validatedData['contract_status'],
-//             'signing_date' => $validatedData['signing_date'],
-//             'expiring_date' => $validatedData['expiring_date'] ?? null, // Nullable expiring date for buyers
-//             'due_date' => $dueDate, 
-//           // Add calculated due date
-//         ]);
-
-//         if (!$contract) {
-//             throw new \Exception("Contract not created successfully.");
-//         }
-
-//         return $contract;  // Return the created contract
-
-//     } catch (\Exception $e) {
-//         // Handle exception and return an error message
-//         throw new \Exception("Contract creation error: " . $e->getMessage());
-//     }
-// }
-
-// /**
-//  * Create Payment for Buyer.
-//  */
-// private function createBuyerPayment($tenantId, $validatedData)
-// {
-//     try {
-//         // Check if property_price and utility_fee are set
-//         if (!isset($validatedData['property_price']) || !isset($validatedData['utility_fee'])) {
-//             throw new \Exception("Missing property_price or utility_fee in validated data.");
-//         }
-
-//         // Create payment
-//         $payment = PaymentForBuyer::create([
-//             'tenant_id' => $tenantId,
-//             'property_price' => $validatedData['property_price'],  // Price of the purchased property
-//             'utility_fee' => $validatedData['utility_fee'],  // Utility fee for the buyer
-//             'start_date' => $validatedData['start_date'],
-            
-//         ]);
-
-//         if (!$payment) {
-//             throw new \Exception("Payment not created successfully.");
-//         }
-
-//         return $payment;
-
-//     } catch (\Exception $e) {
-//         throw new \Exception("Payment creation error: " . $e->getMessage());
-//     }
-// }
-
-
-    /**
-     * Show a specific tenant.
-     */
     public function show($id)
     {
         try {

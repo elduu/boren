@@ -22,7 +22,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\UtilityController;
 use App\Http\Controllers\EmailController;
 use App\Http\Controllers\AuditLogController;
-
+use App\Models\Utility;
 
 /*
 |--------------------------------------------------------------------------
@@ -105,7 +105,8 @@ Route::post('send-payment-due-emails', [EmailController::class, 'sendPaymentDueE
     Route::post('searchcontracts', [ContractController::class, 'search']);
     Route::middleware(['permission:manage categories'])->group(function () {
 
-Route::post('categories', [CategoryController::class, 'store']); // Create a new category
+Route::post('categories', [CategoryController::class, 'store']);
+Route::get('utility_buildings', [UtilityController::class, 'listUtilityBuildings']);  // Create a new category
 
 Route::post('categories/{id}', [CategoryController::class, 'update']); // Update a category by ID
 Route::delete('categories/{id}', [CategoryController::class, 'destroy']);

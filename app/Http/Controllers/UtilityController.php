@@ -330,4 +330,35 @@ public function delete($id)
     }
 }
     
+public function listUtilityBuildings()
+{
+    try {
+        // Assuming Building has a relationship with Category
+        $utilityBuildings = Building::whereHas('category', function ($query) {
+            $query->where('name', 'utilities');
+        })->get(['id', 'name',  'created_at']);
+
+        if ($utilityBuildings->isEmpty()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'No buildings found under the "utility" category.',
+                'data' => [],
+            ], 200);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Buildings under the "utility" category retrieved successfully.',
+            'data' => $utilityBuildings,
+        ], 200);
+    } catch (\Exception $e) {
+        // Log error for debugging
+     
+
+        return response()->json([
+            'success' => false,
+            'message' => 'An error occurred while fetching buildings.',
+        ], 500);
+    }
+}
 }
