@@ -174,6 +174,10 @@ public function getUserInfo(Request $request)
     // Retrieve the authenticated user from the token
     $user = $request->user();
 
+    $AuthUser = auth()->user();
+    $user = User::find($AuthUser->id);
+
+
     if ($user) {
         // Load the roles relationship to include role information
         $user->load('roles');
@@ -223,19 +227,27 @@ public function update(Request $request, $id)
 {
     DB::beginTransaction();
 
+    $AuthUser = auth()->user();
+    $user = User::find($AuthUser->id);
+
+
     try {
         // Find the user record by ID
         $user = User::findOrFail($id);
 
         // Validate the request data
         $validatedData = $request->validate([
-            'name' => 'string|max:255',
-            'email' => 'string|email|max:255|unique:users,email,' . $id,
-            'phone' => 'string|max:20',
-            'status.in' => 'Status must be one of: active, inactive, suspended.',
-            'password' => 'nullable|string|confirmed',
-            // Add any other fields you want to allow for update here
+            'name' => 'nullable|string|max:255',
+            'email' => 'nullable|string|email|max:255|unique:users,email,' . $id,
+            'phone' => 'nullable|string|max:20',
+            'status' => 'nullable|in:active,inactive,suspended', // Fixed syntax for `in` rule
+            'password' => 'nullable|string|confirmed', // Password confirmation
         ]);
+
+        // Handle password separately to hash before saving
+        if (!empty($validatedData['password'])) {
+            $validatedData['password'] = bcrypt($validatedData['password']);
+        }
 
         // Update only the fields provided in the request
         $user->fill($validatedData);
@@ -248,7 +260,7 @@ public function update(Request $request, $id)
         return response()->json([
             'success' => true,
             'message' => 'User updated successfully.',
-            'data' => $user
+            'data' => $user->only(['id', 'name', 'email', 'phone', 'status', 'created_at', 'updated_at']), // Exclude sensitive fields
         ], 200);
 
     } catch (\Exception $e) {

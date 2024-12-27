@@ -68,7 +68,7 @@ class FloorController extends Controller
 {
     // Validate the request data
     $validated = $request->validate([
-        'building_id' => 'nullable|exists:buildings,id', // Ensure building exists
+      //  'building_id' => 'nullable|exists:buildings,id', // Ensure building exists
         'name' => 'nullable|string|max:255',            // Floor name is required, max length 255 characters
     ]);
 
@@ -77,13 +77,12 @@ class FloorController extends Controller
         $floor = Floor::findOrFail($id);
 
         // Retrieve the category_id from the specified building
-        $building = Building::findOrFail($validated['building_id']);
-        $categoryId = $building->category_id;
+        // $building = Building::findOrFail($validated['building_id']);
+        // $categoryId = $building->category_id;
 
         // Update the floor record
         $floor->update([
-            'building_id' => $validated['building_id'],
-            'category_id' => $categoryId,
+           
             'name' => $validated['name'],
         ]);
 
