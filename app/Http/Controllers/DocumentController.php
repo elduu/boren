@@ -70,18 +70,18 @@ class DocumentController extends Controller
             $data = $tenants->flatMap(function ($tenant) {
                 return $tenant->documents->map(function ($document) use ($tenant) {
                     return [
-                        'id' => $document->id,
+                        'document_id' => $document->id,
                         'tenant_id' => $tenant->id,
                         'tenant_name' => $tenant->name,
                         'document_type' => $document->document_type,
                         'document_format' => $document->document_format,
                         'doc_name' => $document->doc_name,
                         'doc_size' => $document->doc_size,
-                        'file_path' => url($document->file_path),
+                        'document_path' => url($document->file_path),
                         'created_at' => $document->created_at,
                         'updated_at' => $document->updated_at,
                     ];
-                });
+                }); 
             });
     
             // Return the flattened array in a single response

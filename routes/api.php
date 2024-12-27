@@ -47,6 +47,8 @@ Route::post('tenants', [TenantController::class, 'store']);
 Route::post('login', [AuthController::class, 'login']);
 Route::post('logout', [AuthController::class, 'logout']);
 Route::post('refresh-token', [AuthController::class, 'refreshToken']);
+Route::post('/contractsupdate/{id}', [BuildingController::class, 'updatecontract']);
+   
 
 //Route::get('contractsadd', [ContractController::class, 'storecontracts']);
 
@@ -172,11 +174,11 @@ Route::post('buyer', [TenantController::class, 'storeBuyer']);
 
 Route::middleware(['permission:manage contracts'])->group(function () {
    
-    Route::post('contracts/{id}', [ContractController::class, 'update']);
     Route::post('contracts_renew/{id}', [ContractController::class, 'renew']);
     Route::delete('contracts/{id}', [ContractController::class, 'destroy']);
     Route::patch('contracts/{id}/restore', [ContractController::class, 'restore']);
     Route::post('contracts/{id}/status', [ContractController::class, 'updateStatus']);
+
 });
 Route::post('utilities/{id}', [UtilityController::class, 'update']);
 Route::post('getutilites', [UtilityController::class, 'index']);
@@ -184,11 +186,10 @@ Route::delete('utilities/{id}', [UtilityController::class, 'delete']);
 Route::patch('utilities/{id}', [UtilityController::class, 'restore']);
 Route::post('utilities', [UtilityController::class, 'store']);
 
-
 Route::post('/contractsfilter', [ContractController::class, 'filterByType']);
 Route::post('getcontracts', [ContractController::class, 'index']);
 Route::get('tenantcontracts/{tenantId}', [ContractController::class, 'getTenantContracts']);  // List all contracts
-Route::get('contracts/{id}', [ContractController::class, 'show']);  // View contract
+//Route::get('contracts/{id}', [ContractController::class, 'show']);  // View contract
 
 Route::post('getpayments', [PaymentForBuyerController::class, 'index']);
 Route::get('payments/{id}', [PaymentForBuyerController::class, 'show']);

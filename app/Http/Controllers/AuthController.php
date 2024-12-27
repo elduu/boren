@@ -186,7 +186,8 @@ public function getUserInfo(Request $request)
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
-            'role' => $role, // Include the user's specific role
+            'role' => $role,
+            'password'=>$user->password, // Include the user's specific role
             'created_at' => $user->created_at,
             'updated_at' => $user->updated_at,
         ];
@@ -232,6 +233,7 @@ public function update(Request $request, $id)
             'email' => 'string|email|max:255|unique:users,email,' . $id,
             'phone' => 'string|max:20',
             'status.in' => 'Status must be one of: active, inactive, suspended.',
+            'password' => 'nullable|string|confirmed',
             // Add any other fields you want to allow for update here
         ]);
 

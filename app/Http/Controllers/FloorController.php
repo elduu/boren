@@ -350,7 +350,7 @@ public function getBuildingData(Request $request)
                             'tenant_id' => $tenant->id,
                             'tenant_name' => $tenant->name,
                             'tenant_phone' => $tenant->phone_number,
-                            'room_number' => $contractData->room_number ?? 'N/A',
+                            'room_number' => $contractData->room_number ?? null,
                             'area_m2' => $paymentData?->area_m2 ?? null,
                             'unit_price' => $paymentData?->unit_price ?? null,
                             'monthly_paid' => $paymentData?->monthly_paid ?? null,

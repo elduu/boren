@@ -11,6 +11,16 @@ use Illuminate\Http\Request;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Exception;
 
+use App\Models\Contract;
+use App\Models\Tenant;
+use Carbon\Carbon;
+
+use Illuminate\Http\UploadedFile;
+use App\Models\Document;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
+use App\Models\AuditLog;
+
 class BuildingController extends Controller
 {
     // List all buildings

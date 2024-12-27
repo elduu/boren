@@ -507,4 +507,5 @@ class PaymentForBuyerController extends Controller
         'deleted_payments' => $deletedPayments
     ], 200);
 }
+
 }
