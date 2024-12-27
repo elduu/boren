@@ -47,7 +47,7 @@ Route::post('tenants', [TenantController::class, 'store']);
 Route::post('login', [AuthController::class, 'login']);
 Route::post('logout', [AuthController::class, 'logout']);
 Route::post('refresh-token', [AuthController::class, 'refreshToken']);
-Route::post('/contractsupdate/{id}', [BuildingController::class, 'updatecontract']);
+//Route::post('/contracts/{id}/update', [ContractController::class, 'updatecontract']);
    
 
 //Route::get('contractsadd', [ContractController::class, 'storecontracts']);
@@ -123,6 +123,7 @@ Route::get('buildingsInCategory', [CategoryController::class, 'buildingsInCatego
 
 Route::middleware(['permission:manage buildings'])->group(function () {
     Route::post('buildings', [BuildingController::class, 'store']);
+    Route::post('contracts_update/{id}', [ContractController::class, 'updatecontract']);
     Route::post('buildings/{id}', [BuildingController::class, 'update']);
     Route::delete('buildings/{id}', [BuildingController::class, 'destroy']);
     Route::patch('buildings_restore/{id}', [BuildingController::class, 'restore']);

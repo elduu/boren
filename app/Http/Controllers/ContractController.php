@@ -106,64 +106,65 @@ class ContractController extends Controller
             ], 500);
         }
     }
-
     public function updatecontract(Request $request, $id)
-{
-    $messages = [
-        'tenant_id.required' => 'Tenant ID is required.',
-        'tenant_id.exists' => 'The specified Tenant ID does not exist.',
-        'type.required' => 'The contract type is required.',
-        'type.in' => 'The contract type must be either rental or purchased.',
-        'status.required' => 'The contract status is required.',
-        'status.in' => 'The contract status must be either active or expired.',
-        'signing_date.required' => 'The signing date is required.',
-        'signing_date.date' => 'The signing date must be a valid date.',
-        'expiring_date.required' => 'The expiring date is required.',
-        'expiring_date.date' => 'The expiring date must be a valid date.',
-        'expiring_date.after' => 'The expiring date must be after the signing date.',
-    ];
+    {
+        $messages = [
+            'tenant_id.required' => 'Tenant ID is required.',
+            'tenant_id.exists' => 'The specified Tenant ID does not exist.',
+            'type.required' => 'The contract type is required.',
+            'type.in' => 'The contract type must be either rental or purchased.',
+            'room_number.required' => 'The room number is required.',
+            'room_number.max' => 'The room number may not be greater than 255 characters.',
+            'signing_date.required' => 'The signing date is required.',
+            'signing_date.date' => 'The signing date must be a valid date.',
+            'expiring_date.required' => 'The expiring date is required.',
+            'expiring_date.date' => 'The expiring date must be a valid date.',
+            'expiring_date.after' => 'The expiring date must be after the signing date.',
+        ];
 
-    // Validate the incoming request
-    $request->validate([
-        'tenant_id' => 'required|exists:tenants,id',
-        'type' => 'nullable|in:rental,purchased', 
-        'room_number' => 'required|string|max:255',
-        
-        //'status' => 'required|in:active,expired',
-        'signing_date' => 'required|date',
-        'expiring_date' => 'required|date|after:signing_date',
-    ], $messages);
+        try {
+            // Validate the incoming request explicitly
+            $validatedData = $request->validate([
+                'tenant_id' => 'required|exists:tenants,id',
+                'type' => 'nullable|in:rental,purchased',
+                'room_number' => 'required|string|max:255',
+                'signing_date' => 'required|date',
+                'expiring_date' => 'required|date|after:signing_date',
+            ], $messages);
 
-    try {
-        $contract = Contract::findOrFail($id);
-        $dueDate = Carbon::parse($request->expiring_date)->subMonth()->format('Y-m-d');
+            // Find the contract
+            $contract = Contract::findOrFail($id);
 
-        $contract->update(array_merge(
-            $request->all(),
-            ['due_date' => $dueDate]
-        ));
-    
-        $currentDate = Carbon::now()->format('Y-m-d');
+            // Calculate the due date
+            $dueDate = Carbon::parse($validatedData['expiring_date'])->subMonth()->format('Y-m-d');
 
-        AuditLog::create([
-            'auditable_id' => $contract->id,
-            'auditable_type' => Contract::class,
-            'user_id' => auth()->id(),
-            'event' => 'updated',
-            'document_for' => 'contract',
-        ]);
-    //     Contract::whereDate('expiring_date', '<=', $currentDate)
-    //     ->update(['status' => 'inactive']);
+            // Update the contract
+            $contract->update(array_merge(
+                $validatedData,
+                ['due_date' => $dueDate]
+            ));
 
-    // Contract::whereDate('expiring_date', '>', $currentDate)
-    //     ->update(['status' => 'active']);
-        return response()->json(['success' => true, 'data' => $contract], 200);
-    } catch (ModelNotFoundException $e) {
-        return response()->json(['success' => false, 'message' => 'Contract not found.'], 200);
-    } catch (\Exception $e) {
-        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            // Log the update in the audit log
+            AuditLog::create([
+                'auditable_id' => $contract->id,
+                'auditable_type' => Contract::class,
+                'user_id' => auth()->id(),
+                'event' => 'updated',
+                'document_for' => 'contract',
+            ]);
+
+            return response()->json(['success' => true, 'data' => $contract], 200);
+        } catch (ModelNotFoundException $e) {
+            // Return JSON response for not found
+            return response()->json(['success' => false, 'message' => 'Contract not found.'], 404);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Return validation errors in JSON format
+            return response()->json(['success' => false, 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            // Catch-all for other exceptions
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
     }
-}
 //     private function storeDocumentFile(UploadedFile $file, $tenantId)
 //     {
 //         // Define the directory path where documents will be stored
