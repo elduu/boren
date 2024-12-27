@@ -75,7 +75,7 @@ class ReportController extends Controller
                     'tenant_id' => $contract->tenant->id,
                     'tenant_name' => $contract->tenant->name ?? null,
                     'floor_name' => $contract->tenant->floor->name ?? null, // Include floor name
-                    'category_name' => $contract->tenant->category->name ?? null,  // Include category name
+                    'category_name' => $contract->tenant->floor->category->name ?? null,  // Include category name
                     'type' => $contract->type,
                     'status' => $contract->contract_status,
                     'signing_date' => $contract->signing_date,
@@ -146,7 +146,7 @@ class ReportController extends Controller
             $currentYear = Carbon::now()->year;
     
             // Query contracts with overdue status
-            $contracts = Contract::with(['tenant:id,name,floor_id','floor', 'category', 'documents'])
+            $contracts = Contract::with(['tenant:id,name,floor_id','category','floor', 'documents'])
               
                 ->where('due_date', '<=', Carbon::now())
                 ->where('expiring_date', '>=', Carbon::now())
@@ -165,7 +165,7 @@ class ReportController extends Controller
                     'tenant_id' => $contract->tenant->id ?? null ,
                     'tenant_name' => $contract->tenant->name ?? null,
                     'floor_name' => $contract->tenant->floor->name ?? null, // Include floor name
-                    'category_name' => $contract->tenant->category->name ?? null,  // Include category name
+                    'category_name' => $contract->tenant->floor->category->name ?? null,  // Include category name
                     'type' => $contract->type,
                     'status' => $contract->contract_status,
                     'signing_date' => $contract->signing_date,
@@ -238,11 +238,12 @@ class ReportController extends Controller
 }
     /**
      * Get all overdue payments in the current month.
-     */public function getOverduePayments()
+     */
+    public function getOverduePayments()
 {
     try {
         // Query overdue payments with related tenant and documents
-        $overduePayments = PaymentForTenant::with(['tenant:id,name,floor_id', 'documents'])
+        $overduePayments = PaymentForTenant::with(['tenant:id,name,floor_id','category','documents'])
            // ->where('status', 'overdue')
             ->where('due_date', '<=', Carbon::now())
             ->where('payment_made_until', '>=', Carbon::now())
@@ -259,7 +260,7 @@ class ReportController extends Controller
                 'tenant_id' => $payment->tenant->id ?? null,
                 'tenant_name' => $payment->tenant->name ?? null ,
                 'floor_name' => $payment->tenant->floor->name ?? null, // Include floor name
-                'category_name' => $payment->tenant->category->name ?? null, // Include category name
+                'category_name' => $payment->tenant->floor->category->name ?? null, // Include category name
                 'unit_price' => $payment->unit_price,
                 'monthly_paid' => $payment->monthly_paid,
                 'area_m2' => $payment->area_m2,
