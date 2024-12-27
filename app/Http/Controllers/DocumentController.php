@@ -140,7 +140,7 @@ class DocumentController extends Controller
             $documents = Document::whereHas('tenant', function ($q) use ($query) {
                 $q->where('name', 'like', "%{$query}%")
                     ->orWhere('doc_name', 'like', "%{$query}%")
-                    ->orWhere('room_number', 'like', "%{$query}%");
+                   ;
             })
             ->with('tenant') // Load the related tenant
             ->orderBy('created_at', 'desc') // Order by the most recent documents
