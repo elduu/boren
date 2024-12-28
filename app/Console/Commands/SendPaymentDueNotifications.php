@@ -31,7 +31,7 @@ class SendPaymentDueNotifications extends Command
     {
         $threeDaysFromNow = Carbon::now()->addDays(12);
         $tenantsDue = PaymentForTenant::where('due_date', '<=', $threeDaysFromNow)
-            ->where('payment_status', 'unpaid')
+            //->where('payment_status', 'unpaid')
             ->with('tenant') // Ensure the tenant relationship exists
             ->get();
            
@@ -45,7 +45,7 @@ class SendPaymentDueNotifications extends Command
         $tenantsData = $tenantsDue->map(function ($payment) {
             return [
                 'name' => $payment->tenant->name,
-                'room_number' => $payment->tenant->room_number,
+                'room_number' => $payment->room_number,
                 'due_date' => $payment->due_date,
             ];
         })->toArray();

@@ -32,7 +32,7 @@ class AuthController extends Controller
             'email' => 'nullable|email|unique:users',
             'phone' => 'nullable|string|unique:users',
             'password' => 'required|string|confirmed',
-            'role' => 'required|in:admin,user',
+            'role' => 'required|in:admin,writer,read_only',
             'status' => 'nullable|in:active,inactive,suspended',
         ], [
             'name.required' => 'The name field is required.',

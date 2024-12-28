@@ -33,7 +33,7 @@ class SendContractRenewalNotifications extends Command
         $thirtyDaysFromNow = Carbon::now()->addDays(30);
         $thirtyDaysFromNow = Carbon::now()->addDays(30);
          $tenantsDue = Contract::where('due_date', '<=', $thirtyDaysFromNow)
-          ->where('status', 'active') 
+         // ->where('status', 'active') 
           ->with('tenant')
           ->get(); // Ensure the tenant relationship exists ->get();
         if ($tenantsDue->isEmpty()) {
@@ -45,7 +45,7 @@ class SendContractRenewalNotifications extends Command
         $tenantsData = $tenantsDue->map(function ($contract) {
             return [
                 'name' => $contract->tenant->name,
-                'room_number' => $contract->tenant->room_number,
+                'room_number' => $contract->room_number,
                 'due_date' => $contract->due_date,
             ];
         })->toArray();

@@ -44,19 +44,12 @@ class RolesAndPermissionsSeeder extends Seeder
         $admin = Role::create(['name' => 'admin']);
         $admin->givePermissionTo(Permission::all());
         
-        $admin = Role::create(['name' => 'manager']);
+        $admin = Role::create(['name' => 'writer']);
         $admin->givePermissionTo(Permission::all());
     
 
-        $user = Role::create(['name' => 'user']);
-        $user->givePermissionTo([
-            'view tenants',
-            'upload documents',
-            'view documents',
-            'view payments', 
-        ]);
-
-        
+        $user = Role::create(['name' => 'read-only']);
+        $user->givePermissionTo(Permission::all());
         // Assign this role to employees who need limited access
         // Add other roles if needed and assign relevant permissions
     

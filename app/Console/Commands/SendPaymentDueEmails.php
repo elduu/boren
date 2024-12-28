@@ -62,7 +62,7 @@ class SendPaymentDueEmails extends Command
 
             try {
                 // Send email to the tenant
-                Mail::to($tenant->email)->send(new PaymentDueMail($tenant, $payment));
+             //   Mail::to($tenant->email)->send(new PaymentDueMail($tenant, $payment));
 
                 // Output the email sending status to the console
                 $this->info("Payment due email sent to: {$tenant->email} for payment due on {$dueDate->format('F j, Y')}");
