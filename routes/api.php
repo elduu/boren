@@ -36,8 +36,7 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
      return $request->user();
 });
 
-Route::get('user-', [AuthController::class, 'getUserInfo']);
-Route::get('users', [AuthController::class, ' listAllUsers']);
+
 
 Route::post('tenants', [TenantController::class, 'store']);
 
@@ -147,6 +146,8 @@ Route::get('payments_tenant/{tenantId}', [PaymentForTenantController::class, 'se
 
 Route::middleware(['auth:api', 'role:admin|writer|read_only'])->group(function () {
      Route::get('categories/{id}', [CategoryController::class, 'show']);
+     Route::get('user-', [AuthController::class, 'getUserInfo']);
+Route::get('users', [AuthController::class, ' listAllUsers']);
  Route::get('category_search/{name}', [CategoryController::class, 'search']);
 Route::get('buildings', [BuildingController::class, 'index']);
  Route::get('buildings/{id}', [BuildingController::class, 'show']);
