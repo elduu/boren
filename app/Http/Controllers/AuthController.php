@@ -166,12 +166,12 @@ public function getUserInfo(Request $request)
 
         // Check if the authenticated user is an admin
         $currentUser = $request->user();
-        if (!$currentUser || !$currentUser->hasRole('admin')) { // Adjust based on your RBAC implementation
-            return response()->json([
-                'success' => false,
-                'message' => 'You do not have permission to update users.',
-            ], 403);
-        }
+        // if (!$currentUser || !$currentUser->hasRole('admin')) { // Adjust based on your RBAC implementation
+        //     return response()->json([
+        //         'success' => false,
+        //         'message' => 'You do not have permission to update users.',
+        //     ], 403);
+        // }
 // Retrieve the authenticated user from the token
     $user = $request->user();
 
