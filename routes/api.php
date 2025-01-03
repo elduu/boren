@@ -86,7 +86,7 @@ Route::post('tenants/{id}/status', [TenantController::class, 'updateStatus']);
 });
 Route::delete('payments/{id}', [PaymentForBuyerController::class, 'destroy']);
 Route::post('payments/{id}/restore', [PaymentForBuyerController::class, 'restore']);
-
+Route::get('users', [AuthController::class, ' listAllUsers']);
 
 Route::post('categories', [CategoryController::class, 'store']); // Create a new category
 
@@ -148,8 +148,9 @@ Route::middleware(['auth:api', 'role:admin|writer|read_only'])->group(function (
      Route::get('categories/{id}', [CategoryController::class, 'show']);
      Route::get('user-info', [AuthController::class, 'getUserInfo']);
     // Route::get('user-', [AuthController::class, 'getUserInfo']);
-Route::get('users', [AuthController::class, ' listAllUsers']);
+
 Route::post('contractadd', [FloorController::class, 'storeContract']);
+
  Route::get('category_search/{name}', [CategoryController::class, 'search']);
 Route::get('buildings', [BuildingController::class, 'index']);
  Route::get('buildings/{id}', [BuildingController::class, 'show']);
