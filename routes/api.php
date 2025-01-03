@@ -38,12 +38,13 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 
 
 
+
 Route::post('tenants', [TenantController::class, 'store']);
 
 Route::post('login', [AuthController::class, 'login']);
 Route::post('logout', [AuthController::class, 'logout']);
 Route::post('refresh-token', [AuthController::class, 'refreshToken']);
-
+Route::get('users', [AuthController::class, 'listAllUsers']);
 //Route::get('contractsadd', [ContractController::class, 'storecontracts']);
 
 Route::middleware(['jwt.auth','auth:api'])->group(function () {
@@ -55,7 +56,7 @@ Route::post('filter-by-phone', [AuthController::class, 'filterByPhone']);
  Route::post('forgot-password', [AuthController::class, 'forgotPassword']);
  Route::post('reset-password', [AuthController::class, 'resetPassword']);
  Route::post('update_admin', [AuthController::class, 'updateAdminCredentials']);
- Route::get('users', [AuthController::class, 'listAllUsers']);
+
 
  Route::get('documents', [ReportController::class, 'getAllDocuments']);
 
@@ -86,7 +87,7 @@ Route::post('tenants/{id}/status', [TenantController::class, 'updateStatus']);
 });
 Route::delete('payments/{id}', [PaymentForBuyerController::class, 'destroy']);
 Route::post('payments/{id}/restore', [PaymentForBuyerController::class, 'restore']);
-Route::get('users', [AuthController::class, ' listAllUsers']);
+//Route::get('users', [AuthController::class, ' listAllUsers']);
 
 Route::post('categories', [CategoryController::class, 'store']); // Create a new category
 
