@@ -108,7 +108,7 @@ Route::get('buildings_trashed', [BuildingController::class, 'trashed']);
 
 Route::post('floors', [FloorController::class, 'store']);
 Route::post('editfloors/{id}', [FloorController::class, 'update']);
-Route::post('contractadd', [FloorController::class, 'storeContract']);
+
 
 });
 
@@ -149,6 +149,7 @@ Route::middleware(['auth:api', 'role:admin|writer|read_only'])->group(function (
      Route::get('user-info', [AuthController::class, 'getUserInfo']);
     // Route::get('user-', [AuthController::class, 'getUserInfo']);
 Route::get('users', [AuthController::class, ' listAllUsers']);
+Route::post('contractadd', [FloorController::class, 'storeContract']);
  Route::get('category_search/{name}', [CategoryController::class, 'search']);
 Route::get('buildings', [BuildingController::class, 'index']);
  Route::get('buildings/{id}', [BuildingController::class, 'show']);
