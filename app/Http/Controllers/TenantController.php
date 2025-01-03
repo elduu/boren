@@ -233,7 +233,7 @@ class TenantController extends Controller
             // 'start_date' => 'required|date',
             // 'end_date' => 'nullable|date|after_or_equal:start_date',
             'documents' => 'required|array|min:1',
-            'documents.*.file' => 'required|file|mimes:pdf,doc,docx,xlsx,xls,jpg,jpeg,png|max:2048',
+            'documents.*.file' => 'required|file|mimes:pdf,doc,docx,xlsx,xls,jpg,jpeg,png',
           //  'documents.*.document_type' => 'required|in:payment_receipt,lease_agreement,tenant_info',
 
         ]);
@@ -353,7 +353,7 @@ private function validateBuyerData(Request $request)
     //     'start_date' => 'required_if:type,buyer|date',
  
         'documents' => 'required|array|min:1', // Ensure that documents is an array
-        'documents.*.file' => 'required|file|mimes:pdf,doc,docx,xlsx,xls,jpg,jpeg,png|max:2048', // Validate each file
+        'documents.*.file' => 'required|file|mimes:pdf,doc,docx,xlsx,xls,jpg,jpeg,png', // Validate each file
         // Optional path for each file
      //   'documents.*.document_type' => 'required|in:payment_receipt,lease_agreement,tenant_info', // Validate each document type
     ]);
@@ -729,7 +729,7 @@ public function storeBuyer(Request $request)
         return response()->json([
             'success' => false,
             'message' => 'Tenant not found.'
-        ], 404);
+        ], 200);
     } catch (\Exception $e) {
         // Handle any other exception
         return response()->json([

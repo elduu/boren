@@ -9,6 +9,7 @@ use Spatie\Permission\Middlewares\RoleMiddleware;
 
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
 
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Validator;
@@ -27,28 +28,21 @@ class AuthController extends Controller
          if (!$user->hasRole('admin')) {
              return response()->json(['error' => 'Unauthorized'], 403);
          }
-        $validatedData = $request->validate([
-            'name' => 'required|string',
-            'email' => 'nullable|email|unique:users',
-            'phone' => 'nullable|string|unique:users',
-            'password' => 'required|string|confirmed',
-            'role' => 'required|in:admin,writer,read_only',
-            'status' => 'nullable|in:active,inactive,suspended',
-        ], [
-            'name.required' => 'The name field is required.',
-            'name.string' => 'The name must be a valid string.',
-            'email.email' => 'Please provide a valid email address.',
-            'email.unique' => 'The email address is already taken.',
-            'phone.string' => 'Please provide a valid phone number.',
-            'phone.unique' => 'The phone number is already taken.',
-            'password.required' => 'Password is required to register.',
-            'password.string' => 'Password must be a valid string.',
-            'password.confirmed' => 'The password confirmation does not match.',
-            'role.required' => 'Please assign a role to the user.',
-            'role.in' => 'Role must be either admin or user.',
-            'status.in' => 'Status must be one of: active, inactive, suspended.',
-        ]);
-    
+         try {
+            $validatedData = $request->validate([
+                'name' => 'required|string',
+                'email' => 'nullable|email|unique:users,email',
+                'phone' => 'nullable|string|unique:users,phone',
+                'password' => 'required|string|confirmed',
+                'role' => 'required|in:admin,writer,read_only',
+                'status' => 'nullable|in:active,inactive,suspended',
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation error occurred',
+                'errors' => $e->errors(),
+            ], 422);
+        }
         // Create User
         $newUser = User::create([
             'name' => $request->name,
@@ -60,9 +54,6 @@ class AuthController extends Controller
         if (!$role = Role::where('name', $request->role)->first()) {
             $role = Role::create(['name' => $request->role]);
         }
-
-        // Assign Role
-        $newUser->assignRole($role);
 
     
         // Assign Role
