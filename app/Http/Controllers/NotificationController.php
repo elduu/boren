@@ -13,7 +13,18 @@ class NotificationController extends Controller
     {
         // Get the authenticated user
         $user = $request->user();
-
+        $user = $request->user();// Get the authenticated user
+        $lastExecuted = Cache::get('last_notif_execution', now()->subDay()); // Default to a day ago
+    
+            // Execute commands if it's been more than 24 hours
+            if ($lastExecuted->diffInHours(now()) >= 24) {
+                // Execute the Artisan commands
+                Artisan::call('app:send-contract-renewal-notifications');
+                Artisan::call('app:send-payment-due-notifications');
+        
+                // Update the last execution time
+                Cache::put('last_notif_execution', now());
+            }
         // Fetch all unread notifications for the user
         $unreadNotifications = $user->notifications()->whereNull('read_at')->get();
 
@@ -92,7 +103,7 @@ public function index(Request $request)
     $lastExecuted = Cache::get('last_notif_execution', now()->subDay()); // Default to a day ago
 
         // Execute commands if it's been more than 24 hours
-        if ($lastExecuted->diffInHours(now()) >= 12) {
+        if ($lastExecuted->diffInHours(now()) >= 24) {
             // Execute the Artisan commands
             Artisan::call('app:send-contract-renewal-notifications');
             Artisan::call('app:send-payment-due-notifications');

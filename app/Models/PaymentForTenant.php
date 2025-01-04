@@ -26,6 +26,7 @@ class PaymentForTenant extends Model
         'due_date',
         'room_number',
         'end_date',
+        'activate_status',
     ];
 
 

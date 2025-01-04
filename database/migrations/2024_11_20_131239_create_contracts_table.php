@@ -23,6 +23,7 @@ return new class extends Migration
             $table->softDeletes();  // Soft delete
             $table->timestamps();  // Created and Updated timestamps
             $table->string('contract_number')->unique(); 
+            $table->enum('activate_status', ['active', 'inactive'])->default('active');
         });
     }
 

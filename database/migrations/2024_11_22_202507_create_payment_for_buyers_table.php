@@ -19,7 +19,7 @@ return new class extends Migration
             $table->date('start_date');
             $table->string('room_number');
             $table->string('payment_number')->unique(); 
-           // $table->enum('utility_status', ['paid', 'unpaid']);
+          //  $table->enum('activate_status', ['active', 'inactive'])->default('active');
               // Start date, also serving as the due date for the utility fee
             $table->softDeletes(); // Soft delete support
             $table->timestamps();

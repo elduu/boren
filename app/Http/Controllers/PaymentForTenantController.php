@@ -63,6 +63,7 @@ class PaymentForTenantController extends Controller
                 'monthly_paid' => $payment->monthly_paid,
                 'area_m2' => $payment->area_m2,
                 'payment_status'=>$payment->payment_status,
+                'activate_status'=>$payment->activate_status,
                 'utility_fee' => $payment->utility_fee,
                 'start_date' => $payment->start_date,
                 'payment_made_until' => $payment->payment_made_until,
@@ -151,6 +152,7 @@ public function search(Request $request)
                 'monthly_paid' => $payment->monthly_paid,
                 'area_m2' => $payment->area_m2,
                 'payment_status' => $payment->payment_status,
+                'activate_status'=>$payment->activate_status,
                 'utility_fee' => $payment->utility_fee,
                 'start_date' => $payment->start_date,
                 'payment_made_until' => $payment->payment_made_until,
@@ -349,6 +351,7 @@ public function update(Request $request, $id)
         'end_date' => 'nullable|date|after_or_equal:start_date',
         'room_number'=>'nullable',
         'payment_made_until' => 'nullable|date|after_or_equal:start_date',
+        'activate_status'=>'nullable|in:active,inactive'
     
     ]);
 
@@ -363,6 +366,7 @@ public function update(Request $request, $id)
             'end_date',
             'payment_made_until',
             'room_number',
+            'activate_status',
         ]);
         $currentDate = Carbon::now()->format('Y-m-d');
 

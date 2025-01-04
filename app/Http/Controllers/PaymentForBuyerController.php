@@ -242,6 +242,7 @@ class PaymentForBuyerController extends Controller
                 'utility_fee' => 'sometimes|numeric|min:0',
                 'start_date' => 'sometimes|date',
                 'room_number'=> 'nullable',
+                
                 // 'documents' => 'array',
                 // 'documents.*.file' => 'sometimes|file',
                 // 'documents.*.document_type' => 'sometimes|string',
@@ -370,6 +371,7 @@ class PaymentForBuyerController extends Controller
                     'utility_fee' => $payment->utility_fee,
                     'start_date' => $payment->start_date,
                     'room_number'=>$payment->room_number,
+                    'activate_status'=>$payment->activate_status,
                     'documents' => $payment->documents->map(function ($document) {
                         return [
                             'id' => $document->id,

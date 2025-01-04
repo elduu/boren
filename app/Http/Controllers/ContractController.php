@@ -77,6 +77,7 @@ class ContractController extends Controller
                     // Include tenant name
                     'type' => $contract->type,
                     'status' => $contract->contract_status,
+                    'activate_status'=>$contract->activate_status,
                     'signing_date' => $contract->signing_date,
                     'expiring_date' => $contract->expiring_date,
                     'due_date' => $contract->due_date,
@@ -130,6 +131,7 @@ class ContractController extends Controller
                 'room_number' => 'nullable|string|max:255',
                 'signing_date' => 'nullable|date',
                 'expiring_date' => 'nullable|date|after:signing_date',
+                'activate_status'=>'nullable|in:active,inactive',
             ], $messages);
 
             // Find the contract
@@ -409,6 +411,7 @@ public function search(Request $request)
                 'type' => $contract->type,
                 'room_number'=>$contract->room_number,
                 'status' => $contract->contract_status,
+                'activate_status'=>$contract->activate_status,
                 'signing_date' => $contract->signing_date,
                 'expiring_date' => $contract->expiring_date,
                 'due_date' => $contract->due_date,
