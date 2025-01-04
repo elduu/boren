@@ -130,13 +130,13 @@ class AuthController extends Controller
         // Check if the user exists with the provided email
         $user = User::where('email', $request->email)->first();
         if (!$user) {
-            return response()->json(['message' => 'No user found with this email address.'], 200);
+            return response()->json(['message' => 'No user found with this email address.'], 404);
         }
     } elseif ($request->has('phone')) {
         // Check if the user exists with the provided phone number
         $user = User::where('phone', $request->phone)->first();
         if (!$user) {
-            return response()->json(['message' => 'No user found with this phone number.'], 200);
+            return response()->json(['message' => 'No user found with this phone number.'], 404);
         }
     } else {
         return response()->json(['message' => 'Please provide either an email or phone number to login.'], 400);
