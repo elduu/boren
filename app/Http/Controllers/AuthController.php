@@ -102,7 +102,7 @@ class AuthController extends Controller
         $user = User::where('phone', $request->phone)->first();
 
         if (!$user) {
-            return response()->json(['message' => 'User not found'], 404);
+            return response()->json(['message' => 'User not found'], 200);
         }
 
         return response()->json(['user' => $user]);
@@ -130,21 +130,21 @@ class AuthController extends Controller
         // Check if the user exists with the provided email
         $user = User::where('email', $request->email)->first();
         if (!$user) {
-            return response()->json(['error' => 'No user found with this email address.'], 404);
+            return response()->json(['message' => 'No user found with this email address.'], 200);
         }
     } elseif ($request->has('phone')) {
         // Check if the user exists with the provided phone number
         $user = User::where('phone', $request->phone)->first();
         if (!$user) {
-            return response()->json(['error' => 'No user found with this phone number.'], 404);
+            return response()->json(['message' => 'No user found with this phone number.'], 200);
         }
     } else {
-        return response()->json(['error' => 'Please provide either an email or phone number to login.'], 400);
+        return response()->json(['message' => 'Please provide either an email or phone number to login.'], 400);
     }
 
     // If the password doesn't match
     if (!Hash::check($request->password, $user->password)) {
-        return response()->json(['error' => 'Invalid password. Please try again.'], 401);
+        return response()->json(['message' => 'Invalid password. Please try again.'], 401);
     }
 
     // Generate a JWT token for the authenticated user
