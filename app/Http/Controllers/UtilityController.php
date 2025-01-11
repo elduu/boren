@@ -173,7 +173,7 @@ class UtilityController extends Controller
         // Validate the request with custom error messages
         $request->validate([
             'tenant_id' => 'nullable|exists:tenants,id',
-            'room_number' => 'required|string|max:255',
+            'room_number' => 'nullable|string|max:255',
            
             'start_date' => 'nullable|date',
             'end_date' => 'nullable|date|after_or_equal:start_date',

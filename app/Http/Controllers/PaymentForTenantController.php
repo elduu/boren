@@ -63,6 +63,7 @@ class PaymentForTenantController extends Controller
                 'monthly_paid' => $payment->monthly_paid,
                 'area_m2' => $payment->area_m2,
                 'payment_status'=>$payment->payment_status,
+            'payment_number'=>$payment->payment_number,
                 'activate_status'=>$payment->activate_status,
                 'utility_fee' => $payment->utility_fee,
                 'start_date' => $payment->start_date,
@@ -126,7 +127,8 @@ public function search(Request $request)
                     $subQuery->where('name', 'like', "%{$query}%")
                         ->orWhere('room_number', 'like', "%{$query}%")
                         ->orWhere('tenant_number', 'like', "%{$query}%")
-                        ->orWhere('phone_number', 'like', "%{$query}%");
+                        ->orWhere('phone_number', 'like', "%{$query}%")
+                        ->orWhere('payment_number', 'like', "%{$query}%");
                 });
         })->with(['tenant:id,name,floor_id', 'documents']) // Include tenant and documents relationships
           ->orderBy('created_at', 'desc');
@@ -151,6 +153,7 @@ public function search(Request $request)
                 'unit_price' => $payment->unit_price,
                 'monthly_paid' => $payment->monthly_paid,
                 'area_m2' => $payment->area_m2,
+                'payment_number'=>$payment->payment_number,
                 'payment_status' => $payment->payment_status,
                 'activate_status'=>$payment->activate_status,
                 'utility_fee' => $payment->utility_fee,

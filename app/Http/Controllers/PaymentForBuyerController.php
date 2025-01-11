@@ -67,6 +67,7 @@ class PaymentForBuyerController extends Controller
                     'property_price' => $payment->property_price,
                     'utility_fee' => $payment->utility_fee,
                     'room_number'=>$payment->room_number,
+                    'payment_number'=>$payment->payment_number,
                     'start_date' => $payment->start_date,
                     'documents' => $payment->documents->map(function ($document) {
                         return [
@@ -345,7 +346,8 @@ class PaymentForBuyerController extends Controller
             $paymentsQuery = PaymentForBuyer::whereHas('tenant', function ($q) use ($query, $floorId) {
                 $q->where('floor_id', $floorId)
                     ->where(function ($subQuery) use ($query) {
-                        $subQuery->where('name', 'like', "%{$query}%");
+                        $subQuery->where('name', 'like', "%{$query}%")
+                        ->orWhere('payment_number', 'like', "%{$query}%");
                           
                     });
             })->with(['tenant:id,name,floor_id', 'documents']) // Include tenant and documents relationships
@@ -370,6 +372,7 @@ class PaymentForBuyerController extends Controller
                     'property_price' => $payment->property_price,
                     'utility_fee' => $payment->utility_fee,
                     'start_date' => $payment->start_date,
+                    'payment_number'=>$payment->payment_number,
                     'room_number'=>$payment->room_number,
                     'activate_status'=>$payment->activate_status,
                     'documents' => $payment->documents->map(function ($document) {

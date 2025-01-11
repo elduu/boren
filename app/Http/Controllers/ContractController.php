@@ -76,6 +76,7 @@ class ContractController extends Controller
                     'room_number' => $contract->room_number,
                     // Include tenant name
                     'type' => $contract->type,
+                    'contract_number'=> $contract->contract_number,
                     'status' => $contract->contract_status,
                     'activate_status'=>$contract->activate_status,
                     'signing_date' => $contract->signing_date,
@@ -389,7 +390,9 @@ public function search(Request $request)
 
         // Search contracts based on tenant's name
         $contracts = Contract::whereHas('tenant', function ($q) use ($query) {
-            $q->where('name', 'like', "%{$query}%");
+            $q->where('name', 'like', "%{$query}%")
+            ->orWhere('contract_number', 'like', "%{$query}%")  ;
+
         })
         ->with(['tenant:id,name,floor_id', 'documents']) // Load related tenant and documents
         ->orderBy('created_at', 'desc') // Order by the most recent contracts
@@ -415,6 +418,7 @@ public function search(Request $request)
                 'signing_date' => $contract->signing_date,
                 'expiring_date' => $contract->expiring_date,
                 'due_date' => $contract->due_date,
+                'contract_number'=> $contract->contract_number,
                 'created_at' => $contract->created_at->format('Y-m-d H:i:s'),
                 'updated_at' => $contract->updated_at->format('Y-m-d H:i:s'),
                 'documents' => $contract->documents->map(function ($document) {
