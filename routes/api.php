@@ -86,7 +86,7 @@ Route::post('/{id}/deactivate', [TenantController::class, 'deactivateTenant']);
 Route::post('tenants/{id}/status', [TenantController::class, 'updateStatus']);
 });
 Route::delete('payments/{id}', [PaymentForBuyerController::class, 'destroy']);
-Route::post('payments/{id}/restore', [PaymentForBuyerController::class, 'restore']);
+Route::patch('payments/{id}/restore', [PaymentForBuyerController::class, 'restore']);
 //Route::get('users', [AuthController::class, ' listAllUsers']);
 
 Route::post('categories', [CategoryController::class, 'store']); // Create a new category

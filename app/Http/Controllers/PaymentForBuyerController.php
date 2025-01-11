@@ -242,7 +242,7 @@ class PaymentForBuyerController extends Controller
                 'property_price' => 'sometimes|numeric|min:0',
                 'utility_fee' => 'sometimes|numeric|min:0',
                 'start_date' => 'sometimes|date',
-                'room_number'=> 'nullable',
+             'room_number' => 'nuallable|string|max:255',
                 
                 // 'documents' => 'array',
                 // 'documents.*.file' => 'sometimes|file',

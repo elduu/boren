@@ -78,6 +78,7 @@ class UtilityController extends Controller
                     'utililty_type' => $utility->utility_type,
                     'status' => $utility->utility_status,
                     'created_at' => $utility->created_at->format('Y-m-d H:i:s'),
+                    'utility_number'=>$utility->utility_number,
                 ];
             });
     
@@ -214,7 +215,6 @@ class UtilityController extends Controller
         // Update only the provided values (leave others intact)
         $utility->update($request->only([
             'tenant_id',
-         
             'other_fee',
         'electric_bill_fee',
         'generator_bill',

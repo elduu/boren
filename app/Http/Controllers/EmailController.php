@@ -18,7 +18,7 @@ class EmailController extends Controller
     {
         // Validate the incoming request
         $validatedData = $request->validate([
-            'message' => 'required|string', // Email subject
+            'message' => 'nullable|string', // Email subject
             'body' => 'required|string',    // Email body content
             'tenant_email' => 'required|email', // Tenant email address
         ], [
@@ -51,7 +51,7 @@ class EmailController extends Controller
         // Send the email with dynamic subject (message) and body content
         try {
             Mail::to($tenant->email)
-                ->send(new ContractRenewalMail($tenant, $contract, $validatedData['message'], $validatedData['body']));
+                ->send(new ContractRenewalMail($tenant, $contract, $validatedData['message'] ?? " ", $validatedData['body']));
     
             return response()->json(['message' => 'Contract renewal reminder email sent successfully.'], 200);
         } catch (\Exception $e) {
@@ -66,7 +66,7 @@ class EmailController extends Controller
 {
     // Validate the incoming request data
     $validatedData = $request->validate([
-        'message' => 'required|string', // Email subject
+        'message' => 'nullable|string', // Email subject
         'body' => 'required|string',    // Email body content
         'tenant_email' => 'required|email', // Tenant email address
     ], [
@@ -99,7 +99,7 @@ class EmailController extends Controller
     // Send the email with dynamic subject (message) and body content
     try {
         Mail::to($tenant->email)
-            ->send(new PaymentDueMail($tenant, $paymentForTenant, $validatedData['message'], $validatedData['body']));
+            ->send(new PaymentDueMail($tenant, $paymentForTenant, $validatedData['message'] ?? " ", $validatedData['body']));
 
         return response()->json(['message' => 'Payment due reminder email sent successfully.'], 200);
     } catch (\Exception $e) {

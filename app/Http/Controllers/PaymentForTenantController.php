@@ -352,7 +352,7 @@ public function update(Request $request, $id)
         'utility_fee' => 'nullable|numeric|min:0',
         'start_date' => 'nullable|date',
         'end_date' => 'nullable|date|after_or_equal:start_date',
-        'room_number'=>'nullable',
+'room_number' => 'nullable|string|max:255',
         'payment_made_until' => 'nullable|date|after_or_equal:start_date',
         'activate_status'=>'nullable|in:active,inactive'
     
