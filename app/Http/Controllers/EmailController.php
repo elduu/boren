@@ -37,7 +37,7 @@ class EmailController extends Controller
     
         // Ensure the tenant exists
         if (!$tenant) {
-            return response()->json(['message' => 'Tenant not found.'], 200);
+            return response()->json(['message' => 'Tenant not found.'], 400);
         }
     
         // Fetch the latest contract for the tenant
@@ -45,7 +45,7 @@ class EmailController extends Controller
     
         // Ensure a contract exists for the tenant
         if (!$contract) {
-            return response()->json(['message' => 'Contract not found for the tenant.'], 200);
+            return response()->json(['message' => 'Contract not found for the tenant.'], 400);
         }
     
         // Send the email with dynamic subject (message) and body content
@@ -84,7 +84,7 @@ class EmailController extends Controller
 
     // Ensure the tenant exists
     if (!$tenant) {
-        return response()->json(['message' => 'Tenant not found.'], 200
+        return response()->json(['message' => 'Tenant not found.'], 400
     );
     }
 
@@ -93,7 +93,7 @@ class EmailController extends Controller
 
     // Ensure a payment exists for the tenant
     if (!$paymentForTenant) {
-        return response()->json(['message' => 'Payment not found for the tenant.'], 404);
+        return response()->json(['message' => 'Payment not found for the tenant.'], 400);
     }
 
     // Send the email with dynamic subject (message) and body content
