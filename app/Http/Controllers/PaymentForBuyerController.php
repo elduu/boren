@@ -347,7 +347,8 @@ class PaymentForBuyerController extends Controller
                 $q->where('floor_id', $floorId)
                     ->where(function ($subQuery) use ($query) {
                         $subQuery->where('name', 'like', "%{$query}%")
-                        ->orWhere('payment_number', 'like', "%{$query}%");
+                        ->orWhere('payment_number', 'like', "%{$query}%")
+                        ->orWhere('room_number', 'like', "%{$query}%")  ;
                           
                     });
             })->with(['tenant:id,name,floor_id', 'documents']) // Include tenant and documents relationships

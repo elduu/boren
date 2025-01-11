@@ -391,7 +391,8 @@ public function search(Request $request)
         // Search contracts based on tenant's name
         $contracts = Contract::whereHas('tenant', function ($q) use ($query) {
             $q->where('name', 'like', "%{$query}%")
-            ->orWhere('contract_number', 'like', "%{$query}%")  ;
+            ->orWhere('contract_number', 'like', "%{$query}%") 
+              ->orWhere('room_number', 'like', "%{$query}%")  ;
 
         })
         ->with(['tenant:id,name,floor_id', 'documents']) // Load related tenant and documents
