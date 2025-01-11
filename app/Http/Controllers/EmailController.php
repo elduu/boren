@@ -37,7 +37,7 @@ class EmailController extends Controller
     
         // Ensure the tenant exists
         if (!$tenant) {
-            return response()->json(['message' => 'Tenant not found.','status'=>'failed'], 400);
+            return response()->json(['message' => 'Tenant not found.','status'=>'failed'], 200);
         }
     
         // Fetch the latest contract for the tenant
@@ -45,7 +45,7 @@ class EmailController extends Controller
     
         // Ensure a contract exists for the tenant
         if (!$contract) {
-            return response()->json(['message' => 'Contract not found for the tenant.','status'=>'failed'], 400);
+            return response()->json(['message' => 'Contract not found for the tenant.','status'=>'failed'], 200);
         }
     
         // Send the email with dynamic subject (message) and body content
@@ -53,7 +53,7 @@ class EmailController extends Controller
             Mail::to($tenant->email)
                 ->send(new ContractRenewalMail($tenant, $contract, $validatedData['message'] ?? " ", $validatedData['body']));
     
-            return response()->json(['message' => 'Contract renewal reminder email sent successfully.'], 200);
+            return response()->json(['message' => 'Contract renewal reminder email sent successfully.', 'status'=>'success'], 200);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Error sending email: ' . $e->getMessage()], 500);
         }
@@ -105,7 +105,7 @@ class EmailController extends Controller
         Mail::to($tenant->email)
             ->send(new PaymentDueMail($tenant, $paymentForTenant, $validatedData['message'] ?? " ", $validatedData['body']));
 
-        return response()->json(['message' => 'Payment due reminder email sent successfully.'], 200);
+        return response()->json(['message' => 'Payment due reminder email sent successfully.','status'=>'success'], 200);
     } catch (\Exception $e) {
         return response()->json(['message' => 'Error sending email: ' . $e->getMessage()], 500);
     }
